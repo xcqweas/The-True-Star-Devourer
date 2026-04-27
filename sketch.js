@@ -20,9 +20,11 @@ function draw() {
   if (gameState === "menu") {
     drawMenu();
   } 
+
   else if (gameState === "playing") {
     runGame();
   } 
+  
   else if (gameState === "gameover") {
     drawGameOver();
   }
@@ -77,7 +79,9 @@ function runGame() {
       if (f.x - f.r >= 0 && f.x + f.r <= width && f.y - f.r >= 0 && f.y + f.r <= height) {
         f.entered = true;
       }
-    } else {
+    } 
+    
+    else {
       if (f.x - f.r < 0 || f.x + f.r > width)  f.vx *= -1;
       if (f.y - f.r < 0 || f.y + f.r > height) f.vy *= -1;
     }
