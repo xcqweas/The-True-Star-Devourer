@@ -73,10 +73,14 @@ function drawMenu() {
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(36);
-  text("Star Game", width / 2, height / 2 - 40);
+  text("The True Star Devourer", width / 2, height / 2 - 40);
+
+  textSize(16);
+  text("Use Mouse to control your star and eat smaller stars!", width / 2, height / 2 + 10);
+  text("But watch out for bigger stars!", width / 2, height / 2 + 40);
 
   textSize(20);
-  text("Press SPACE to Start", width / 2, height / 2 + 10);
+  text("Press SPACE to Start", width / 2, height / 2 + 90);
 }
 
 function getSpawnInterval() {
