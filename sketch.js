@@ -5,8 +5,47 @@ let star_objects = [];
 let score = 0;
 let startFrame = 0;
 let lastSpawnFrame = 0;
-const SPAWN_INTERVAL = 30; // spawn a new star every 3 seconds
+const MIN_SPAWN_INTERVAL = 5;
+const MAX_SPAWN_INTERVAL = 90;
 const MAX_STARS = 30;
+
+function makeAsteroidShape(radius, pointCount, roughness) {
+  let points = [];
+  for (let i = 0; i < pointCount; i++) {
+    let angle = map(i, 0, pointCount, 0, TWO_PI);
+    let localRadius = radius * random(1 - roughness, 1 + roughness);
+    points.push({
+      x: cos(angle) * localRadius,
+      y: sin(angle) * localRadius
+    });
+  }
+  return points;
+}
+
+function drawAsteroidBody(body, baseColor, detailColor) {
+  let shapeScale = body.r / (body.shapeRadius || body.r);
+  let smoothness = constrain(map(body.r, 20, 140, 0, 0.85), 0, 0.85);
+  push();
+  translate(body.x, body.y);
+  rotate(body.angle);
+  noStroke();
+  fill(baseColor);
+  beginShape();
+  for (let point of body.shape) {
+    let scaledX = point.x * shapeScale;
+    let scaledY = point.y * shapeScale;
+    let pointRadius = dist(0, 0, scaledX, scaledY);
+    let circleX = pointRadius === 0 ? 0 : (scaledX / pointRadius) * body.r;
+    let circleY = pointRadius === 0 ? 0 : (scaledY / pointRadius) * body.r;
+    vertex(lerp(scaledX, circleX, smoothness), lerp(scaledY, circleY, smoothness));
+  }
+  endShape(CLOSE);
+
+  fill(detailColor);
+  circle(-body.r * 0.2, -body.r * 0.1, body.r * 0.45);
+  circle(body.r * 0.25, body.r * 0.15, body.r * 0.28);
+  pop();
+}
 
 function setup() {
   createCanvas(1600, 900);
@@ -40,6 +79,11 @@ function drawMenu() {
   text("Press SPACE to Start", width / 2, height / 2 + 10);
 }
 
+function getSpawnInterval() {
+  let fillRatio = star_objects.length / MAX_STARS;
+  return lerp(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL, fillRatio);
+}
+
 function runGame() {
   // UI
   fill(255);
@@ -53,13 +97,13 @@ function runGame() {
   let dy = mouseY - player.y;
   player.x += dx * 0.05;
   player.y += dy * 0.05;
+  player.angle += player.rotationSpeed;
 
   // draw player
-  fill(200, 200, 255);
-  ellipse(player.x, player.y, player.r * 2);
+  drawAsteroidBody(player, color(180, 205, 235), color(130, 155, 185));
 
   // respawn stars over time, growing larger as time passes
-  if (frameCount - lastSpawnFrame >= SPAWN_INTERVAL && star_objects.length < MAX_STARS) {
+  if (frameCount - lastSpawnFrame >= getSpawnInterval() && star_objects.length < MAX_STARS) {
     spawnStar();
     lastSpawnFrame = frameCount;
   }
@@ -68,12 +112,13 @@ function runGame() {
   for (let i = star_objects.length - 1; i >= 0; i--) {
     let f = star_objects[i];
 
-    fill(255, 200, 100);
-    ellipse(f.x, f.y, f.r * 2);
-
     // move star
     f.x += f.vx;
     f.y += f.vy;
+    f.angle += f.rotationSpeed;
+
+    drawAsteroidBody(f, color(150, 128, 102), color(105, 88, 68));
+
     // only bounce once the star is fully on-screen (prevents edge-spawned stars from immediately bouncing back)
     if (!f.entered) {
       if (f.x - f.r >= 0 && f.x + f.r <= width && f.y - f.r >= 0 && f.y + f.r <= height) {
@@ -132,7 +177,11 @@ function startGame() {
   player = {
     x: width / 2,
     y: height / 2,
-    r: 20
+    r: 20,
+    angle: random(TWO_PI),
+    rotationSpeed: random(-0.02, 0.02),
+    shapeRadius: 20,
+    shape: makeAsteroidShape(20, 11, 0.22)
   };
 
   star_objects = [];
@@ -143,14 +192,19 @@ function startGame() {
 }
 
 function spawnStar(initial = false) {
-  // radius range grows with elapsed time: starts at 8–30, scales up over 2 minutes
+  // radius range grows with elapsed time: starts at 8–30, scales up over time
   let elapsed = (frameCount - startFrame) / 60; // seconds
-  let growth = elapsed / 120; // reaches 1.0 after 2 minutes
-  let minR = 8  + growth * 44;
-  let maxR = 30 + growth * 120;
+  let growth = elapsed / 60; // reaches 1.0 after 1 minutes
+
+  let minR = 8  + growth * 90;
+  let maxR = 30 + growth * 180;
   let r = random(minR, maxR);
-  let speed = random(1.25+growth, 2.25+growth) * (20 / r);
+
+  let speed = random(1.25+growth, 2.25+growth) * (20 / r); // smaller stars move faster, but all stars speed up over time
   let x, y, vx, vy;
+  let shape = makeAsteroidShape(r, floor(random(9, 14)), 0.28);
+  let angle = random(TWO_PI);
+  let rotationSpeed = random(-0.03, 0.03) * (20 / r);
   
   if (initial) {
     // place randomly anywhere on screen with a random direction
@@ -159,7 +213,7 @@ function spawnStar(initial = false) {
     let angle = random(TWO_PI);
     vx = cos(angle) * speed;
     vy = sin(angle) * speed;
-    star_objects.push({ x, y, r, vx, vy, entered: true });
+    star_objects.push({ x, y, r, vx, vy, entered: true, shape, shapeRadius: r, angle, rotationSpeed });
     return;
   } 
   
@@ -171,5 +225,5 @@ function spawnStar(initial = false) {
     else if (edge === 2) { x = -r;            y = random(height); vx =  speed; vy = random(-1, 1) * speed; }
     else                 { x = width + r;     y = random(height); vx = -speed; vy = random(-1, 1) * speed; }
   }
-  star_objects.push({ x, y, r, vx, vy, entered: false });
+  star_objects.push({ x, y, r, vx, vy, entered: false, shape, shapeRadius: r, angle, rotationSpeed });
 }
