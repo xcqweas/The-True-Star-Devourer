@@ -1,7 +1,12 @@
 function setup() {
-  createCanvas(1600, 900);
+  createCanvas(windowWidth, windowHeight);
+  initializeAdaptiveMaxStars();
   startGame();
   gameState = "menu";
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
 
 function draw() {

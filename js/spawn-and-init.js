@@ -1,10 +1,20 @@
 function getSpawnInterval() {
-  let fillRatio = star_objects.length / MAX_STARS;
+  let fillRatio = star_objects.length / currentMaxStars;
 
   // Change the shape of the curve.
   let shaped = 0.5 + 0.5 * Math.tanh((fillRatio - 0.5) * SHARPNESS);
 
   return lerp(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL, shaped);
+}
+
+function initializeAdaptiveMaxStars() {
+  // Scale star cap by canvas area relative to the original 1600x900 baseline.
+  let baselineArea = 1600 * 900;
+  let currentArea = width * height;
+  let areaScale = currentArea / baselineArea;
+
+  // Keep at least 8 stars and never exceed the configured absolute cap.
+  currentMaxStars = constrain(round(MAX_STARS * areaScale), 8, MAX_STARS);
 }
 
 function getInitialSpawnPosition(r) {
@@ -50,7 +60,8 @@ function startGame(newGame = true) {
 
   star_objects = [];
 
-  for (let i = 0; i < 20; i++) {
+  let initialStars = min(20, currentMaxStars);
+  for (let i = 0; i < initialStars; i++) {
     spawnStar(true);
   }
 }
@@ -69,7 +80,7 @@ function spawnStar(initial = false) {
   let r = random(minR, maxR);
 
   // Smaller stars tend to move faster, but all new stars spawn faster as time goes on.
-  let speed = random(1 + factor, 2 + factor) * (22 / r);
+  let speed = random(1 + factor, 2 + factor) * (25 / r);
   let x;
   let y;
   let vx;

@@ -8,3 +8,5 @@ let lastSpawnFrame = 0;
 let difficultyFactor = 1;
 let selectedDifficultyIndex = 1;
 let currentStageIndex = 0;
+
+let currentMaxStars = MAX_STARS;

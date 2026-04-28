@@ -34,9 +34,9 @@ function drawProgress() {
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(28);
-  text("Congratulations! You've evolved into the next stage!", width / 2, height / 2 - 20);
+  text("Congratulations! You've evolved into the next stage!", width / 2, height / 2 - 60);
   textSize(20);
-  text("Press SPACE to continue", width / 2, height / 2 + 20);
+  text("Press SPACE to continue", width / 2, height / 2 - 20);
 }
 
 function drawEnding() {

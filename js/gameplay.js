@@ -20,7 +20,7 @@ function runGame() {
   drawBodyForCurrentStage(player, palette.playerBase, palette.playerDetail);
 
   // Respawn stars over time.
-  if (frameCount - lastSpawnFrame >= getSpawnInterval() && star_objects.length < MAX_STARS) {
+  if (frameCount - lastSpawnFrame >= getSpawnInterval() && star_objects.length < currentMaxStars) {
     spawnStar();
     lastSpawnFrame = frameCount;
   }
@@ -49,16 +49,18 @@ function runGame() {
 
     if (d < player.r + f.r) {
       if (player.r > f.r) {
-        // Harder difficulties grow less per eaten star.
+        // Harder difficulties grow less per eaten star, vice versa
         player.r += f.r * 0.05 / difficultyFactor;
         star_objects.splice(i, 1);
         score += 1;
 
-        if (score === 75) {
+        if (score % 60 === 0) {
           gameState = "progress";
           return;
         }
-      } else {
+      } 
+      
+      else {
         gameState = "gameover";
         return;
       }
