@@ -14,4 +14,6 @@ You can clone this repo to your local computer and run it through any local webp
 
 ## What to do
 
-Currently the only goal is to eat smaller asteriods and avoid larger asteroids, and by eating, you will also grow larger!
+You can move your asteroid with your mouse (it will try to follow it, but at a speed limit), and you can collide with smaller asteroids to eat them! But colliding with larger asteroids will... well, make yourself eaten.
+
+Currently the only goal is to eat smaller asteroids and avoid larger asteroids, and by eating, you will also grow larger!
