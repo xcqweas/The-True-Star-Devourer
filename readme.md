@@ -16,14 +16,14 @@ You can clone this repo to your local computer and run it through any local webp
 
 The game is now split into stage-oriented and responsibility-oriented files:
 
-- `js/config/constants.js`: balancing values, difficulty presets, stage list
-- `js/state/game-state.js`: mutable game state
-- `js/rendering/bodies.js`: shared body/shape rendering
-- `js/stages/stage-visuals.js`: stage-specific colors and shape rules
-- `js/entities/spawn-and-init.js`: spawn rules and game initialization
-- `js/ui/screens.js`: menu, game-over, progress, ending screens
-- `js/core/gameplay.js`: active gameplay loop and stage progression handler
-- `js/core/p5-entry.js`: p5 entry points (`setup`, `draw`, `keyPressed`)
+- `js/constants.js`: balancing values, difficulty presets, stage list
+- `js/game-state.js`: mutable game state
+- `js/bodies.js`: shared body/shape rendering
+- `js/stage-visuals.js`: stage-specific colors and shape rules
+- `js/spawn-and-init.js`: spawn rules and game initialization
+- `js/screens.js`: menu, game-over, progress, ending screens
+- `js/gameplay.js`: active gameplay loop and stage progression handler
+- `js/p5-entry.js`: p5 entry points (`setup`, `draw`, `keyPressed`)
 
 `index.html` loads these scripts in dependency order.
 
