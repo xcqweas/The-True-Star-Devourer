@@ -8,6 +8,8 @@ let lastSpawnFrame = 0;
 const MIN_SPAWN_INTERVAL = 5;
 const MAX_SPAWN_INTERVAL = 90;
 const MAX_STARS = 30;
+const START_CENTER_BLOCK_W = 0.25;
+const START_CENTER_BLOCK_H = 0.25;
 
 function makeAsteroidShape(radius, pointCount, roughness) {
   let points = [];
@@ -86,6 +88,29 @@ function drawMenu() {
 function getSpawnInterval() {
   let fillRatio = star_objects.length / MAX_STARS;
   return lerp(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL, fillRatio);
+}
+
+function getInitialSpawnPosition(r) {
+  let centerX = width / 2;
+  let centerY = height / 2;
+  let halfBlockW = (width * START_CENTER_BLOCK_W) / 2;
+  let halfBlockH = (height * START_CENTER_BLOCK_H) / 2;
+
+  for (let i = 0; i < 50; i++) {
+    let x = random(r, width - r);
+    let y = random(r, height - r);
+    let inCenterBlock = abs(x - centerX) < halfBlockW && abs(y - centerY) < halfBlockH;
+    if (!inCenterBlock) {
+      return { x, y };
+    }
+  }
+
+  // Fallback to corners if random sampling fails.
+  let corner = floor(random(4));
+  if (corner === 0) return { x: r, y: r };
+  if (corner === 1) return { x: width - r, y: r };
+  if (corner === 2) return { x: r, y: height - r };
+  return { x: width - r, y: height - r };
 }
 
 function runGame() {
@@ -197,7 +222,7 @@ function startGame() {
 
 function spawnStar(initial = false) {
   // radius range grows with elapsed time: starts at 8–30, scales up over time
-  let elapsed = (frameCount - startFrame) / 60; // seconds
+  let elapsed = (frameCount - startFrame) / 90; // seconds
   let growth = elapsed / 60; // reaches 1.0 after 1 minutes
 
   let minR = 8  + growth * 90;
@@ -211,9 +236,10 @@ function spawnStar(initial = false) {
   let rotationSpeed = random(-0.03, 0.03) * (20 / r);
   
   if (initial) {
-    // place randomly anywhere on screen with a random direction
-    x = random(r, width - r);
-    y = random(r, height - r);
+    // place at startup away from the center area to avoid immediate collisions
+    let spawnPos = getInitialSpawnPosition(r);
+    x = spawnPos.x;
+    y = spawnPos.y;
     let angle = random(TWO_PI);
     vx = cos(angle) * speed;
     vy = sin(angle) * speed;
