@@ -223,7 +223,7 @@ function startGame() {
 function spawnStar(initial = false) {
   // radius range grows with elapsed time: starts at 8–30, scales up over time
   let elapsed = (frameCount - startFrame) / 90; // seconds
-  let growth = elapsed / 60; // reaches 1.0 after 1 minutes
+  let growth = elapsed / 90; // reaches 1.0 after 1.5 minutes
 
   let minR = 8  + growth * 90;
   let maxR = 30 + growth * 180;
