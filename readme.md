@@ -4,6 +4,10 @@ Welcome to this Minigame!
 
 ## How to run the game
 
+### p5.js
+
+You can use this sharelink, <https://editor.p5js.org/xcqweas/full/AJmh_awJp>, or copy and paste all files there in the exact structure to play it!
+
 ### Clone and Run
 
 You can clone this repo to your local computer and run it through any local webpage tools, for example I am using Live Server extension in VSC
