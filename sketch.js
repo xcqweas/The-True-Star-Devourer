@@ -8,9 +8,11 @@ let lastSpawnFrame = 0;
 let difficultyFactor = 1;
 let selectedDifficultyIndex = 1;
 let currentStageIndex = 0;
-const MIN_SPAWN_INTERVAL = 5;
-const MAX_SPAWN_INTERVAL = 90;
-const MAX_STARS = 30;
+const GROW_TIME = 75; // time in seconds for stars to reach max size
+const MIN_SPAWN_INTERVAL = 5; // minimum frames between spawns even when the screen is empty
+const MAX_SPAWN_INTERVAL = 90; // maximum frames between spawns when the screen is almost full
+const SHARPNESS = 6; // controls how sharply the spawn interval changes as the screen fills up, higher is more sudden
+const MAX_STARS = 30; // base max stars
 const START_CENTER_BLOCK_W = 0.25;
 const START_CENTER_BLOCK_H = 0.25;
 const DIFFICULTY_PRESETS = [
@@ -19,6 +21,87 @@ const DIFFICULTY_PRESETS = [
   { name: "Hard", factor: 1.1 }
 ];
 const GAME_STAGES = ["playingStage0", "playingStage1"];
+
+
+function getCurrentStageName() {
+  return GAME_STAGES[currentStageIndex] || GAME_STAGES[0];
+}
+
+function getStagePalette() {
+  if (currentStageIndex === 1) {
+    return {
+      playerBase: color(176, 184, 196),
+      playerDetail: color(128, 138, 150),
+      starBase: color(156, 162, 170),
+      starDetail: color(108, 116, 124)
+    };
+  }
+
+  // Stage 0 default visuals.
+  return {
+    playerBase: color(180, 205, 235),
+    playerDetail: color(130, 155, 185),
+    starBase: color(150, 128, 102),
+    starDetail: color(105, 88, 68)
+  };
+}
+
+function makeShapeForCurrentStage(radius) {
+  if (currentStageIndex === 1) {
+    // Stage 1: more points + low roughness to keep bodies very circular.
+    return makeAsteroidShape(radius, floor(random(18, 28)), 0.08);
+  }
+
+  // Stage 0 default shape.
+  return makeAsteroidShape(radius, floor(random(9, 14)), 0.28);
+
+  // Future stage implementations:
+  // if (currentStageIndex === 2) {
+  //   return makeSomethingElse(radius);
+  // }
+}
+
+function drawRockyMoonBody(body, baseColor, detailColor) {
+  let shapeScale = body.r / (body.shapeRadius || body.r);
+  push();
+  translate(body.x, body.y);
+  rotate(body.angle);
+  noStroke();
+
+  // Very circular silhouette with subtle irregularity from the stored shape.
+  fill(baseColor);
+  beginShape();
+  for (let point of body.shape) {
+    let scaledX = point.x * shapeScale;
+    let scaledY = point.y * shapeScale;
+    let pointRadius = dist(0, 0, scaledX, scaledY);
+    let circleX = pointRadius === 0 ? 0 : (scaledX / pointRadius) * body.r;
+    let circleY = pointRadius === 0 ? 0 : (scaledY / pointRadius) * body.r;
+    vertex(lerp(scaledX, circleX, 0.95), lerp(scaledY, circleY, 0.95));
+  }
+  endShape(CLOSE);
+
+  // Moon-like crater details.
+  fill(detailColor);
+  circle(-body.r * 0.22, -body.r * 0.12, body.r * 0.42);
+  circle(body.r * 0.18, body.r * 0.2, body.r * 0.3);
+  circle(body.r * 0.05, -body.r * 0.28, body.r * 0.2);
+  pop();
+}
+
+function drawBodyForCurrentStage(body, baseColor, detailColor) {
+  if (currentStageIndex === 1) {
+    drawRockyMoonBody(body, baseColor, detailColor);
+    return;
+  }
+
+  // Future stage implementations:
+  // if (currentStageIndex === 2) {
+  //   drawPlanetBody(body, baseColor, detailColor);
+  // }
+
+  drawAsteroidBody(body, baseColor, detailColor);
+}
 
 
 function makeAsteroidShape(radius, pointCount, roughness) {
@@ -43,6 +126,7 @@ function drawAsteroidBody(body, baseColor, detailColor) {
   noStroke();
   fill(baseColor);
   beginShape();
+  
   for (let point of body.shape) {
     let scaledX = point.x * shapeScale;
     let scaledY = point.y * shapeScale;
@@ -112,7 +196,11 @@ function drawMenu() {
 
 function getSpawnInterval() {
   let fillRatio = star_objects.length / MAX_STARS;
-  return lerp(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL, fillRatio);
+
+  // change the shape of the curve
+  let shaped = 0.5 + 0.5 * Math.tanh((fillRatio - 0.5) * SHARPNESS);
+
+  return lerp(MIN_SPAWN_INTERVAL, MAX_SPAWN_INTERVAL, shaped);
 }
 
 function getInitialSpawnPosition(r) {
@@ -139,12 +227,15 @@ function getInitialSpawnPosition(r) {
 }
 
 function runGame() {
+  let palette = getStagePalette();
+
   // UI
   fill(255);
   textAlign(LEFT, TOP);
   textSize(16);
   text("Time Passed: " + floor((frameCount - startFrame) / 60), 20, 20);
   text("Score: " + score, 20, 40);
+  text("Stage: " + (currentStageIndex + 1), 20, 60);
 
   // move player toward mouse
   let dx = mouseX - player.x;
@@ -154,7 +245,7 @@ function runGame() {
   player.angle += player.rotationSpeed;
 
   // draw player
-  drawAsteroidBody(player, color(180, 205, 235), color(130, 155, 185));
+  drawBodyForCurrentStage(player, palette.playerBase, palette.playerDetail);
 
   // respawn stars over time, growing larger as time passes
   if (frameCount - lastSpawnFrame >= getSpawnInterval() && star_objects.length < MAX_STARS) {
@@ -171,7 +262,7 @@ function runGame() {
     f.y += f.vy;
     f.angle += f.rotationSpeed;
 
-    drawAsteroidBody(f, color(150, 128, 102), color(105, 88, 68));
+    drawBodyForCurrentStage(f, palette.starBase, palette.starDetail);
 
     // only bounce once the star is fully on-screen (prevents edge-spawned stars from immediately bouncing back)
     if (!f.entered) {
@@ -232,20 +323,22 @@ function keyPressed() {
   if (key === ' ') {
     if (gameState === "menu") {
       difficultyFactor = DIFFICULTY_PRESETS[selectedDifficultyIndex].factor;
+      currentStageIndex = 0;
       startGame();
-      gameState = "playingStage0";
+      gameState = getCurrentStageName();
     } 
     
     else if (gameState === "gameover") {
+      currentStageIndex = 0;
       startGame();
-      gameState = "playingStage0";
+      gameState = getCurrentStageName();
     }
 
     else if (gameState === "progress") { 
       if (currentStageIndex < GAME_STAGES.length - 1) {
         currentStageIndex++;
-        gameState = GAME_STAGES[currentStageIndex];
-        startGame();
+        gameState = getCurrentStageName();
+        startGame(newGame = false);
       }
       else {
         // No more stages, end the game with a win state
@@ -264,8 +357,10 @@ function drawProgress() {
   text("Press SPACE to continue", width / 2, height / 2 + 20);
 }
 
-function startGame() {
-  score = 0;
+function startGame(newGame = true) {
+  if (newGame) {
+    score = 0;
+  }
   startFrame = frameCount;
   lastSpawnFrame = frameCount;
 
@@ -276,7 +371,7 @@ function startGame() {
     angle: random(TWO_PI),
     rotationSpeed: random(-0.02, 0.02),
     shapeRadius: 20,
-    shape: makeAsteroidShape(20, 11, 0.22)
+    shape: makeShapeForCurrentStage(20)
   };
 
   star_objects = [];
@@ -290,26 +385,33 @@ function drawEnding() {
   fill(255);
   textAlign(CENTER, CENTER);
   textSize(32);
-  text("You have become the True Star Devourer!", width / 2, height / 2 - 20); 
+  text("You have become the True Star Devourer!", width / 2, height / 2 - 40); 
   text("For now... Until the next BIG BOOM", width / 2, height / 2); 
   textSize(20);
-  text("Refresh the page to play again", width / 2, height / 2 + 40);
+  text("Well, until next update", width / 2, height / 2 + 40);
+  text("You can refresh the page to play again!", width / 2, height / 2 + 80);
 }
 
 function spawnStar(initial = false) {
-  // radius range grows with elapsed time: starts at 8–30, scales up over time
-  let elapsed = (frameCount - startFrame) / 90; // seconds
-  let growth = elapsed / 90; // reaches 1.0 after 1.5 minutes
+  // radius range grows with elapsed time
+  let elapsed = (frameCount - startFrame) / 60; // time in seconds
+  let growth = elapsed / GROW_TIME; // reaches highest after given time
 
-  let minR = 8  + growth * 80  * difficultyFactor;
-  let maxR = 30 + growth * 160 * difficultyFactor;
+  // combining the factors, and game is slightly harder in later stages
+  let factor = difficultyFactor*growth + min(max(0, currentStageIndex*0.05), 0.25); 
+  // caps the growth factor to prevent excessively large stars in later stages
+
+  let minR = factor * 80  + 8 ;
+  let maxR = factor * 160 + 30;
   let r = random(minR, maxR);
 
-  let speed = random(1.25+growth, 2.25+growth) * (20 / r) * difficultyFactor; // smaller stars tend to move faster, but all new stars spawn at higher speeds as time goes on
+  // calculating the speed
+  // smaller stars tend to move faster, but all new stars spawn at higher speeds as time goes on
+  let speed = random(1+factor, 2+factor) * (22 / r); 
   let x, y, vx, vy;
-  let shape = makeAsteroidShape(r, floor(random(9, 14)), 0.28);
+  let shape = makeShapeForCurrentStage(r);
   let angle = random(TWO_PI);
-  let rotationSpeed = random(-0.03, 0.03) * (20 / r);
+  let rotationSpeed = random(-1, 1) * (0.5 / r);
   
   if (initial) {
     // place at startup away from the center area to avoid immediate collisions
