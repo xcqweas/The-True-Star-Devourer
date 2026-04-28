@@ -108,17 +108,23 @@ function spawnStar(initial = false) {
     y = -r;
     vx = random(-1, 1) * speed;
     vy = speed;
-  } else if (edge === 1) {
+  } 
+  
+  else if (edge === 1) {
     x = random(width);
     y = height + r;
     vx = random(-1, 1) * speed;
     vy = -speed;
-  } else if (edge === 2) {
+  } 
+  
+  else if (edge === 2) {
     x = -r;
     y = random(height);
     vx = speed;
     vy = random(-1, 1) * speed;
-  } else {
+  } 
+  
+  else {
     x = width + r;
     y = random(height);
     vx = -speed;
