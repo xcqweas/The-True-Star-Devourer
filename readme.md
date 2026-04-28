@@ -4,13 +4,24 @@ Welcome to this Minigame!
 
 ## How to run the game
 
-### p5.js
-
-You can just copy and paste the content from sketch.js to a p5.js project and run it there. Here is one prepared by me! <https://editor.p5js.org/xcqweas/full/vThBvIy0N>
-
 ### Clone and Run
 
 You can clone this repo to your local computer and run it through any local webpage tools, for example I am using Live Server extension in VSC
+
+## Project structure
+
+The game is now split into stage-oriented and responsibility-oriented files:
+
+- `js/config/constants.js`: balancing values, difficulty presets, stage list
+- `js/state/game-state.js`: mutable game state
+- `js/rendering/bodies.js`: shared body/shape rendering
+- `js/stages/stage-visuals.js`: stage-specific colors and shape rules
+- `js/entities/spawn-and-init.js`: spawn rules and game initialization
+- `js/ui/screens.js`: menu, game-over, progress, ending screens
+- `js/core/gameplay.js`: active gameplay loop and stage progression handler
+- `js/core/p5-entry.js`: p5 entry points (`setup`, `draw`, `keyPressed`)
+
+`index.html` loads these scripts in dependency order.
 
 ## What to do
 
