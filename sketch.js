@@ -5,11 +5,21 @@ let star_objects = [];
 let score = 0;
 let startFrame = 0;
 let lastSpawnFrame = 0;
+let difficultyFactor = 1;
+let selectedDifficultyIndex = 1;
+let currentStageIndex = 0;
 const MIN_SPAWN_INTERVAL = 5;
 const MAX_SPAWN_INTERVAL = 90;
 const MAX_STARS = 30;
 const START_CENTER_BLOCK_W = 0.25;
 const START_CENTER_BLOCK_H = 0.25;
+const DIFFICULTY_PRESETS = [
+  { name: "Easy", factor: 0.9 },
+  { name: "Normal", factor: 1 },
+  { name: "Hard", factor: 1.1 }
+];
+const GAME_STAGES = ["playingStage0", "playingStage1"];
+
 
 function makeAsteroidShape(radius, pointCount, roughness) {
   let points = [];
@@ -62,12 +72,20 @@ function draw() {
     drawMenu();
   } 
 
-  else if (gameState === "playing") {
+  else if (GAME_STAGES.includes(gameState)) {
     runGame();
   } 
   
   else if (gameState === "gameover") {
     drawGameOver();
+  }
+
+  else if (gameState === "progress") {
+    drawProgress();
+  }
+
+  else if (gameState === "ending") {
+    drawEnding();
   }
 }
 
@@ -82,7 +100,14 @@ function drawMenu() {
   text("But watch out for bigger stars!", width / 2, height / 2 + 40);
 
   textSize(20);
-  text("Press SPACE to Start", width / 2, height / 2 + 90);
+  let selected = DIFFICULTY_PRESETS[selectedDifficultyIndex];
+  text("Difficulty: " + selected.name, width / 2, height / 2 + 80);
+
+  textSize(16);
+  text("LEFT/RIGHT ARROW: Change difficulty", width / 2, height / 2 + 110);
+
+  textSize(20);
+  text("Press SPACE to Start", width / 2, height / 2 + 145);
 }
 
 function getSpawnInterval() {
@@ -165,9 +190,13 @@ function runGame() {
     // check collision, can only eat if player is bigger, otherwise game over
     if (d < player.r + f.r) {
       if (player.r > f.r) {
-        player.r += f.r * 0.04; // grow by 4% of the eaten star's radius
+        player.r += f.r * 0.05 / difficultyFactor; // grow by 5% of the eaten star's radius scaled by difficulty (harder difficulties grow less per star to balance out the faster spawn and larger star sizes)
         star_objects.splice(i, 1);
         score += 1;
+        if (score === 75) {
+          gameState = "progress";
+          return;
+        }
       } 
       
       else {
@@ -190,12 +219,49 @@ function drawGameOver() {
 }
 
 function keyPressed() {
-  if (key === ' ') {
-    if (gameState === "menu" || gameState === "gameover") {
-      startGame();
-      gameState = "playing";
+  if (gameState === "menu") {
+    if (keyCode === LEFT_ARROW) {
+      selectedDifficultyIndex = (selectedDifficultyIndex - 1 + DIFFICULTY_PRESETS.length) % DIFFICULTY_PRESETS.length;
+    }
+
+    if (keyCode === RIGHT_ARROW) {
+      selectedDifficultyIndex = (selectedDifficultyIndex + 1) % DIFFICULTY_PRESETS.length;
     }
   }
+
+  if (key === ' ') {
+    if (gameState === "menu") {
+      difficultyFactor = DIFFICULTY_PRESETS[selectedDifficultyIndex].factor;
+      startGame();
+      gameState = "playingStage0";
+    } 
+    
+    else if (gameState === "gameover") {
+      startGame();
+      gameState = "playingStage0";
+    }
+
+    else if (gameState === "progress") { 
+      if (currentStageIndex < GAME_STAGES.length - 1) {
+        currentStageIndex++;
+        gameState = GAME_STAGES[currentStageIndex];
+        startGame();
+      }
+      else {
+        // No more stages, end the game with a win state
+        gameState = "ending";
+      }
+    }
+  }
+}
+
+function drawProgress() {
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(28);
+  text("Congratulations! You've evolved into the next stage!", width / 2, height / 2 - 20);
+  textSize(20);
+  text("Press SPACE to continue", width / 2, height / 2 + 20);
 }
 
 function startGame() {
@@ -220,16 +286,26 @@ function startGame() {
   }
 }
 
+function drawEnding() {
+  fill(255);
+  textAlign(CENTER, CENTER);
+  textSize(32);
+  text("You have become the True Star Devourer!", width / 2, height / 2 - 20); 
+  text("For now... Until the next BIG BOOM", width / 2, height / 2); 
+  textSize(20);
+  text("Refresh the page to play again", width / 2, height / 2 + 40);
+}
+
 function spawnStar(initial = false) {
   // radius range grows with elapsed time: starts at 8–30, scales up over time
   let elapsed = (frameCount - startFrame) / 90; // seconds
   let growth = elapsed / 90; // reaches 1.0 after 1.5 minutes
 
-  let minR = 8  + growth * 90;
-  let maxR = 30 + growth * 180;
+  let minR = 8  + growth * 80  * difficultyFactor;
+  let maxR = 30 + growth * 160 * difficultyFactor;
   let r = random(minR, maxR);
 
-  let speed = random(1.25+growth, 2.25+growth) * (20 / r); // smaller stars move faster, but all stars speed up over time
+  let speed = random(1.25+growth, 2.25+growth) * (20 / r) * difficultyFactor; // smaller stars tend to move faster, but all new stars spawn at higher speeds as time goes on
   let x, y, vx, vy;
   let shape = makeAsteroidShape(r, floor(random(9, 14)), 0.28);
   let angle = random(TWO_PI);
