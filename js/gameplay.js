@@ -39,8 +39,13 @@ function drawThreatRing(body) {
   pop();
 }
 
+function isThreatAssistEnabled() {
+  return selectedDifficultyIndex <= 1;
+}
+
 function runGame() {
   let palette = getStagePalette();
+  const showThreatAssist = isThreatAssistEnabled();
 
   // UI
   fill(255);
@@ -74,7 +79,9 @@ function runGame() {
     f.y += f.vy;
     f.angle += f.rotationSpeed;
 
-    drawThreatRing(f);
+    if (showThreatAssist) {
+      drawThreatRing(f);
+    }
     drawBodyForCurrentStage(f, palette.starBase, palette.starDetail);
 
     // Bounce once fully on-screen.
