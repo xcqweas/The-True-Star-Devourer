@@ -1,3 +1,44 @@
+function getThreatVisual(enemyRadius, playerRadius) {
+  const ratio = enemyRadius / max(playerRadius, 0.001);
+
+  if (ratio < 0.92) {
+    return {
+      ring: [92, 244, 176, 235],
+      glow: [64, 205, 150, 45]
+    };
+  }
+
+  if (ratio <= 1.08) {
+    return {
+      ring: [255, 214, 110, 245],
+      glow: [255, 191, 90, 55]
+    };
+  }
+
+  return {
+    ring: [255, 112, 110, 240],
+    glow: [230, 70, 80, 50]
+  };
+}
+
+function drawThreatRing(body) {
+  const visual = getThreatVisual(body.r, player.r);
+  const pulse = map(sin(frameCount * 0.08 + body.x * 0.01), -1, 1, 0.96, 1.06);
+  const glowDiameter = body.r * 2.35;
+  const ringDiameter = (body.r * 2 + 8) * pulse;
+
+  push();
+  noStroke();
+  fill(visual.glow[0], visual.glow[1], visual.glow[2], visual.glow[3]);
+  circle(body.x, body.y, glowDiameter);
+
+  noFill();
+  stroke(visual.ring[0], visual.ring[1], visual.ring[2], visual.ring[3]);
+  strokeWeight(constrain(body.r * 0.07, 1.5, 4));
+  circle(body.x, body.y, ringDiameter);
+  pop();
+}
+
 function runGame() {
   let palette = getStagePalette();
 
@@ -33,6 +74,7 @@ function runGame() {
     f.y += f.vy;
     f.angle += f.rotationSpeed;
 
+    drawThreatRing(f);
     drawBodyForCurrentStage(f, palette.starBase, palette.starDetail);
 
     // Bounce once fully on-screen.
