@@ -1,0 +1,3628 @@
+{
+  "viewport": [
+    1600,
+    900
+  ],
+  "rows": [
+    {
+      "seed": 1,
+      "radius": 20,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 19,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 18,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 18,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 20,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 4,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 3,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 3,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 120,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.1790501955368092,
+      "rendered": {
+        "asteroid": 116,
+        "moon": 8,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 116,
+        "moon": 7,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 93,
+        "moon": 7,
+        "planet": 0
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 120,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.1790501955368092,
+      "rendered": {
+        "asteroid": 31,
+        "moon": 3,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 31,
+        "moon": 3,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 19,
+        "moon": 3,
+        "planet": 1
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 300,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.07429376903236863,
+      "rendered": {
+        "asteroid": 142,
+        "moon": 20,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 142,
+        "moon": 20,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 60,
+        "moon": 20,
+        "planet": 0
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 300,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.07429376903236863,
+      "rendered": {
+        "asteroid": 62,
+        "moon": 12,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 61,
+        "moon": 12,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 11,
+        "moon": 11,
+        "planet": 1
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 600,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 152,
+        "moon": 21,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 152,
+        "moon": 21,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 80,
+        "moon": 20,
+        "planet": 0
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 43,
+        "moon": 16,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 43,
+        "moon": 16,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 16,
+        "moon": 15,
+        "planet": 1
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 1200,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.019632463542128515,
+      "rendered": {
+        "asteroid": 227,
+        "moon": 23,
+        "planet": 4
+      },
+      "physical": {
+        "asteroid": 227,
+        "moon": 23,
+        "planet": 4
+      },
+      "substantial": {
+        "asteroid": 144,
+        "moon": 21,
+        "planet": 4
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 1200,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.019632463542128515,
+      "rendered": {
+        "asteroid": 59,
+        "moon": 19,
+        "planet": 2
+      },
+      "physical": {
+        "asteroid": 59,
+        "moon": 19,
+        "planet": 2
+      },
+      "substantial": {
+        "asteroid": 32,
+        "moon": 16,
+        "planet": 2
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 1999,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 376,
+        "moon": 33,
+        "planet": 12
+      },
+      "physical": {
+        "asteroid": 376,
+        "moon": 33,
+        "planet": 12
+      },
+      "substantial": {
+        "asteroid": 295,
+        "moon": 20,
+        "planet": 12
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "radius": 1999,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 139,
+        "moon": 27,
+        "planet": 6
+      },
+      "physical": {
+        "asteroid": 139,
+        "moon": 27,
+        "planet": 5
+      },
+      "substantial": {
+        "asteroid": 87,
+        "moon": 11,
+        "planet": 5
+      },
+      "openingFood": 71,
+      "openingFoodMass": 10612.348877182461
+    },
+    {
+      "seed": 42,
+      "radius": 20,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 16,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 15,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 15,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 20,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 2,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 2,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 2,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 120,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.1790501955368092,
+      "rendered": {
+        "asteroid": 103,
+        "moon": 6,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 103,
+        "moon": 6,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 80,
+        "moon": 6,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 120,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.1790501955368092,
+      "rendered": {
+        "asteroid": 31,
+        "moon": 7,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 31,
+        "moon": 7,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 19,
+        "moon": 7,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 300,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.07429376903236863,
+      "rendered": {
+        "asteroid": 130,
+        "moon": 16,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 130,
+        "moon": 16,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 55,
+        "moon": 15,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 300,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.07429376903236863,
+      "rendered": {
+        "asteroid": 71,
+        "moon": 20,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 71,
+        "moon": 20,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 11,
+        "moon": 20,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 148,
+        "moon": 17,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 148,
+        "moon": 17,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 73,
+        "moon": 16,
+        "planet": 1
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 49,
+        "moon": 23,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 49,
+        "moon": 23,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 17,
+        "moon": 22,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 1200,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.019632463542128515,
+      "rendered": {
+        "asteroid": 233,
+        "moon": 23,
+        "planet": 5
+      },
+      "physical": {
+        "asteroid": 233,
+        "moon": 23,
+        "planet": 5
+      },
+      "substantial": {
+        "asteroid": 148,
+        "moon": 18,
+        "planet": 5
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 1200,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.019632463542128515,
+      "rendered": {
+        "asteroid": 61,
+        "moon": 29,
+        "planet": 3
+      },
+      "physical": {
+        "asteroid": 61,
+        "moon": 29,
+        "planet": 3
+      },
+      "substantial": {
+        "asteroid": 30,
+        "moon": 24,
+        "planet": 3
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 1999,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 358,
+        "moon": 31,
+        "planet": 15
+      },
+      "physical": {
+        "asteroid": 358,
+        "moon": 31,
+        "planet": 15
+      },
+      "substantial": {
+        "asteroid": 297,
+        "moon": 19,
+        "planet": 15
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 1999,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 167,
+        "moon": 48,
+        "planet": 12
+      },
+      "physical": {
+        "asteroid": 167,
+        "moon": 48,
+        "planet": 11
+      },
+      "substantial": {
+        "asteroid": 87,
+        "moon": 28,
+        "planet": 11
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 1948,
+      "radius": 20,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 17,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 17,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 17,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 20,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 4,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 4,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 4,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 120,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.1790501955368092,
+      "rendered": {
+        "asteroid": 112,
+        "moon": 5,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 112,
+        "moon": 5,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 76,
+        "moon": 5,
+        "planet": 0
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 120,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.1790501955368092,
+      "rendered": {
+        "asteroid": 27,
+        "moon": 1,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 27,
+        "moon": 1,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 15,
+        "moon": 1,
+        "planet": 0
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 300,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.07429376903236863,
+      "rendered": {
+        "asteroid": 129,
+        "moon": 21,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 129,
+        "moon": 21,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 54,
+        "moon": 20,
+        "planet": 0
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 300,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.07429376903236863,
+      "rendered": {
+        "asteroid": 71,
+        "moon": 9,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 71,
+        "moon": 9,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 12,
+        "moon": 9,
+        "planet": 1
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 600,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 146,
+        "moon": 24,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 146,
+        "moon": 24,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 79,
+        "moon": 23,
+        "planet": 1
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 47,
+        "moon": 12,
+        "planet": 1
+      },
+      "physical": {
+        "asteroid": 47,
+        "moon": 12,
+        "planet": 1
+      },
+      "substantial": {
+        "asteroid": 17,
+        "moon": 10,
+        "planet": 1
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 1200,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.019632463542128515,
+      "rendered": {
+        "asteroid": 232,
+        "moon": 27,
+        "planet": 6
+      },
+      "physical": {
+        "asteroid": 232,
+        "moon": 27,
+        "planet": 6
+      },
+      "substantial": {
+        "asteroid": 144,
+        "moon": 24,
+        "planet": 6
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 1200,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.019632463542128515,
+      "rendered": {
+        "asteroid": 61,
+        "moon": 14,
+        "planet": 3
+      },
+      "physical": {
+        "asteroid": 61,
+        "moon": 14,
+        "planet": 2
+      },
+      "substantial": {
+        "asteroid": 32,
+        "moon": 12,
+        "planet": 2
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 1999,
+      "position": [
+        0,
+        0
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 375,
+        "moon": 37,
+        "planet": 12
+      },
+      "physical": {
+        "asteroid": 375,
+        "moon": 37,
+        "planet": 11
+      },
+      "substantial": {
+        "asteroid": 300,
+        "moon": 23,
+        "planet": 11
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "radius": 1999,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 136,
+        "moon": 32,
+        "planet": 11
+      },
+      "physical": {
+        "asteroid": 136,
+        "moon": 32,
+        "planet": 11
+      },
+      "substantial": {
+        "asteroid": 81,
+        "moon": 16,
+        "planet": 11
+      },
+      "openingFood": 66,
+      "openingFoodMass": 7467.053563005243
+    }
+  ],
+  "zoomRows": [
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 1,
+      "rendered": {
+        "asteroid": 2,
+        "moon": 0,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 2,
+        "moon": 0,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 2,
+        "moon": 0,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.1,
+      "rendered": {
+        "asteroid": 86,
+        "moon": 14,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 86,
+        "moon": 14,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 25,
+        "moon": 14,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.03,
+      "rendered": {
+        "asteroid": 35,
+        "moon": 23,
+        "planet": 2
+      },
+      "physical": {
+        "asteroid": 35,
+        "moon": 23,
+        "planet": 2
+      },
+      "substantial": {
+        "asteroid": 17,
+        "moon": 22,
+        "planet": 2
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.01,
+      "rendered": {
+        "asteroid": 25,
+        "moon": 23,
+        "planet": 16
+      },
+      "physical": {
+        "asteroid": 25,
+        "moon": 23,
+        "planet": 16
+      },
+      "substantial": {
+        "asteroid": 17,
+        "moon": 10,
+        "planet": 16
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702
+    }
+  ],
+  "openings": [
+    {
+      "seed": 1,
+      "difficulty": 0.8,
+      "edible": 78,
+      "mass": 8807.355438641647
+    },
+    {
+      "seed": 1,
+      "difficulty": 1,
+      "edible": 71,
+      "mass": 10612.348877182461
+    },
+    {
+      "seed": 1,
+      "difficulty": 1.2,
+      "edible": 56,
+      "mass": 8512.54437383963
+    },
+    {
+      "seed": 7,
+      "difficulty": 0.8,
+      "edible": 79,
+      "mass": 7282.516449098477
+    },
+    {
+      "seed": 7,
+      "difficulty": 1,
+      "edible": 74,
+      "mass": 8742.034769441945
+    },
+    {
+      "seed": 7,
+      "difficulty": 1.2,
+      "edible": 66,
+      "mass": 9000.6172087802
+    },
+    {
+      "seed": 42,
+      "difficulty": 0.8,
+      "edible": 71,
+      "mass": 7429.634354993966
+    },
+    {
+      "seed": 42,
+      "difficulty": 1,
+      "edible": 63,
+      "mass": 7867.688013711702
+    },
+    {
+      "seed": 42,
+      "difficulty": 1.2,
+      "edible": 57,
+      "mass": 8505.790195343236
+    },
+    {
+      "seed": 71,
+      "difficulty": 0.8,
+      "edible": 75,
+      "mass": 8270.303879913068
+    },
+    {
+      "seed": 71,
+      "difficulty": 1,
+      "edible": 68,
+      "mass": 9866.637160276656
+    },
+    {
+      "seed": 71,
+      "difficulty": 1.2,
+      "edible": 62,
+      "mass": 9873.126192912123
+    },
+    {
+      "seed": 1948,
+      "difficulty": 0.8,
+      "edible": 79,
+      "mass": 7995.18693212457
+    },
+    {
+      "seed": 1948,
+      "difficulty": 1,
+      "edible": 66,
+      "mass": 7467.053563005243
+    },
+    {
+      "seed": 1948,
+      "difficulty": 1.2,
+      "edible": 60,
+      "mass": 8030.408366142392
+    },
+    {
+      "seed": 123456,
+      "difficulty": 0.8,
+      "edible": 78,
+      "mass": 8322.106511698748
+    },
+    {
+      "seed": 123456,
+      "difficulty": 1,
+      "edible": 70,
+      "mass": 8717.600512843868
+    },
+    {
+      "seed": 123456,
+      "difficulty": 1.2,
+      "edible": 65,
+      "mass": 9896.191764415864
+    }
+  ],
+  "layout": {
+    "sampleRegions": 625,
+    "sampleBodies": 4310,
+    "counts": {
+      "asteroid": 4256,
+      "moon": 53,
+      "planet": 1
+    },
+    "duplicateIds": 0,
+    "wrongOwners": 0,
+    "unsafeStarts": 0,
+    "asteroidClearanceViolations": 0,
+    "minimumLargeGap": 426.786980549148,
+    "orderIndependent": true,
+    "actualAsteroidsPerRegion": {
+      "max": 20,
+      "min": 2
+    },
+    "systems": 90,
+    "moonsPerSystem": {
+      "min": 2,
+      "max": 4
+    },
+    "minimumSystemGap": 8587.629104852847,
+    "minimumPlanetMoonGap": 1300.0372924841927
+  },
+  "maps": [
+    {
+      "seed": 42,
+      "radius": 600,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.03819122558828524,
+      "rendered": {
+        "asteroid": 49,
+        "moon": 23,
+        "planet": 0
+      },
+      "physical": {
+        "asteroid": 49,
+        "moon": 23,
+        "planet": 0
+      },
+      "substantial": {
+        "asteroid": 17,
+        "moon": 22,
+        "planet": 0
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702,
+      "bodies": [
+        {
+          "id": "42:0:31,16:moon:0",
+          "type": "moon",
+          "x": 32342.75617324497,
+          "y": 16851.615704847194,
+          "r": 210.78337549231946,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,16:asteroid:0",
+          "type": "asteroid",
+          "x": 31893.3651731126,
+          "y": 16611.0827444382,
+          "r": 12.164962879542045,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,15:asteroid:0",
+          "type": "asteroid",
+          "x": 32272.862762700766,
+          "y": 16160.375687483698,
+          "r": 10.792890674064271,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,15:asteroid:0",
+          "type": "asteroid",
+          "x": 30971.306780315936,
+          "y": 16006.524907246232,
+          "r": 9.636207441624814,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,16:asteroid:1",
+          "type": "asteroid",
+          "x": 31975.948226418346,
+          "y": 17023.10632364452,
+          "r": 9.619757265030698,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,16:asteroid:0",
+          "type": "asteroid",
+          "x": 31627.395894691348,
+          "y": 17005.164751522243,
+          "r": 9.292767312586161,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,16:asteroid:1",
+          "type": "asteroid",
+          "x": 31342.327553156763,
+          "y": 16843.01714574918,
+          "r": 6.503351579969942,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,15:asteroid:1",
+          "type": "asteroid",
+          "x": 32570.7186287418,
+          "y": 15788.134174667299,
+          "r": 6.372084208065389,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:28,12:moon:0",
+          "type": "moon",
+          "x": 29237.330607581127,
+          "y": 12709.34803522363,
+          "r": 238.34325260482728,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:37,21:moon:0",
+          "type": "moon",
+          "x": 38318.57083404455,
+          "y": 21943.332342282367,
+          "r": 230.29492023400962,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:25,10:moon:0",
+          "type": "moon",
+          "x": 26209.028263276392,
+          "y": 10839.802085396579,
+          "r": 220.8989966288209,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:36,12:moon:0",
+          "type": "moon",
+          "x": 37309.87751868188,
+          "y": 12831.79856401914,
+          "r": 213.06272238492966,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:35,14:moon:0",
+          "type": "moon",
+          "x": 36493.011409449115,
+          "y": 14720.207858200334,
+          "r": 206.7526493780315,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:35,13:moon:0",
+          "type": "moon",
+          "x": 36500.2438339209,
+          "y": 13974.43263148346,
+          "r": 198.2483822107315,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:35,22:moon:0",
+          "type": "moon",
+          "x": 36484.041833206735,
+          "y": 23140.883452983853,
+          "r": 193.73978127725422,
+          "alpha": 0.8749257609307111
+        },
+        {
+          "id": "42:0:29,18:moon:0",
+          "type": "moon",
+          "x": 30047.73775491187,
+          "y": 18802.44790676988,
+          "r": 186.56791004352272,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:26,13:moon:0",
+          "type": "moon",
+          "x": 27207.645281940695,
+          "y": 13769.597104605988,
+          "r": 184.97666515409946,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:28,17:moon:0",
+          "type": "moon",
+          "x": 29183.134104684723,
+          "y": 17946.557868605545,
+          "r": 179.163823351264,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:28,13:moon:0",
+          "type": "moon",
+          "x": 29245.687169729445,
+          "y": 13938.071014842719,
+          "r": 172.26591794751585,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:28,9:moon:0",
+          "type": "moon",
+          "x": 29343.59701793737,
+          "y": 9789.30604341053,
+          "r": 164.9522453919053,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:27,14:moon:0",
+          "type": "moon",
+          "x": 28309.500898782288,
+          "y": 15025.929304445584,
+          "r": 163.07002952322364,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:28,11:moon:0",
+          "type": "moon",
+          "x": 29067.54373579409,
+          "y": 11916.01039153638,
+          "r": 162.89052735082805,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:26,12:moon:0",
+          "type": "moon",
+          "x": 27126.22698202401,
+          "y": 12798.188909242535,
+          "r": 155.7684177160263,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:36,19:moon:0",
+          "type": "moon",
+          "x": 37310.66602846209,
+          "y": 20047.957439746486,
+          "r": 154.24270533956587,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,7:moon:0",
+          "type": "moon",
+          "x": 30144.199188372142,
+          "y": 7508.539870794729,
+          "r": 153.4831466898322,
+          "alpha": 0.0393673322072674
+        },
+        {
+          "id": "42:0:27,20:moon:0",
+          "type": "moon",
+          "x": 27982.5610892716,
+          "y": 21072.327474136586,
+          "r": 152.9277560301125,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,22:moon:0",
+          "type": "moon",
+          "x": 30127.857908771497,
+          "y": 23007.104101652232,
+          "r": 136.94193947128952,
+          "alpha": 0.934732842251979
+        },
+        {
+          "id": "42:0:33,20:moon:0",
+          "type": "moon",
+          "x": 34126.67045286711,
+          "y": 20885.879735393995,
+          "r": 132.68155192025006,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,13:moon:0",
+          "type": "moon",
+          "x": 30305.42799098185,
+          "y": 13637.998125053306,
+          "r": 124.14289662614465,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:25,9:moon:0",
+          "type": "moon",
+          "x": 25900.078549718706,
+          "y": 9876.549109420024,
+          "r": 120.2164067979902,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:34,15:asteroid:1",
+          "type": "asteroid",
+          "x": 35524.83221168071,
+          "y": 16060.309020131826,
+          "r": 23.760802783445378,
+          "alpha": 0.045028647213952486
+        },
+        {
+          "id": "42:0:28,21:asteroid:0",
+          "type": "asteroid",
+          "x": 29334.557976678014,
+          "y": 21854.682416368276,
+          "r": 23.602891835659292,
+          "alpha": 0.043358742791649287
+        },
+        {
+          "id": "42:0:35,14:asteroid:10",
+          "type": "asteroid",
+          "x": 36252.96232351288,
+          "y": 14973.387063719332,
+          "r": 23.523519821288144,
+          "alpha": 0.042530087314001916
+        },
+        {
+          "id": "42:0:34,23:asteroid:0",
+          "type": "asteroid",
+          "x": 35722.01102119312,
+          "y": 23798.3469087407,
+          "r": 23.264248989254664,
+          "alpha": 0.01742103360470078
+        },
+        {
+          "id": "42:0:25,20:asteroid:11",
+          "type": "asteroid",
+          "x": 25795.407945055515,
+          "y": 21379.361041918397,
+          "r": 22.16987426473413,
+          "alpha": 0.02952493160047665
+        },
+        {
+          "id": "42:0:35,10:asteroid:3",
+          "type": "asteroid",
+          "x": 36388.42776199058,
+          "y": 11058.362088460475,
+          "r": 21.991048479654946,
+          "alpha": 0.02796965360071964
+        },
+        {
+          "id": "42:0:31,14:asteroid:0",
+          "type": "asteroid",
+          "x": 31985.566503245384,
+          "y": 14742.978742219508,
+          "r": 21.98946810645497,
+          "alpha": 0.961225838309286
+        },
+        {
+          "id": "42:0:35,13:asteroid:12",
+          "type": "asteroid",
+          "x": 36726.38640804216,
+          "y": 13455.660847384483,
+          "r": 21.786425401424253,
+          "alpha": 0.026237719793182512
+        },
+        {
+          "id": "42:0:37,19:asteroid:12",
+          "type": "asteroid",
+          "x": 38172.205167051405,
+          "y": 19611.70052376017,
+          "r": 21.632891000513666,
+          "alpha": 0.024971874840226557
+        },
+        {
+          "id": "42:0:27,13:asteroid:12",
+          "type": "asteroid",
+          "x": 28554.808025196195,
+          "y": 13993.272010300308,
+          "r": 21.480034081971645,
+          "alpha": 0.023740487611722833
+        },
+        {
+          "id": "42:0:26,10:asteroid:1",
+          "type": "asteroid",
+          "x": 26741.509180832654,
+          "y": 10473.37971315533,
+          "r": 21.336673599491007,
+          "alpha": 0.0226119350631802
+        },
+        {
+          "id": "42:0:32,15:asteroid:1",
+          "type": "asteroid",
+          "x": 33570.849702619016,
+          "y": 15680.807006441057,
+          "r": 19.201665398376555,
+          "alpha": 0.5627726343227042
+        },
+        {
+          "id": "42:0:28,14:asteroid:8",
+          "type": "asteroid",
+          "x": 28953.230022076517,
+          "y": 15096.273827973753,
+          "r": 18.853764349660022,
+          "alpha": 0.007255744733198422
+        },
+        {
+          "id": "42:0:24,8:asteroid:0",
+          "type": "asteroid",
+          "x": 24754.273171860725,
+          "y": 8708.579054679722,
+          "r": 18.522156059249184,
+          "alpha": 0.0046073123978842
+        },
+        {
+          "id": "42:0:27,11:asteroid:10",
+          "type": "asteroid",
+          "x": 28454.731358870864,
+          "y": 11447.342796176672,
+          "r": 18.290080208252284,
+          "alpha": 0.004917017591304251
+        },
+        {
+          "id": "42:0:26,21:asteroid:11",
+          "type": "asteroid",
+          "x": 26836.986550964415,
+          "y": 21620.464937016368,
+          "r": 18.267462332903424,
+          "alpha": 0.004832364996699926
+        },
+        {
+          "id": "42:0:27,19:asteroid:1",
+          "type": "asteroid",
+          "x": 28094.781371966004,
+          "y": 20122.5572514385,
+          "r": 18.149100774447007,
+          "alpha": 0.0044010272394844965
+        },
+        {
+          "id": "42:0:35,20:asteroid:14",
+          "type": "asteroid",
+          "x": 36574.83391946927,
+          "y": 20626.70425094664,
+          "r": 18.148403806486616,
+          "alpha": 0.004398545388237896
+        },
+        {
+          "id": "42:0:26,18:asteroid:19",
+          "type": "asteroid",
+          "x": 26825.395167123526,
+          "y": 18677.017171803862,
+          "r": 18.073464314288447,
+          "alpha": 0.004135666637642516
+        },
+        {
+          "id": "42:0:28,10:asteroid:4",
+          "type": "asteroid",
+          "x": 29548.739170309156,
+          "y": 10913.429704785347,
+          "r": 16.861155281436808,
+          "alpha": 0.0009936792926227903
+        },
+        {
+          "id": "42:0:25,13:asteroid:6",
+          "type": "asteroid",
+          "x": 25913.932623557746,
+          "y": 13763.039795290679,
+          "r": 16.84018049380965,
+          "alpha": 0.0009580011746697069
+        },
+        {
+          "id": "42:0:34,11:asteroid:19",
+          "type": "asteroid",
+          "x": 35281.9089400582,
+          "y": 11908.445200372487,
+          "r": 16.552616457014764,
+          "alpha": 0.0005340234470251337
+        },
+        {
+          "id": "42:0:29,14:asteroid:4",
+          "type": "asteroid",
+          "x": 30534.132162556052,
+          "y": 14561.272204291075,
+          "r": 16.391260522274635,
+          "alpha": 0.026289446856649377
+        },
+        {
+          "id": "42:0:35,12:asteroid:17",
+          "type": "asteroid",
+          "x": 36306.15202517435,
+          "y": 13047.060049794614,
+          "r": 16.268898191819503,
+          "alpha": 0.00023554048582966067
+        },
+        {
+          "id": "42:0:30,20:asteroid:5",
+          "type": "asteroid",
+          "x": 30864.69705254212,
+          "y": 20927.4584008269,
+          "r": 16.0822908899008,
+          "alpha": 0.00010464186789289094
+        },
+        {
+          "id": "42:0:25,11:asteroid:11",
+          "type": "asteroid",
+          "x": 26157.44420260191,
+          "y": 12169.99915727973,
+          "r": 16.076343442754993,
+          "alpha": 0.0001013279569644649
+        },
+        {
+          "id": "42:0:25,12:asteroid:3",
+          "type": "asteroid",
+          "x": 25739.987480755895,
+          "y": 12778.11293638125,
+          "r": 15.874967671761539,
+          "alpha": 0.000020534186257246436
+        },
+        {
+          "id": "42:0:29,14:asteroid:2",
+          "type": "asteroid",
+          "x": 30289.589820612222,
+          "y": 14936.931289061904,
+          "r": 13.58238093655336,
+          "alpha": 0.04804723832606528
+        },
+        {
+          "id": "42:0:30,17:asteroid:1",
+          "type": "asteroid",
+          "x": 31611.47430310771,
+          "y": 17706.172357637435,
+          "r": 12.354843084030092,
+          "alpha": 0.336469898663347
+        },
+        {
+          "id": "42:0:32,15:asteroid:0",
+          "type": "asteroid",
+          "x": 33374.93421321735,
+          "y": 15648.460708420724,
+          "r": 12.031265426522204,
+          "alpha": 0.7986795288307319
+        },
+        {
+          "id": "42:0:30,14:asteroid:0",
+          "type": "asteroid",
+          "x": 30944.2997106947,
+          "y": 15126.972005661577,
+          "r": 11.63952551174843,
+          "alpha": 0.8542912724230148
+        },
+        {
+          "id": "42:0:29,14:asteroid:1",
+          "type": "asteroid",
+          "x": 30441.660753745586,
+          "y": 14634.296200402081,
+          "r": 10.170170109022543,
+          "alpha": 0.014942628417949466
+        },
+        {
+          "id": "42:0:32,14:asteroid:0",
+          "type": "asteroid",
+          "x": 33232.37026677281,
+          "y": 14765.023457098752,
+          "r": 7.7895804233321275,
+          "alpha": 0.3373148720024428
+        },
+        {
+          "id": "42:0:29,16:asteroid:1",
+          "type": "asteroid",
+          "x": 30318.263253577054,
+          "y": 17224.522006317973,
+          "r": 7.780416738192896,
+          "alpha": 0.011049113061164406
+        },
+        {
+          "id": "42:0:29,15:asteroid:0",
+          "type": "asteroid",
+          "x": 30511.652601290494,
+          "y": 16224.647516902536,
+          "r": 6.923087233101882,
+          "alpha": 0.6804552227024936
+        },
+        {
+          "id": "42:0:30,15:asteroid:1",
+          "type": "asteroid",
+          "x": 30877.587710734457,
+          "y": 16213.665545120835,
+          "r": 6.829045036299079,
+          "alpha": 0.998412583650513
+        },
+        {
+          "id": "42:0:31,17:asteroid:0",
+          "type": "asteroid",
+          "x": 32639.124463051558,
+          "y": 17629.66857855022,
+          "r": 6.647895976113574,
+          "alpha": 0.3276225812369926
+        },
+        {
+          "id": "42:0:30,14:asteroid:1",
+          "type": "asteroid",
+          "x": 31325.06729739532,
+          "y": 14897.618352718651,
+          "r": 6.566821363849832,
+          "alpha": 0.9231759955880998
+        },
+        {
+          "id": "42:0:31,14:asteroid:1",
+          "type": "asteroid",
+          "x": 32337.84983837977,
+          "y": 14813.334892366081,
+          "r": 6.320343251435929,
+          "alpha": 0.9647022611945513
+        },
+        {
+          "id": "42:0:32,16:asteroid:1",
+          "type": "asteroid",
+          "x": 33074.528385516256,
+          "y": 16952.64051233232,
+          "r": 6.2948167443320875,
+          "alpha": 0.770932450736742
+        },
+        {
+          "id": "42:0:32,14:asteroid:1",
+          "type": "asteroid",
+          "x": 33568.03216140717,
+          "y": 14943.645477671176,
+          "r": 6.130162345873859,
+          "alpha": 0.15129873530040183
+        },
+        {
+          "id": "42:0:32,16:asteroid:0",
+          "type": "asteroid",
+          "x": 33110.72901849449,
+          "y": 17073.922957453877,
+          "r": 6.012379142108467,
+          "alpha": 0.6233833943331546
+        }
+      ]
+    },
+    {
+      "seed": 42,
+      "radius": 1999,
+      "position": [
+        32000,
+        16000
+      ],
+      "zoom": 0.012028418044581947,
+      "rendered": {
+        "asteroid": 167,
+        "moon": 48,
+        "planet": 12
+      },
+      "physical": {
+        "asteroid": 167,
+        "moon": 48,
+        "planet": 11
+      },
+      "substantial": {
+        "asteroid": 87,
+        "moon": 28,
+        "planet": 11
+      },
+      "openingFood": 63,
+      "openingFoodMass": 7867.688013711702,
+      "bodies": [
+        {
+          "id": "42:0:31,16:moon:0",
+          "type": "moon",
+          "x": 32342.75617324497,
+          "y": 16851.615704847194,
+          "r": 210.78337549231946,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:33,16:asteroid:1",
+          "type": "asteroid",
+          "x": 34272.99303853139,
+          "y": 17050.906219203025,
+          "r": 22.558565036301303,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,14:asteroid:0",
+          "type": "asteroid",
+          "x": 31985.566503245384,
+          "y": 14742.978742219508,
+          "r": 21.98946810645497,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,13:asteroid:1",
+          "type": "asteroid",
+          "x": 31920.82922920212,
+          "y": 13517.749813064933,
+          "r": 20.109995031666514,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,15:asteroid:1",
+          "type": "asteroid",
+          "x": 33570.849702619016,
+          "y": 15680.807006441057,
+          "r": 19.201665398376555,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,13:asteroid:13",
+          "type": "asteroid",
+          "x": 30540.97934421897,
+          "y": 14061.724120616913,
+          "r": 18.8837279929089,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,14:asteroid:4",
+          "type": "asteroid",
+          "x": 30534.132162556052,
+          "y": 14561.272204291075,
+          "r": 16.391260522274635,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,13:asteroid:2",
+          "type": "asteroid",
+          "x": 30852.31910653785,
+          "y": 14075.091341827065,
+          "r": 14.988095533633361,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,15:asteroid:1",
+          "type": "asteroid",
+          "x": 29942.881431948394,
+          "y": 15936.904454432428,
+          "r": 14.855125708066609,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,16:asteroid:0",
+          "type": "asteroid",
+          "x": 30007.212952554226,
+          "y": 16631.904863711447,
+          "r": 13.818499043510002,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,14:asteroid:2",
+          "type": "asteroid",
+          "x": 30289.589820612222,
+          "y": 14936.931289061904,
+          "r": 13.58238093655336,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,17:asteroid:0",
+          "type": "asteroid",
+          "x": 30528.851558741182,
+          "y": 17986.54186218977,
+          "r": 13.09825157834025,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,17:asteroid:1",
+          "type": "asteroid",
+          "x": 31611.47430310771,
+          "y": 17706.172357637435,
+          "r": 12.354843084030092,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,16:asteroid:0",
+          "type": "asteroid",
+          "x": 31893.3651731126,
+          "y": 16611.0827444382,
+          "r": 12.164962879542045,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,15:asteroid:0",
+          "type": "asteroid",
+          "x": 33374.93421321735,
+          "y": 15648.460708420724,
+          "r": 12.031265426522204,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,14:asteroid:0",
+          "type": "asteroid",
+          "x": 30944.2997106947,
+          "y": 15126.972005661577,
+          "r": 11.63952551174843,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,15:asteroid:0",
+          "type": "asteroid",
+          "x": 32272.862762700766,
+          "y": 16160.375687483698,
+          "r": 10.792890674064271,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,14:asteroid:1",
+          "type": "asteroid",
+          "x": 30441.660753745586,
+          "y": 14634.296200402081,
+          "r": 10.170170109022543,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,17:asteroid:0",
+          "type": "asteroid",
+          "x": 33284.21881861985,
+          "y": 18156.07677487284,
+          "r": 9.913520840172989,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,15:asteroid:0",
+          "type": "asteroid",
+          "x": 30971.306780315936,
+          "y": 16006.524907246232,
+          "r": 9.636207441624814,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,16:asteroid:1",
+          "type": "asteroid",
+          "x": 31975.948226418346,
+          "y": 17023.10632364452,
+          "r": 9.619757265030698,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,16:asteroid:0",
+          "type": "asteroid",
+          "x": 31627.395894691348,
+          "y": 17005.164751522243,
+          "r": 9.292767312586161,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,13:asteroid:0",
+          "type": "asteroid",
+          "x": 33556.1504471153,
+          "y": 14085.940430749208,
+          "r": 9.278718587247834,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,14:asteroid:0",
+          "type": "asteroid",
+          "x": 30042.874220244586,
+          "y": 14975.918449126184,
+          "r": 9.053778424116295,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,14:asteroid:0",
+          "type": "asteroid",
+          "x": 33232.37026677281,
+          "y": 14765.023457098752,
+          "r": 7.7895804233321275,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,16:asteroid:1",
+          "type": "asteroid",
+          "x": 30318.263253577054,
+          "y": 17224.522006317973,
+          "r": 7.780416738192896,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,14:asteroid:3",
+          "type": "asteroid",
+          "x": 30116.893544826657,
+          "y": 14464.185997828841,
+          "r": 7.7373949812814855,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,17:asteroid:1",
+          "type": "asteroid",
+          "x": 32512.658169463277,
+          "y": 18043.817884530872,
+          "r": 7.590313664788828,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:28,15:asteroid:0",
+          "type": "asteroid",
+          "x": 29574.45072490722,
+          "y": 15769.933927625418,
+          "r": 7.262669300255715,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,15:asteroid:0",
+          "type": "asteroid",
+          "x": 30511.652601290494,
+          "y": 16224.647516902536,
+          "r": 6.923087233101882,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,15:asteroid:1",
+          "type": "asteroid",
+          "x": 30877.587710734457,
+          "y": 16213.665545120835,
+          "r": 6.829045036299079,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:29,13:asteroid:7",
+          "type": "asteroid",
+          "x": 30615.65532828495,
+          "y": 14166.298108957708,
+          "r": 6.699639095479535,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,17:asteroid:0",
+          "type": "asteroid",
+          "x": 32639.124463051558,
+          "y": 17629.66857855022,
+          "r": 6.647895976113574,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,14:asteroid:1",
+          "type": "asteroid",
+          "x": 31325.06729739532,
+          "y": 14897.618352718651,
+          "r": 6.566821363849832,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,16:asteroid:1",
+          "type": "asteroid",
+          "x": 31342.327553156763,
+          "y": 16843.01714574918,
+          "r": 6.503351579969942,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,13:asteroid:0",
+          "type": "asteroid",
+          "x": 32544.265417210758,
+          "y": 13750.642088446766,
+          "r": 6.431497598065893,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,15:asteroid:1",
+          "type": "asteroid",
+          "x": 32570.7186287418,
+          "y": 15788.134174667299,
+          "r": 6.372084208065389,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:31,14:asteroid:1",
+          "type": "asteroid",
+          "x": 32337.84983837977,
+          "y": 14813.334892366081,
+          "r": 6.320343251435929,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,16:asteroid:1",
+          "type": "asteroid",
+          "x": 33074.528385516256,
+          "y": 16952.64051233232,
+          "r": 6.2948167443320875,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:33,14:asteroid:1",
+          "type": "asteroid",
+          "x": 33971.889951474965,
+          "y": 14899.393288396299,
+          "r": 6.248970746937433,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:30,17:asteroid:0",
+          "type": "asteroid",
+          "x": 31512.751790829003,
+          "y": 17991.79347679019,
+          "r": 6.176787626348361,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,14:asteroid:1",
+          "type": "asteroid",
+          "x": 33568.03216140717,
+          "y": 14943.645477671176,
+          "r": 6.130162345873859,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,16:asteroid:0",
+          "type": "asteroid",
+          "x": 33110.72901849449,
+          "y": 17073.922957453877,
+          "r": 6.012379142108467,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:-34,14:planet:0",
+          "type": "planet",
+          "x": -34729.467577032745,
+          "y": 14374.115245023742,
+          "r": 1629.7941931989044,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:82,13:planet:0",
+          "type": "planet",
+          "x": 84771.65472760797,
+          "y": 14103.573065171018,
+          "r": 1617.527113482356,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:56,15:planet:0",
+          "type": "planet",
+          "x": 57424.9627331011,
+          "y": 15521.636857585981,
+          "r": 1616.0258788615465,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:56,36:planet:0",
+          "type": "planet",
+          "x": 57903.55829310417,
+          "y": 37306.19488180801,
+          "r": 1572.315561817959,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:61,-15:planet:0",
+          "type": "planet",
+          "x": 63246.64723226614,
+          "y": -15042.20983715728,
+          "r": 1521.3180114515126,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:-15,37:planet:0",
+          "type": "planet",
+          "x": -14454.659805271775,
+          "y": 38588.99206474237,
+          "r": 1409.684736840427,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:-16,14:planet:0",
+          "type": "planet",
+          "x": -15541.531629383564,
+          "y": 15279.848426913843,
+          "r": 1401.1650857515633,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:32,39:planet:0",
+          "type": "planet",
+          "x": 32915.371125491336,
+          "y": 40771.45955605619,
+          "r": 1359.9208041094244,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:8,9:planet:0",
+          "type": "planet",
+          "x": 8547.62133333832,
+          "y": 9544.74145468697,
+          "r": 1323.325264826417,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:33,-15:planet:0",
+          "type": "planet",
+          "x": 34054.74333190173,
+          "y": -14956.009568296373,
+          "r": 1295.7605957519263,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:85,39:planet:0",
+          "type": "planet",
+          "x": 87429.15838598274,
+          "y": 40090.63186965324,
+          "r": 1246.232545003295,
+          "alpha": 1
+        },
+        {
+          "id": "42:0:34,5:moon:0",
+          "type": "moon",
+          "x": 35400.995690251235,
+          "y": 5609.779208715949,
+          "r": 238.70874535292387,
+          "alpha": 0.5824422468291938
+        },
+        {
+          "id": "42:0:28,12:moon:0",
+          "type": "moon",
+          "x": 29237.330607581127,
+          "y": 12709.34803522363,
+          "r": 238.34325260482728,
+          "alpha": 0.9911132471004459
+        },
+        {
+          "id": "42:0:37,21:moon:0",
+          "type": "moon",
+          "x": 38318.57083404455,
+          "y": 21943.332342282367,
+          "r": 230.29492023400962,
+          "alpha": 0.9742262898150313
+        },
+        {
+          "id": "42:0:21,20:moon:0",
+          "type": "moon",
+          "x": 22030.486476739097,
+          "y": 21016.193857832404,
+          "r": 226.3531879708171,
+          "alpha": 0.8273396207127276
+        },
+        {
+          "id": "42:0:28,26:moon:0",
+          "type": "moon",
+          "x": 29238.639825893057,
+          "y": 27114.968143113736,
+          "r": 222.87424684502184,
+          "alpha": 0.10321466210950803
+        },
+        {
+          "id": "42:0:25,10:moon:0",
+          "type": "moon",
+          "x": 26209.028263276392,
+          "y": 10839.802085396579,
+          "r": 220.8989966288209,
+          "alpha": 0.9445827239923826
+        },
+        {
+          "id": "42:0:34,26:moon:0",
+          "type": "moon",
+          "x": 35441.53758607813,
+          "y": 27163.020795274566,
+          "r": 219.76853664033115,
+          "alpha": 0.08138740103878801
+        },
+        {
+          "id": "42:0:27,6:moon:0",
+          "type": "moon",
+          "x": 28098.428962139307,
+          "y": 6789.909592458873,
+          "r": 217.97205350361764,
+          "alpha": 0.9333484309973383
+        },
+        {
+          "id": "42:0:20,17:moon:0",
+          "type": "moon",
+          "x": 20866.48144454686,
+          "y": 17922.591473862587,
+          "r": 215.1951051224023,
+          "alpha": 0.09196734627390193
+        },
+        {
+          "id": "42:0:36,12:moon:0",
+          "type": "moon",
+          "x": 37309.87751868188,
+          "y": 12831.79856401914,
+          "r": 213.06272238492966,
+          "alpha": 0.9125389983774714
+        },
+        {
+          "id": "42:0:27,25:moon:0",
+          "type": "moon",
+          "x": 28111.782845953843,
+          "y": 26238.708525836784,
+          "r": 212.47110868804157,
+          "alpha": 0.6314974117802767
+        },
+        {
+          "id": "42:0:35,14:moon:0",
+          "type": "moon",
+          "x": 36493.011409449115,
+          "y": 14720.207858200334,
+          "r": 206.7526493780315,
+          "alpha": 0.8824259354223872
+        },
+        {
+          "id": "42:0:21,5:moon:0",
+          "type": "moon",
+          "x": 21924.282454225766,
+          "y": 5712.669962432432,
+          "r": 204.45299070328474,
+          "alpha": 0.5750318812950458
+        },
+        {
+          "id": "42:0:35,13:moon:0",
+          "type": "moon",
+          "x": 36500.2438339209,
+          "y": 13974.43263148346,
+          "r": 198.2483822107315,
+          "alpha": 0.8364768904719094
+        },
+        {
+          "id": "42:0:26,4:moon:0",
+          "type": "moon",
+          "x": 27276.29674742108,
+          "y": 4711.168063584007,
+          "r": 196.9118923600763,
+          "alpha": 0.032786196540691634
+        },
+        {
+          "id": "42:0:40,16:moon:0",
+          "type": "moon",
+          "x": 41509.45534883062,
+          "y": 16848.69698493672,
+          "r": 196.1450813524425,
+          "alpha": 0.8239357380374698
+        },
+        {
+          "id": "42:0:35,22:moon:0",
+          "type": "moon",
+          "x": 36484.041833206735,
+          "y": 23140.883452983853,
+          "r": 193.73978127725422,
+          "alpha": 0.8099037694458421
+        },
+        {
+          "id": "42:0:21,13:moon:0",
+          "type": "moon",
+          "x": 21901.613525324083,
+          "y": 13684.491846459508,
+          "r": 192.0719368290156,
+          "alpha": 0.6279727801911633
+        },
+        {
+          "id": "42:0:29,18:moon:0",
+          "type": "moon",
+          "x": 30047.73775491187,
+          "y": 18802.44790676988,
+          "r": 186.56791004352272,
+          "alpha": 0.8153795419310234
+        },
+        {
+          "id": "42:0:26,13:moon:0",
+          "type": "moon",
+          "x": 27207.645281940695,
+          "y": 13769.597104605988,
+          "r": 184.97666515409946,
+          "alpha": 0.7545061026339052
+        },
+        {
+          "id": "42:0:21,4:moon:0",
+          "type": "moon",
+          "x": 22167.951009167624,
+          "y": 4592.577539418445,
+          "r": 179.5870262850076,
+          "alpha": 0.007892734578301759
+        },
+        {
+          "id": "42:0:28,17:moon:0",
+          "type": "moon",
+          "x": 29183.134104684723,
+          "y": 17946.557868605545,
+          "r": 179.163823351264,
+          "alpha": 0.7710308248638087
+        },
+        {
+          "id": "42:0:27,4:moon:0",
+          "type": "moon",
+          "x": 28065.235122266382,
+          "y": 4769.269478769505,
+          "r": 174.63536895811558,
+          "alpha": 0.04055037097759801
+        },
+        {
+          "id": "42:0:28,13:moon:0",
+          "type": "moon",
+          "x": 29245.687169729445,
+          "y": 13938.071014842719,
+          "r": 172.26591794751585,
+          "alpha": 0.7230997247579289
+        },
+        {
+          "id": "42:0:42,19:moon:0",
+          "type": "moon",
+          "x": 43386.01502734925,
+          "y": 19934.258835657445,
+          "r": 170.51377558149397,
+          "alpha": 0.009759483515952086
+        },
+        {
+          "id": "42:0:22,17:moon:0",
+          "type": "moon",
+          "x": 23181.14367152145,
+          "y": 18038.08479078309,
+          "r": 166.7286704108119,
+          "alpha": 0.6271711260549268
+        },
+        {
+          "id": "42:0:28,9:moon:0",
+          "type": "moon",
+          "x": 29343.59701793737,
+          "y": 9789.30604341053,
+          "r": 164.9522453919053,
+          "alpha": 0.6141686593277423
+        },
+        {
+          "id": "42:0:35,5:moon:0",
+          "type": "moon",
+          "x": 36317.56244662834,
+          "y": 5647.87424330546,
+          "r": 164.48797278106213,
+          "alpha": 0.3754417672506802
+        },
+        {
+          "id": "42:0:27,14:moon:0",
+          "type": "moon",
+          "x": 28309.500898782288,
+          "y": 15025.929304445584,
+          "r": 163.07002952322364,
+          "alpha": 0.6003124263198251
+        },
+        {
+          "id": "42:0:28,11:moon:0",
+          "type": "moon",
+          "x": 29067.54373579409,
+          "y": 11916.01039153638,
+          "r": 162.89052735082805,
+          "alpha": 0.5989870810797391
+        },
+        {
+          "id": "42:0:21,19:moon:0",
+          "type": "moon",
+          "x": 21845.333275965964,
+          "y": 20134.896645254074,
+          "r": 161.88197563402355,
+          "alpha": 0.44353294283303807
+        },
+        {
+          "id": "42:0:27,5:moon:0",
+          "type": "moon",
+          "x": 28136.45467534178,
+          "y": 5735.015747751447,
+          "r": 157.77840854600072,
+          "alpha": 0.3792563014874898
+        },
+        {
+          "id": "42:0:26,12:moon:0",
+          "type": "moon",
+          "x": 27126.22698202401,
+          "y": 12798.188909242535,
+          "r": 155.7684177160263,
+          "alpha": 0.5459719863324608
+        },
+        {
+          "id": "42:0:36,19:moon:0",
+          "type": "moon",
+          "x": 37310.66602846209,
+          "y": 20047.957439746486,
+          "r": 154.24270533956587,
+          "alpha": 0.534535376758648
+        },
+        {
+          "id": "42:0:29,7:moon:0",
+          "type": "moon",
+          "x": 30144.199188372142,
+          "y": 7508.539870794729,
+          "r": 153.4831466898322,
+          "alpha": 0.5288354278649645
+        },
+        {
+          "id": "42:0:27,20:moon:0",
+          "type": "moon",
+          "x": 27982.5610892716,
+          "y": 21072.327474136586,
+          "r": 152.9277560301125,
+          "alpha": 0.5246654604614366
+        },
+        {
+          "id": "42:0:27,26:moon:0",
+          "type": "moon",
+          "x": 28081.51873086877,
+          "y": 27192.678263421825,
+          "r": 150.9960947278887,
+          "alpha": 0.037786627867394555
+        },
+        {
+          "id": "42:0:21,18:moon:0",
+          "type": "moon",
+          "x": 22192.31205446798,
+          "y": 19033.447094455627,
+          "r": 146.25806959345937,
+          "alpha": 0.4430969034293452
+        },
+        {
+          "id": "42:0:36,6:moon:0",
+          "type": "moon",
+          "x": 37492.5508936806,
+          "y": 6757.728661739704,
+          "r": 146.14976816810668,
+          "alpha": 0.47372982458943835
+        },
+        {
+          "id": "42:0:20,10:moon:0",
+          "type": "moon",
+          "x": 20823.676501228736,
+          "y": 10950.978882662614,
+          "r": 140.7881062477827,
+          "alpha": 0.03505566052917927
+        },
+        {
+          "id": "42:0:29,22:moon:0",
+          "type": "moon",
+          "x": 30127.857908771497,
+          "y": 23007.104101652232,
+          "r": 136.94193947128952,
+          "alpha": 0.4050130001911507
+        },
+        {
+          "id": "42:0:33,20:moon:0",
+          "type": "moon",
+          "x": 34126.67045286711,
+          "y": 20885.879735393995,
+          "r": 132.68155192025006,
+          "alpha": 0.3736974015989302
+        },
+        {
+          "id": "42:0:20,13:moon:0",
+          "type": "moon",
+          "x": 21188.60361666775,
+          "y": 14011.941095832877,
+          "r": 132.22382202744484,
+          "alpha": 0.10578376432942228
+        },
+        {
+          "id": "42:0:21,6:moon:0",
+          "type": "moon",
+          "x": 22113.802551856596,
+          "y": 6598.7227319560425,
+          "r": 127.6595432125032,
+          "alpha": 0.30377545682126805
+        },
+        {
+          "id": "42:0:29,13:moon:0",
+          "type": "moon",
+          "x": 30305.42799098185,
+          "y": 13637.998125053306,
+          "r": 124.14289662614465,
+          "alpha": 0.8803536570487733
+        },
+        {
+          "id": "42:0:20,4:moon:0",
+          "type": "moon",
+          "x": 21118.012131819545,
+          "y": 4600.914360073657,
+          "r": 122.07743405364454,
+          "alpha": 0.003709580255127742
+        },
+        {
+          "id": "42:0:25,9:moon:0",
+          "type": "moon",
+          "x": 25900.078549718706,
+          "y": 9876.549109420024,
+          "r": 120.2164067979902,
+          "alpha": 0.28517562398528495
+        },
+        {
+          "id": "42:0:34,15:asteroid:1",
+          "type": "asteroid",
+          "x": 35524.83221168071,
+          "y": 16060.309020131826,
+          "r": 23.760802783445378,
+          "alpha": 0.0031245882152862725
+        },
+        {
+          "id": "42:0:30,12:asteroid:2",
+          "type": "asteroid",
+          "x": 31283.170138340443,
+          "y": 12983.54952852428,
+          "r": 22.562053693394116,
+          "alpha": 0.4198991349384179
+        },
+        {
+          "id": "42:0:31,18:asteroid:1",
+          "type": "asteroid",
+          "x": 32064.33217138052,
+          "y": 19082.5587185435,
+          "r": 21.995625116665167,
+          "alpha": 0.4440968078352755
+        },
+        {
+          "id": "42:0:28,17:asteroid:0",
+          "type": "asteroid",
+          "x": 29519.336451027542,
+          "y": 18294.856333576143,
+          "r": 21.86994214313385,
+          "alpha": 0.07973395487176049
+        },
+        {
+          "id": "42:0:34,14:asteroid:9",
+          "type": "asteroid",
+          "x": 34984.178504716605,
+          "y": 14568.4915186055,
+          "r": 21.81673345429536,
+          "alpha": 0.14653606765957372
+        },
+        {
+          "id": "42:0:29,18:asteroid:11",
+          "type": "asteroid",
+          "x": 30478.36412026733,
+          "y": 18753.137208532542,
+          "r": 21.48266538432081,
+          "alpha": 0.35372841334770755
+        },
+        {
+          "id": "42:0:29,18:asteroid:4",
+          "type": "asteroid",
+          "x": 30373.991973865777,
+          "y": 18996.70320255682,
+          "r": 21.30592051208778,
+          "alpha": 0.0558262795986183
+        },
+        {
+          "id": "42:0:28,17:asteroid:3",
+          "type": "asteroid",
+          "x": 29372.403395477682,
+          "y": 18172.80701246485,
+          "r": 21.25056075287238,
+          "alpha": 0.05565751644612349
+        },
+        {
+          "id": "42:0:28,14:asteroid:15",
+          "type": "asteroid",
+          "x": 28817.652537491173,
+          "y": 14919.73857999593,
+          "r": 20.125333381837965,
+          "alpha": 0.09446118312839391
+        },
+        {
+          "id": "42:0:34,13:asteroid:13",
+          "type": "asteroid",
+          "x": 34940.0085397996,
+          "y": 14092.797844693065,
+          "r": 19.72383731086358,
+          "alpha": 0.006998325211485912
+        },
+        {
+          "id": "42:0:30,18:asteroid:1",
+          "type": "asteroid",
+          "x": 31561.119476187974,
+          "y": 18734.53669096902,
+          "r": 19.459400667211806,
+          "alpha": 0.8619281581424456
+        },
+        {
+          "id": "42:0:29,13:asteroid:18",
+          "type": "asteroid",
+          "x": 29833.57125614956,
+          "y": 13873.300497684628,
+          "r": 19.012539289835473,
+          "alpha": 0.5090558965188083
+        },
+        {
+          "id": "42:0:28,14:asteroid:8",
+          "type": "asteroid",
+          "x": 28953.230022076517,
+          "y": 15096.273827973753,
+          "r": 18.853764349660022,
+          "alpha": 0.3053009184457103
+        },
+        {
+          "id": "42:0:28,14:asteroid:11",
+          "type": "asteroid",
+          "x": 28884.7943023704,
+          "y": 14906.828405860811,
+          "r": 17.887761710246814,
+          "alpha": 0.15127453766055932
+        },
+        {
+          "id": "42:0:28,14:asteroid:16",
+          "type": "asteroid",
+          "x": 29299.366340987384,
+          "y": 14601.712476491928,
+          "r": 17.553530459253476,
+          "alpha": 0.49911739423874457
+        },
+        {
+          "id": "42:0:29,13:asteroid:2",
+          "type": "asteroid",
+          "x": 30014.709692072123,
+          "y": 13991.157200530171,
+          "r": 17.53335174013158,
+          "alpha": 0.7978826503120959
+        },
+        {
+          "id": "42:0:30,12:asteroid:10",
+          "type": "asteroid",
+          "x": 31549.301085878164,
+          "y": 12499.00131405145,
+          "r": 17.32803733538055,
+          "alpha": 0.0014194219047597434
+        },
+        {
+          "id": "42:0:28,14:asteroid:2",
+          "type": "asteroid",
+          "x": 28794.623360797763,
+          "y": 15196.24028539285,
+          "r": 17.18223560774651,
+          "alpha": 0.14709015462519015
+        },
+        {
+          "id": "42:0:29,12:asteroid:6",
+          "type": "asteroid",
+          "x": 30582.54365804419,
+          "y": 13127.333296343684,
+          "r": 17.0006104059296,
+          "alpha": 0.26884854040886697
+        },
+        {
+          "id": "42:0:34,16:asteroid:1",
+          "type": "asteroid",
+          "x": 35336.75065456331,
+          "y": 16699.742595825344,
+          "r": 16.980081123019737,
+          "alpha": 0.05281081386159292
+        },
+        {
+          "id": "42:0:30,12:asteroid:13",
+          "type": "asteroid",
+          "x": 30886.323453567922,
+          "y": 12690.295913588256,
+          "r": 16.593798726125094,
+          "alpha": 0.009750274393989566
+        },
+        {
+          "id": "42:0:30,18:asteroid:0",
+          "type": "asteroid",
+          "x": 31287.683956030756,
+          "y": 18674.524689849466,
+          "r": 16.52848585924628,
+          "alpha": 0.860714385894327
+        },
+        {
+          "id": "42:0:34,14:asteroid:8",
+          "type": "asteroid",
+          "x": 35048.12138160691,
+          "y": 14981.609083618969,
+          "r": 16.511522082479168,
+          "alpha": 0.2546257622572945
+        },
+        {
+          "id": "42:0:28,14:asteroid:9",
+          "type": "asteroid",
+          "x": 29325.10801561922,
+          "y": 14985.108096033335,
+          "r": 16.17256142514423,
+          "alpha": 0.7505198898286043
+        },
+        {
+          "id": "42:0:30,13:asteroid:3",
+          "type": "asteroid",
+          "x": 31113.538765933365,
+          "y": 13514.554806187749,
+          "r": 16.08293022232529,
+          "alpha": 0.9668910432200485
+        },
+        {
+          "id": "42:0:29,12:asteroid:7",
+          "type": "asteroid",
+          "x": 30460.83468447998,
+          "y": 12910.059153608978,
+          "r": 15.960907424037163,
+          "alpha": 0.02617946806531468
+        },
+        {
+          "id": "42:0:30,12:asteroid:4",
+          "type": "asteroid",
+          "x": 31586.14434512332,
+          "y": 12904.298635926098,
+          "r": 15.906506709532596,
+          "alpha": 0.3775783081077221
+        },
+        {
+          "id": "42:0:28,14:asteroid:3",
+          "type": "asteroid",
+          "x": 28846.95918500796,
+          "y": 14584.314236834645,
+          "r": 15.857410755246123,
+          "alpha": 0.02401852014023742
+        },
+        {
+          "id": "42:0:33,18:asteroid:1",
+          "type": "asteroid",
+          "x": 33970.68391367048,
+          "y": 18731.361056782305,
+          "r": 15.59996416594833,
+          "alpha": 0.08398959928869043
+        },
+        {
+          "id": "42:0:28,17:asteroid:5",
+          "type": "asteroid",
+          "x": 29510.095230817795,
+          "y": 18061.36233540252,
+          "r": 15.47041092751314,
+          "alpha": 0.22942495819068742
+        },
+        {
+          "id": "42:0:30,12:asteroid:11",
+          "type": "asteroid",
+          "x": 31259.59941584617,
+          "y": 12607.854190088809,
+          "r": 15.36835511140988,
+          "alpha": 0.016671041378825358
+        },
+        {
+          "id": "42:0:29,12:asteroid:12",
+          "type": "asteroid",
+          "x": 29993.86241453886,
+          "y": 13164.023152500391,
+          "r": 15.265784632702323,
+          "alpha": 0.015891804582118918
+        },
+        {
+          "id": "42:0:28,17:asteroid:7",
+          "type": "asteroid",
+          "x": 29417.013215102255,
+          "y": 17756.396856110543,
+          "r": 14.764287351623826,
+          "alpha": 0.3754708483645701
+        },
+        {
+          "id": "42:0:30,12:asteroid:9",
+          "type": "asteroid",
+          "x": 30828.487909920514,
+          "y": 12929.625570982695,
+          "r": 14.457063160144868,
+          "alpha": 0.16420736320941265
+        },
+        {
+          "id": "42:0:31,12:asteroid:1",
+          "type": "asteroid",
+          "x": 32586.288439191878,
+          "y": 12545.873822011054,
+          "r": 14.419431350074799,
+          "alpha": 0.005844882219904646
+        },
+        {
+          "id": "42:0:28,14:asteroid:12",
+          "type": "asteroid",
+          "x": 29339.06755740568,
+          "y": 15109.216726902872,
+          "r": 14.40935347404148,
+          "alpha": 0.8158092733202525
+        },
+        {
+          "id": "42:0:29,18:asteroid:18",
+          "type": "asteroid",
+          "x": 30296.493601948023,
+          "y": 18681.852807905525,
+          "r": 14.106545515868204,
+          "alpha": 0.2999769787397142
+        },
+        {
+          "id": "42:0:28,16:asteroid:0",
+          "type": "asteroid",
+          "x": 29449.624582529068,
+          "y": 16864.8001223132,
+          "r": 14.001668188131667,
+          "alpha": 0.9280770893787217
+        },
+        {
+          "id": "42:0:33,13:asteroid:8",
+          "type": "asteroid",
+          "x": 34410.955473121256,
+          "y": 13969.270026907325,
+          "r": 13.741737043361242,
+          "alpha": 0.3336931780765007
+        },
+        {
+          "id": "42:0:29,13:asteroid:6",
+          "type": "asteroid",
+          "x": 30283.679953463376,
+          "y": 13839.307204641402,
+          "r": 13.684078031160588,
+          "alpha": 0.8664562274562425
+        },
+        {
+          "id": "42:0:30,18:asteroid:2",
+          "type": "asteroid",
+          "x": 30938.607357364148,
+          "y": 19184.057015504688,
+          "r": 13.653131931343527,
+          "alpha": 0.09259743852155322
+        },
+        {
+          "id": "42:0:33,17:asteroid:0",
+          "type": "asteroid",
+          "x": 34563.32275843248,
+          "y": 17741.502664797008,
+          "r": 13.590881146947332,
+          "alpha": 0.40911369752032856
+        },
+        {
+          "id": "42:0:28,14:asteroid:14",
+          "type": "asteroid",
+          "x": 29590.48194345832,
+          "y": 14884.344616752118,
+          "r": 13.577730720393715,
+          "alpha": 0.9552896742773895
+        },
+        {
+          "id": "42:0:34,14:asteroid:7",
+          "type": "asteroid",
+          "x": 35112.039564762264,
+          "y": 14920.810272969306,
+          "r": 13.294792012576043,
+          "alpha": 0.15454604416602746
+        },
+        {
+          "id": "42:0:29,13:asteroid:17",
+          "type": "asteroid",
+          "x": 30086.583679322153,
+          "y": 13724.307631563395,
+          "r": 13.229948828067494,
+          "alpha": 0.591857874615948
+        },
+        {
+          "id": "42:0:32,18:asteroid:1",
+          "type": "asteroid",
+          "x": 32939.0682240054,
+          "y": 18897.808734305203,
+          "r": 13.137802453278956,
+          "alpha": 0.48530798023074895
+        },
+        {
+          "id": "42:0:28,13:asteroid:17",
+          "type": "asteroid",
+          "x": 29446.861147563905,
+          "y": 13630.74245923385,
+          "r": 13.130805130303816,
+          "alpha": 0.011591343827452527
+        },
+        {
+          "id": "42:0:29,18:asteroid:14",
+          "type": "asteroid",
+          "x": 30575.103013776243,
+          "y": 18610.410469133407,
+          "r": 13.010989070688208,
+          "alpha": 0.5904169468019642
+        },
+        {
+          "id": "42:0:32,12:asteroid:0",
+          "type": "asteroid",
+          "x": 33061.898471042514,
+          "y": 12995.569639179856,
+          "r": 12.942651669183526,
+          "alpha": 0.2857197275252662
+        },
+        {
+          "id": "42:0:29,18:asteroid:5",
+          "type": "asteroid",
+          "x": 30376.822827473283,
+          "y": 18741.52978214249,
+          "r": 12.876585973952892,
+          "alpha": 0.28637492793347485
+        },
+        {
+          "id": "42:0:30,12:asteroid:6",
+          "type": "asteroid",
+          "x": 30866.060295131058,
+          "y": 13198.993635687977,
+          "r": 12.83096239607988,
+          "alpha": 0.5205042655257208
+        },
+        {
+          "id": "42:0:29,13:asteroid:5",
+          "type": "asteroid",
+          "x": 30081.608049042523,
+          "y": 13611.469616767019,
+          "r": 12.659533791512303,
+          "alpha": 0.45919322894369985
+        },
+        {
+          "id": "42:0:33,17:asteroid:1",
+          "type": "asteroid",
+          "x": 34124.045583393425,
+          "y": 17742.53777219355,
+          "r": 12.394843389889564,
+          "alpha": 0.8774115137105832
+        },
+        {
+          "id": "42:0:28,14:asteroid:7",
+          "type": "asteroid",
+          "x": 29074.988548401743,
+          "y": 14792.157715205103,
+          "r": 12.362295918012451,
+          "alpha": 0.3147332314646488
+        },
+        {
+          "id": "42:0:33,13:asteroid:5",
+          "type": "asteroid",
+          "x": 33931.55360939726,
+          "y": 13787.571166656911,
+          "r": 11.588504051856594,
+          "alpha": 0.6412756613258843
+        },
+        {
+          "id": "42:0:28,14:asteroid:5",
+          "type": "asteroid",
+          "x": 29015.48491383344,
+          "y": 15071.618427842855,
+          "r": 11.205991709117182,
+          "alpha": 0.36757865112985266
+        },
+        {
+          "id": "42:0:29,18:asteroid:19",
+          "type": "asteroid",
+          "x": 30597.35883430764,
+          "y": 18697.20362109691,
+          "r": 11.11371160860324,
+          "alpha": 0.4912069475536829
+        },
+        {
+          "id": "42:0:29,18:asteroid:2",
+          "type": "asteroid",
+          "x": 30305.186215955764,
+          "y": 19089.851139415056,
+          "r": 11.032249578717153,
+          "alpha": 0.0013514678845087946
+        },
+        {
+          "id": "42:0:29,17:asteroid:1",
+          "type": "asteroid",
+          "x": 30134.026459351182,
+          "y": 18256.019201241434,
+          "r": 10.940939364621258,
+          "alpha": 0.6533801812505218
+        },
+        {
+          "id": "42:0:28,16:asteroid:1",
+          "type": "asteroid",
+          "x": 29416.455471910536,
+          "y": 16951.384367566556,
+          "r": 10.895807433978584,
+          "alpha": 0.8700324206323274
+        },
+        {
+          "id": "42:0:33,13:asteroid:7",
+          "type": "asteroid",
+          "x": 34020.45872660354,
+          "y": 13846.650037027895,
+          "r": 10.816283567268442,
+          "alpha": 0.6176514483903239
+        },
+        {
+          "id": "42:0:27,16:asteroid:1",
+          "type": "asteroid",
+          "x": 28528.892067216337,
+          "y": 16671.26791689545,
+          "r": 10.732650602741815,
+          "alpha": 0.00030225949606610403
+        },
+        {
+          "id": "42:0:29,13:asteroid:8",
+          "type": "asteroid",
+          "x": 30542.78910977766,
+          "y": 13442.987233735621,
+          "r": 10.471486127515227,
+          "alpha": 0.6310197593512361
+        },
+        {
+          "id": "42:0:34,14:asteroid:1",
+          "type": "asteroid",
+          "x": 35050.115395858884,
+          "y": 14690.765184048563,
+          "r": 10.238400753055423,
+          "alpha": 0.12463542113738701
+        },
+        {
+          "id": "42:0:34,14:asteroid:5",
+          "type": "asteroid",
+          "x": 35330.33371051401,
+          "y": 14892.869503960013,
+          "r": 9.978573650910443,
+          "alpha": 0.0035105279914832144
+        },
+        {
+          "id": "42:0:33,15:asteroid:0",
+          "type": "asteroid",
+          "x": 34566.12724905461,
+          "y": 16000.006401676685,
+          "r": 9.883118833839037,
+          "alpha": 0.9943159074408391
+        },
+        {
+          "id": "42:0:28,13:asteroid:15",
+          "type": "asteroid",
+          "x": 29425.159246489406,
+          "y": 13588.27627691254,
+          "r": 9.529086790451622,
+          "alpha": 0.0007807563289282671
+        },
+        {
+          "id": "42:0:29,13:asteroid:10",
+          "type": "asteroid",
+          "x": 30186.69716092199,
+          "y": 14206.485596492887,
+          "r": 9.473285711100628,
+          "alpha": 0.9974803624721618
+        },
+        {
+          "id": "42:0:29,13:asteroid:0",
+          "type": "asteroid",
+          "x": 29835.56331673637,
+          "y": 14088.22833187133,
+          "r": 9.417413757249534,
+          "alpha": 0.7061456351292286
+        },
+        {
+          "id": "42:0:33,13:asteroid:4",
+          "type": "asteroid",
+          "x": 34154.52670760825,
+          "y": 13561.276503089815,
+          "r": 9.287050084083157,
+          "alpha": 0.19537162063112867
+        },
+        {
+          "id": "42:0:30,13:asteroid:0",
+          "type": "asteroid",
+          "x": 31273.153091341257,
+          "y": 13421.278803661466,
+          "r": 9.146352375942126,
+          "alpha": 0.9351169380773691
+        },
+        {
+          "id": "42:0:28,17:asteroid:8",
+          "type": "asteroid",
+          "x": 29211.30225564167,
+          "y": 17579.023115485907,
+          "r": 9.12662917346243,
+          "alpha": 0.25677052652110677
+        },
+        {
+          "id": "42:0:29,13:asteroid:11",
+          "type": "asteroid",
+          "x": 30088.432838506997,
+          "y": 14214.02010731399,
+          "r": 9.122740295979423,
+          "alpha": 0.9753078714308892
+        },
+        {
+          "id": "42:0:33,13:asteroid:2",
+          "type": "asteroid",
+          "x": 34680.51209662855,
+          "y": 13831.343937177211,
+          "r": 9.029379316856057,
+          "alpha": 0.02476924461957275
+        },
+        {
+          "id": "42:0:33,12:asteroid:2",
+          "type": "asteroid",
+          "x": 34062.4860377945,
+          "y": 13169.871959585696,
+          "r": 9.019369896218787,
+          "alpha": 0.004930793116675769
+        },
+        {
+          "id": "42:0:28,14:asteroid:10",
+          "type": "asteroid",
+          "x": 29580.814835071564,
+          "y": 14759.828637670726,
+          "r": 8.959103171139835,
+          "alpha": 0.9017598378024996
+        },
+        {
+          "id": "42:0:28,13:asteroid:9",
+          "type": "asteroid",
+          "x": 29026.130704164505,
+          "y": 14132.500041268766,
+          "r": 8.957642468243177,
+          "alpha": 0.0029293692091064694
+        },
+        {
+          "id": "42:0:34,14:asteroid:0",
+          "type": "asteroid",
+          "x": 35155.81145429984,
+          "y": 15082.224361542612,
+          "r": 8.890605727631762,
+          "alpha": 0.1577174909961142
+        },
+        {
+          "id": "42:0:29,18:asteroid:1",
+          "type": "asteroid",
+          "x": 30303.636722180992,
+          "y": 18756.85681734979,
+          "r": 8.734260676060579,
+          "alpha": 0.2154767588356764
+        },
+        {
+          "id": "42:0:28,13:asteroid:13",
+          "type": "asteroid",
+          "x": 29079.197547208518,
+          "y": 14146.198352772743,
+          "r": 8.561874615557386,
+          "alpha": 0.019140868256843024
+        },
+        {
+          "id": "42:0:33,16:asteroid:0",
+          "type": "asteroid",
+          "x": 34707.29056101665,
+          "y": 17062.250887602568,
+          "r": 8.319998192434323,
+          "alpha": 0.6768344832872353
+        },
+        {
+          "id": "42:0:28,15:asteroid:1",
+          "type": "asteroid",
+          "x": 29195.830997843295,
+          "y": 15951.411534678191,
+          "r": 8.301937500921325,
+          "alpha": 0.8103929811392584
+        },
+        {
+          "id": "42:0:33,13:asteroid:0",
+          "type": "asteroid",
+          "x": 34073.7589863725,
+          "y": 14052.666569061577,
+          "r": 8.167947225916672,
+          "alpha": 0.7610105169668583
+        },
+        {
+          "id": "42:0:33,13:asteroid:1",
+          "type": "asteroid",
+          "x": 34370.63736816496,
+          "y": 13651.688193093985,
+          "r": 8.054932512761265,
+          "alpha": 0.10533152794471623
+        },
+        {
+          "id": "42:0:33,14:asteroid:0",
+          "type": "asteroid",
+          "x": 34067.66136407852,
+          "y": 14489.20010631159,
+          "r": 7.91423368079763,
+          "alpha": 0.9951155093144368
+        },
+        {
+          "id": "42:0:29,13:asteroid:12",
+          "type": "asteroid",
+          "x": 29957.702399671078,
+          "y": 13547.41125742346,
+          "r": 7.838511954792352,
+          "alpha": 0.27227724851435464
+        },
+        {
+          "id": "42:0:29,12:asteroid:9",
+          "type": "asteroid",
+          "x": 30239.0530875735,
+          "y": 13038.290568001568,
+          "r": 7.769678467919618,
+          "alpha": 0.025268389104677214
+        },
+        {
+          "id": "42:0:32,12:asteroid:1",
+          "type": "asteroid",
+          "x": 33255.41713645682,
+          "y": 13182.133938092738,
+          "r": 7.5815753542138316,
+          "alpha": 0.42076964247075255
+        },
+        {
+          "id": "42:0:34,14:asteroid:3",
+          "type": "asteroid",
+          "x": 35288.543260183185,
+          "y": 15173.113160595298,
+          "r": 7.540147263261192,
+          "alpha": 0.05928747577898519
+        },
+        {
+          "id": "42:0:30,12:asteroid:7",
+          "type": "asteroid",
+          "x": 31004.058269783854,
+          "y": 12999.951326750219,
+          "r": 7.406894761308067,
+          "alpha": 0.31279130458553406
+        },
+        {
+          "id": "42:0:29,12:asteroid:17",
+          "type": "asteroid",
+          "x": 30483.09025023505,
+          "y": 13168.355709657073,
+          "r": 7.343633294563834,
+          "alpha": 0.24461298799915154
+        },
+        {
+          "id": "42:0:29,13:asteroid:1",
+          "type": "asteroid",
+          "x": 29974.432357788086,
+          "y": 13497.371728084981,
+          "r": 7.319082276635784,
+          "alpha": 0.23531562608500767
+        },
+        {
+          "id": "42:0:32,18:asteroid:0",
+          "type": "asteroid",
+          "x": 33075.869124572724,
+          "y": 18674.40957863629,
+          "r": 7.276474547560419,
+          "alpha": 0.7101894679641786
+        },
+        {
+          "id": "42:0:32,13:asteroid:1",
+          "type": "asteroid",
+          "x": 33591.31383664161,
+          "y": 14007.000003721565,
+          "r": 7.241757665761041,
+          "alpha": 0.9971105948061613
+        },
+        {
+          "id": "42:0:28,14:asteroid:4",
+          "type": "asteroid",
+          "x": 29521.79300666973,
+          "y": 14688.857736371458,
+          "r": 7.162786364252856,
+          "alpha": 0.8101266661450834
+        },
+        {
+          "id": "42:0:28,14:asteroid:13",
+          "type": "asteroid",
+          "x": 28921.247163344175,
+          "y": 14635.59964920953,
+          "r": 7.134669992306284,
+          "alpha": 0.07730225968212667
+        },
+        {
+          "id": "42:0:29,13:asteroid:4",
+          "type": "asteroid",
+          "x": 30502.275604486465,
+          "y": 13703.100924097002,
+          "r": 7.080713204120917,
+          "alpha": 0.8773955090013508
+        },
+        {
+          "id": "42:0:28,14:asteroid:6",
+          "type": "asteroid",
+          "x": 29454.338046066463,
+          "y": 15099.571760687977,
+          "r": 7.0238352310534085,
+          "alpha": 0.9162960395827715
+        },
+        {
+          "id": "42:0:34,14:asteroid:4",
+          "type": "asteroid",
+          "x": 35177.912067599595,
+          "y": 14665.415780607611,
+          "r": 7.0056059781175755,
+          "alpha": 0.024338869816222797
+        },
+        {
+          "id": "42:0:29,13:asteroid:15",
+          "type": "asteroid",
+          "x": 30475.66694329679,
+          "y": 13901.064008295536,
+          "r": 6.763932700833598,
+          "alpha": 0.9841748249944915
+        },
+        {
+          "id": "42:0:30,12:asteroid:12",
+          "type": "asteroid",
+          "x": 31019.05481886491,
+          "y": 12621.867863390595,
+          "r": 6.589305899786791,
+          "alpha": 0.0016108648094754763
+        },
+        {
+          "id": "42:0:28,14:asteroid:0",
+          "type": "asteroid",
+          "x": 29292.50141522661,
+          "y": 14892.227192696184,
+          "r": 6.566493270269098,
+          "alpha": 0.650543770908911
+        },
+        {
+          "id": "42:0:31,12:asteroid:0",
+          "type": "asteroid",
+          "x": 32034.76510863751,
+          "y": 12675.046312525868,
+          "r": 6.5591184443162085,
+          "alpha": 0.11512621329777017
+        },
+        {
+          "id": "42:0:29,13:asteroid:14",
+          "type": "asteroid",
+          "x": 30553.555841729045,
+          "y": 13831.710796091706,
+          "r": 6.522692903249486,
+          "alpha": 0.9786760716936519
+        },
+        {
+          "id": "42:0:30,12:asteroid:5",
+          "type": "asteroid",
+          "x": 31052.20292421058,
+          "y": 13070.972290173173,
+          "r": 6.521501802357226,
+          "alpha": 0.42838805142956093
+        },
+        {
+          "id": "42:0:33,13:asteroid:6",
+          "type": "asteroid",
+          "x": 34320.258932352066,
+          "y": 13658.221733506769,
+          "r": 6.462866505732057,
+          "alpha": 0.14420159850051173
+        },
+        {
+          "id": "42:0:29,18:asteroid:9",
+          "type": "asteroid",
+          "x": 30446.248382095248,
+          "y": 18944.456304024905,
+          "r": 6.451499509875247,
+          "alpha": 0.11102330630344859
+        },
+        {
+          "id": "42:0:34,14:asteroid:6",
+          "type": "asteroid",
+          "x": 34977.75835439935,
+          "y": 14455.837779100984,
+          "r": 6.4377645407414805,
+          "alpha": 0.08796742712646988
+        },
+        {
+          "id": "42:0:29,13:asteroid:19",
+          "type": "asteroid",
+          "x": 30235.278876446187,
+          "y": 14025.383213985711,
+          "r": 6.425652902938704,
+          "alpha": 0.9551888466949473
+        },
+        {
+          "id": "42:0:28,14:asteroid:1",
+          "type": "asteroid",
+          "x": 28898.362446539104,
+          "y": 15027.291898027062,
+          "r": 6.288096632464079,
+          "alpha": 0.19601837260568256
+        },
+        {
+          "id": "42:0:28,17:asteroid:1",
+          "type": "asteroid",
+          "x": 29310.928627319634,
+          "y": 18289.333337537944,
+          "r": 6.267443491579991,
+          "alpha": 0.0002660682453342611
+        },
+        {
+          "id": "42:0:28,13:asteroid:11",
+          "type": "asteroid",
+          "x": 29460.03827694431,
+          "y": 13805.448472827673,
+          "r": 6.242701176814079,
+          "alpha": 0.08572520200469169
+        },
+        {
+          "id": "42:0:30,13:asteroid:1",
+          "type": "asteroid",
+          "x": 31176.997509472072,
+          "y": 13417.383319191635,
+          "r": 6.24238506076598,
+          "alpha": 0.9065179587054732
+        },
+        {
+          "id": "42:0:29,13:asteroid:9",
+          "type": "asteroid",
+          "x": 29813.20410565287,
+          "y": 14124.36400296539,
+          "r": 6.237917841898667,
+          "alpha": 0.7110952225880858
+        },
+        {
+          "id": "42:0:29,18:asteroid:12",
+          "type": "asteroid",
+          "x": 30419.980946585536,
+          "y": 18803.159009732306,
+          "r": 6.199175882358553,
+          "alpha": 0.23623996046474227
+        },
+        {
+          "id": "42:0:29,13:asteroid:16",
+          "type": "asteroid",
+          "x": 30110.649762045592,
+          "y": 13490.996096938848,
+          "r": 6.075642980742557,
+          "alpha": 0.33891217243851834
+        },
+        {
+          "id": "42:0:32,17:asteroid:1",
+          "type": "asteroid",
+          "x": 33618.23475025594,
+          "y": 18127.0290437527,
+          "r": 6.062569870016228,
+          "alpha": 0.9377745517564227
+        },
+        {
+          "id": "42:0:28,14:asteroid:17",
+          "type": "asteroid",
+          "x": 29108.388692703098,
+          "y": 15236.014709442854,
+          "r": 6.0540583313816745,
+          "alpha": 0.5558820647402313
+        },
+        {
+          "id": "42:0:31,18:asteroid:0",
+          "type": "asteroid",
+          "x": 32576.41050899774,
+          "y": 19339.91160472855,
+          "r": 6.047576187446758,
+          "alpha": 0.059383456264264445
+        },
+        {
+          "id": "42:0:28,13:asteroid:18",
+          "type": "asteroid",
+          "x": 29031.92746221274,
+          "y": 14187.94793876633,
+          "r": 6.041547110936342,
+          "alpha": 0.01107452883530391
+        },
+        {
+          "id": "42:0:29,13:asteroid:3",
+          "type": "asteroid",
+          "x": 29873.88012342155,
+          "y": 13843.801044143736,
+          "r": 6.036373331616193,
+          "alpha": 0.5013256694755783
+        },
+        {
+          "id": "42:0:29,18:asteroid:3",
+          "type": "asteroid",
+          "x": 30469.98651562631,
+          "y": 18611.285235203803,
+          "r": 6.028633335049241,
+          "alpha": 0.5036920215301476
+        },
+        {
+          "id": "42:0:33,15:asteroid:1",
+          "type": "asteroid",
+          "x": 34623.507141672075,
+          "y": 16023.979234743863,
+          "r": 6.025133581938536,
+          "alpha": 0.9697495137150821
+        },
+        {
+          "id": "42:0:28,13:asteroid:7",
+          "type": "asteroid",
+          "x": 29511.25785348192,
+          "y": 14231.863957230002,
+          "r": 6.014763529618383,
+          "alpha": 0.4650506174443553
+        },
+        {
+          "id": "42:0:30,12:asteroid:0",
+          "type": "asteroid",
+          "x": 31209.68987069279,
+          "y": 12707.829133402556,
+          "r": 6.01300450217785,
+          "alpha": 0.0620339738340453
+        }
+      ]
+    }
+  ]
+}

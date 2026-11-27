@@ -21,7 +21,7 @@
     <button onclick="replay('start')">Safe start</button>
     <button onclick="replay('evolved')">Growth &amp; evolution</button>
     <button onclick="replay('pass')">Gravity pass</button>
-    <button onclick="replay('death')">Impact</button>
+    <button onclick="replay('fragmented')">Impact survival</button>
     <button onclick="approach()">Fast approach</button>
     <button onclick="approach(true)">Pull behind HUD</button>
     <button onclick="paused = !paused; if (!paused) stoppingPoint = 'death'">Pause / resume</button>
@@ -38,6 +38,8 @@
   <script src="../js/stage-visuals.js"></script>
   <script src="../js/gravity.js"></script>
   <script src="../js/world.js"></script>
+  <script src="../js/collisions.js"></script>
+  <script src="../js/ecology.js"></script>
   <script src="../js/hazards.js"></script>
   <script src="../js/movement-visuals.js"></script>
   <script src="../js/spawn-and-init.js"></script>
@@ -62,7 +64,8 @@
       if (paused && gameState === 'playing') { background(30); drawGame(); } else realDraw();
       if (automatic && (gameState === 'gameover' ||
         (stoppingPoint === 'evolved' && route.evolved) ||
-        (stoppingPoint === 'pass' && route.phase === 'impact'))) paused = true;
+        (stoppingPoint === 'pass' && route.phase === 'impact') ||
+        (stoppingPoint === 'fragmented' && route.fragmented))) paused = true;
       document.getElementById('status').textContent =
         (paused ? 'Paused' : 'Running') + ' · ' + gameState + ' · tick ' + runTick +
         ' · ' + player.type + ' · score ' + score + ' · zoom ' + camera.zoom.toFixed(3) +

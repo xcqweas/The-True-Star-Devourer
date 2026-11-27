@@ -1,5 +1,5 @@
 function isGravitySource(body) {
-  return GRAVITY_ENABLED && body !== player && body.id !== "player" &&
+  return GRAVITY_ENABLED && !isLooseDebris(body) && body !== player && body.id !== "player" &&
     body.gravitySource !== false && !!GRAVITY_SOURCE_PROFILES[body.type]?.enabled;
 }
 
@@ -9,6 +9,7 @@ function gravityInfluenceRadius(source) {
 }
 
 function isGravityResponder(body) {
+  if (isLooseDebris(body)) return runTick >= body.gravityAfterTick;
   return body === player || (!isGravitySource(body) && body.type === "asteroid" && body.r <= GRAVITY_MAX_RESPONDER_RADIUS);
 }
 
@@ -29,6 +30,11 @@ function gravityFromSource(body, source) {
   const fade = 1 - smoothGravityWeight((distance / radius - GRAVITY_FADE_START) / (1 - GRAVITY_FADE_START));
   const profile = GRAVITY_SOURCE_PROFILES[source.type];
   let scale = GRAVITY_G * source.mass * profile.strength * fade / (squared + softening * softening) ** 1.5;
+  if (body.surfaceRelease?.sourceId === source.id) {
+    // A surface bounce needs time to clear this field. Other sources still pull.
+    scale *= smoothGravityWeight((runTick - body.surfaceRelease.untilTick) /
+      Math.max(1, ECOLOGY_SURFACE_GRAVITY_FADE_TICKS));
+  }
   const acceleration = scale * distance;
   if (acceleration > GRAVITY_MAX_SOURCE_ACCELERATION) scale *= GRAVITY_MAX_SOURCE_ACCELERATION / acceleration;
   return { ax: dx * scale, ay: dy * scale };
@@ -55,7 +61,7 @@ function gravityAcceleration(body, sources) {
 
 function updateGravitySources(initialize = false) {
   if (!GRAVITY_ENABLED) { world.gravitySources.clear(); return []; }
-  // Bound the receiver rectangle in physical space, including small active bodies.
+  // The player/local pool uses this cache. Background actors query their own fields.
   let minX = player.x, maxX = player.x, minY = player.y, maxY = player.y;
   for (const body of star_objects) {
     if (!isGravityResponder(body)) continue;
@@ -99,6 +105,11 @@ function accumulateBodyForces(body, sources) {
   body.gravityAy = gravity.ay;
   body.ax = gravity.ax;
   body.ay = gravity.ay;
+  if (isLooseDebris(body)) {
+    const drag = -Math.expm1(-DEBRIS_DRAG * SIMULATION_STEP_SECONDS) / SIMULATION_STEP_SECONDS;
+    body.ax -= body.vx * drag;
+    body.ay -= body.vy * drag;
+  }
   if (!isGravityResponder(body) || body === player) return;
   const nextVx = body.vx + body.ax * SIMULATION_STEP_SECONDS;
   const nextVy = body.vy + body.ay * SIMULATION_STEP_SECONDS;

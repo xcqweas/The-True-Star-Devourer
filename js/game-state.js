@@ -9,6 +9,10 @@ let difficultyFactor = 1;
 let selectedDifficultyIndex = 1;
 let currentFormIndex = 0;
 let evolutionNotification = null;
+let impactNotification = null;
+const steering = { armed:false, centerTicks:0, engaged:false, rampTicks:0 };
+
+function gameplayNotification() { return impactNotification ?? evolutionNotification; }
 
 let runSeed;
 let world;

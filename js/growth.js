@@ -33,7 +33,11 @@ function updatePlayerEvolution() {
 }
 
 function absorbBodyMass(body) {
-  setBodyMass(player, player.mass + body.mass * CONSUMPTION_MASS_GAIN / difficultyFactor);
+  // Collision material, including a shed core now small enough to eat, always
+  // transfers its actual mass. Difficulty bonuses remain on untouched food.
+  const gain = isLooseDebris(body) || body.hasFragmented ? body.mass :
+    body.mass * CONSUMPTION_MASS_GAIN / difficultyFactor;
+  setBodyMass(player, player.mass + gain);
   updatePlayerEvolution();
 }
 

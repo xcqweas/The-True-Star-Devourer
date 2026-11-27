@@ -15,6 +15,9 @@ function startGame(options = getRunOptions()) {
   simulationAccumulator = 0;
   currentFormIndex = 0;
   evolutionNotification = null;
+  impactNotification = null;
+  steering.armed = steering.engaged = false;
+  steering.centerTicks = steering.rampTicks = 0;
   const form = EVOLUTION_FORMS[0];
   player = createBody("player", form.type, 0, 0, radiusForMass(form.mass), seededRandom(hashSeed(runSeed, "player", 0)));
   setBodyMass(player, form.mass);
@@ -27,4 +30,5 @@ function startGame(options = getRunOptions()) {
   resetMovementVisuals();
   syncWorldRegions();
   updateGravitySources(true);
+  syncEcology(true);
 }

@@ -1,11 +1,13 @@
-function getThreatVisual(enemyRadius, playerRadius) {
-  // Match the collision rule exactly: equal radius is lethal.
+function getThreatVisual(enemyRadius, playerRadius, body = null) {
+  if (body && isLooseDebris(body)) return { ring: [255, 228, 145, 240], glow: [225, 170, 65, 45] };
+  if (body && canFragmentTogether(player, body)) return { ring: [255, 179, 85, 240], glow: [240, 145, 50, 45] };
+  // Below the shedding threshold, equal radius is lethal.
   if (enemyRadius < playerRadius) return { ring: [92, 244, 176, 235], glow: [64, 205, 150, 45] };
   return { ring: [255, 112, 110, 240], glow: [230, 70, 80, 50] };
 }
 
 function drawThreatRing(body) {
-  const visual = getThreatVisual(body.r, player.r);
+  const visual = getThreatVisual(body.r, player.r, body);
   const pulse = map(sin(frameCount * 0.08 + body.x * 0.01), -1, 1, 0.96, 1.06);
   push();
   noStroke();
@@ -32,26 +34,39 @@ function runGame() {
 }
 
 function bodiesCollidedDuringStep(playerStartX, playerStartY, bodyStartX, bodyStartY, body) {
-  // Sweep relative world-space motion so neither body can tunnel between ticks.
-  const startX = playerStartX - bodyStartX;
-  const startY = playerStartY - bodyStartY;
-  const moveX = (player.x - playerStartX) - (body.x - bodyStartX);
-  const moveY = (player.y - playerStartY) - (body.y - bodyStartY);
-  const lengthSquared = moveX * moveX + moveY * moveY;
-  const t = lengthSquared === 0 ? 0 : constrain(-(startX * moveX + startY * moveY) / lengthSquared, 0, 1);
-  const closestX = startX + moveX * t;
-  const closestY = startY + moveY * t;
-  const radius = player.r + body.r;
-  return closestX * closestX + closestY * closestY < radius * radius;
+  return sweptBodyContact(player, { x: playerStartX, y: playerStartY },
+    body, { x: bodyStartX, y: bodyStartY }) !== null;
+}
+
+function playerMovementLimits(radius = player.r) {
+  // Use settled zoom rather than current rendered zoom: easing/FPS cannot alter physics.
+  const scale = constrain(PLAYER_SCREEN_TRAVEL_SPEED /
+    (PLAYER_MAX_SPEED * targetZoomForRadius(radius)), 1, PLAYER_MAX_MOVEMENT_SCALE);
+  return { scale, speed:PLAYER_MAX_SPEED * scale, acceleration:PLAYER_MAX_ACCELERATION * scale };
+}
+
+function steeringActivation(distance, rawStrength) {
+  if (!steering.armed) {
+    steering.centerTicks = distance <= STEERING_ARM_RADIUS ? steering.centerTicks + 1 : 0;
+    if (steering.centerTicks >= STEERING_ARM_HOLD_TICKS) steering.armed = true;
+    return 0; // the arming tick remains neutral
+  }
+  if (rawStrength > 0) steering.engaged = true;
+  if (steering.engaged) steering.rampTicks = Math.min(STEERING_ACTIVATION_TICKS, steering.rampTicks + 1);
+  const t = constrain(steering.rampTicks / Math.max(1, STEERING_ACTIVATION_TICKS), 0, 1);
+  return t * t * (3 - 2 * t);
 }
 
 function accumulatePlayerForces(gravity = { ax: 0, ay: 0 }) {
   const dx = mouseX - width / 2;
   const dy = mouseY - height / 2;
   const distance = Math.hypot(dx, dy);
-  const strength = constrain((distance - STEERING_DEAD_ZONE) /
+  const rawStrength = constrain((distance - STEERING_DEAD_ZONE) /
     (STEERING_MAX_DISTANCE - STEERING_DEAD_ZONE), 0, 1);
-  const targetSpeed = PLAYER_MAX_SPEED * strength;
+  const strength = rawStrength * steeringActivation(distance, rawStrength);
+  const limits = playerMovementLimits();
+  player.impactSpeedScale = limits.scale;
+  const targetSpeed = limits.speed * strength;
   const targetVx = distance === 0 ? 0 : dx / distance * targetSpeed;
   const targetVy = distance === 0 ? 0 : dy / distance * targetSpeed;
   // Steering controls a drive component, rather than damping away gravity drift.
@@ -60,16 +75,16 @@ function accumulatePlayerForces(gravity = { ax: 0, ay: 0 }) {
   let ax = (targetVx - driveVx) * PLAYER_STEERING_RESPONSE;
   let ay = (targetVy - driveVy) * PLAYER_STEERING_RESPONSE;
   const acceleration = Math.hypot(ax, ay);
-  if (acceleration > PLAYER_MAX_ACCELERATION) {
-    ax *= PLAYER_MAX_ACCELERATION / acceleration;
-    ay *= PLAYER_MAX_ACCELERATION / acceleration;
+  if (acceleration > limits.acceleration) {
+    ax *= limits.acceleration / acceleration;
+    ay *= limits.acceleration / acceleration;
   }
   let nextDriveX = driveVx + ax * SIMULATION_STEP_SECONDS;
   let nextDriveY = driveVy + ay * SIMULATION_STEP_SECONDS;
   const driveSpeed = Math.hypot(nextDriveX, nextDriveY);
-  if (driveSpeed > PLAYER_MAX_SPEED) {
-    nextDriveX *= PLAYER_MAX_SPEED / driveSpeed;
-    nextDriveY *= PLAYER_MAX_SPEED / driveSpeed;
+  if (driveSpeed > limits.speed) {
+    nextDriveX *= limits.speed / driveSpeed;
+    nextDriveY *= limits.speed / driveSpeed;
   }
   if (strength === 0 && driveSpeed < 0.01) nextDriveX = nextDriveY = 0;
 
@@ -95,42 +110,29 @@ function accumulatePlayerForces(gravity = { ax: 0, ay: 0 }) {
 function updateGame() {
   runTick++;
   if (evolutionNotification && runTick >= evolutionNotification.expiresAtTick) evolutionNotification = null;
+  if (impactNotification && runTick >= impactNotification.expiresAtTick) impactNotification = null;
+  updateCollisionContacts();
   syncWorldRegions();
+  const ambient = syncEcology();
   const sources = updateGravitySources();
-  const bodiesById = new Map(star_objects.map(body => [body.id, body]));
+  const bodiesById = new Map(ambient.map(body => [body.id, body]));
+  for (const body of star_objects) bodiesById.set(body.id, body);
   for (const { body } of sources) bodiesById.set(body.id, body);
   const tickBodies = [...bodiesById.values()];
-  const playerStartX = player.x;
-  const playerStartY = player.y;
   const starts = new Map(tickBodies.map(body => [body.id, { x: body.x, y: body.y }]));
+  starts.set(player.id, { x: player.x, y: player.y });
 
   // Every acceleration reads the same tick-start positions. Integrate each body
   // once, including relevant offscreen prescribed sources, before collision tests.
   accumulatePlayerForces(gravityAcceleration(player, sources));
-  for (const body of tickBodies) accumulateBodyForces(body, sources);
+  for (const body of tickBodies) accumulateBodyForces(body, ecologyGravity(body));
   integrateBody(player);
   for (const body of tickBodies) integrateBody(body);
+  world.ecologyStats.simulated = tickBodies.length + 1;
+  resolveEcologyContacts([player, ...tickBodies], starts);
   followPlayer();
   recordMovementTrail();
-
-  for (let i = tickBodies.length - 1; i >= 0; i--) {
-    const body = tickBodies[i];
-    const start = starts.get(body.id);
-
-    if (bodiesCollidedDuringStep(playerStartX, playerStartY, start.x, start.y, body)) {
-      if (player.r > body.r) {
-        absorbBodyMass(body);
-        consumeWorldBody(body);
-        const activeIndex = star_objects.indexOf(body);
-        if (activeIndex >= 0) star_objects.splice(activeIndex, 1);
-        score++;
-        if (gameState === "ending") return;
-      } else {
-        gameState = "gameover";
-        return;
-      }
-    }
-  }
+  star_objects = star_objects.filter(body=>!world.consumedIds.has(body.id));
 }
 
 function drawGame() {
@@ -141,16 +143,25 @@ function drawGame() {
   scale(camera.zoom);
   translate(-camera.x, -camera.y);
   drawMovementTrail();
+  drawMergeGhosts();
   let detailedCount = 0;
   for (const body of getRenderableBodies()) {
+    push();
+    drawingContext.globalAlpha *= backgroundBodyOpacity(body);
     const detailed = body.r * camera.zoom >= TINY_BODY_SCREEN_RADIUS && detailedCount < MAX_DETAILED_BODIES;
     if (detailed) {
       detailedCount++;
-      if (showThreatAssist) drawThreatRing(body);
+      if (showThreatAssist && !isLooseDebris(body)) drawThreatRing(body);
     }
     drawBody(body, false, detailed);
+    pop();
   }
   drawBody(player, true);
+  if (hasImpactGrace(player)) {
+    push(); noFill(); stroke(210, 245, 255, 200); strokeWeight(1.5 / camera.zoom);
+    circle(player.x, player.y, player.r * 2 + 12 / camera.zoom);
+    pop();
+  }
   pop();
 
   // Draw last, outside the camera transform, so large planets cannot cover HUD.
@@ -177,14 +188,22 @@ function drawGame() {
   rect(x, barY, barWidth, 6);
   fill(100, 190, 240);
   rect(x, barY, barWidth * progress.fraction, 6);
-  if (evolutionNotification) {
+  const notice = gameplayNotification();
+  if (notice) {
     const box = indicatorObstacles()[1];
     fill(8, 14, 25, 220); rect(box.x, box.y, box.w, box.h, 6);
     fill(255, 235, 170);
-    textSize(20);
+    textSize(impactNotification ? 14 : 20);
     textAlign(CENTER, CENTER);
-    text(evolutionNotification.text, width / 2, height * 0.8);
+    text(notice.text, width / 2, height * 0.8);
   }
   pop();
   drawHazardIndicators();
+  if (!steering.armed) {
+    push(); noFill(); stroke(130,200,245,180); strokeWeight(1);
+    circle(width/2,height/2,STEERING_ARM_RADIUS*2);
+    noStroke();fill(220,237,250);textSize(12);textAlign(CENTER,CENTER);
+    text('Center cursor to steer',width/2,height/2+Math.min(48,height*0.24));
+    pop();
+  }
 }

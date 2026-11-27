@@ -22,6 +22,7 @@ function loadGravityScenario(name) {
   const scenario = scenarios[name];
   if (!scenario) throw new Error("Unknown gravity scenario: " + name);
   startGame({ seed: 721, fixture: true });
+  steering.armed = steering.engaged = true; steering.rampTicks = STEERING_ACTIVATION_TICKS;
   world.regions.clear();
   world.gravitySources.clear();
   [player.x, player.y, player.vx, player.vy] = scenario.player;

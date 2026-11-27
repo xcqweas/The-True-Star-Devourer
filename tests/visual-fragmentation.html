@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>Fragmentation encounter checks</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.12/lib/p5.js"></script>
+  <style>
+    #checks {position:fixed;right:12px;bottom:12px;max-width:360px;padding:12px;
+      background:#091320ed;color:#dbe8f5;border:1px solid #35506a;border-radius:8px;font:12px/1.5 sans-serif}
+    button{margin:2px;padding:5px}output{display:block;color:#a5d9ed}p{margin:6px 0}summary{cursor:pointer}
+  </style>
+</head>
+<body>
+  <aside id="checks"><details open><summary>Fragmentation checks · test page</summary>
+    <p>Three shared Node/browser encounters. Gold angular shards are collectible at any mass.
+      Amber rims mean shedding; the white player ring gives a brief escape window.</p>
+    <button onclick="replay('smaller')">Smaller target</button>
+    <button onclick="replay('comparable')">Comparable target</button>
+    <button onclick="replay('larger')">Larger target</button><br>
+    <button onclick="stopAt='impact'; paused=false; automatic=true">Run to impact</button>
+    <button onclick="stopAt='escape'; paused=false; automatic=true">Escape</button>
+    <button onclick="stopAt='done'; paused=false; automatic=true">Collect debris</button>
+    <button onclick="departing=true;stopAt='departed';paused=false;automatic=true">Move away</button>
+    <button onclick="paused=!paused">Pause / resume</button>
+    <button onclick="automatic=false;paused=false">Mouse control</button>
+    <output id="status"></output>
+  </details></aside>
+  <script src="../js/constants.js"></script>
+  <script src="../js/game-state.js"></script>
+  <script src="../js/camera.js"></script>
+  <script src="../js/growth.js"></script>
+  <script src="../js/bodies.js"></script>
+  <script src="../js/stage-visuals.js"></script>
+  <script src="../js/gravity.js"></script>
+  <script src="../js/world.js"></script>
+  <script src="../js/collisions.js"></script>
+  <script src="../js/ecology.js"></script>
+  <script src="../js/hazards.js"></script>
+  <script src="../js/movement-visuals.js"></script>
+  <script src="../js/spawn-and-init.js"></script>
+  <script src="../js/screens.js"></script>
+  <script src="../js/gameplay.js"></script>
+  <script src="../js/p5-entry.js"></script>
+  <script src="fragmentation-scenarios.js"></script>
+  <script>
+    let route, paused=true, automatic=true, stopAt='impact', departing=false;
+    const realSetup=setup,realUpdate=updateGame,realDraw=draw;
+    setup=()=>{realSetup();replay('larger');};
+    updateGame=()=>{
+      if(automatic) {
+        if(departing && ['done','depart','departed'].includes(route.phase)) steerFragmentationDeparture(route);
+        else steerFragmentationScenario(route);
+      }
+      realUpdate();observeFragmentationScenario(route);
+      if(automatic && ((stopAt==='impact' && route.impactTick!==null) ||
+        (stopAt==='escape' && route.phase==='collect') ||
+        (stopAt==='done' && route.phase==='done') || route.phase==='departed')) paused=true;
+    };
+    draw=()=>{
+      if(paused && gameState==='playing'){background(30);updateCamera(deltaTime/1000);drawGame();}
+      else realDraw();
+      const bodies=[...world.regions.values()].flatMap(b=>[...b.values()]);
+      const mass=player.mass+bodies.reduce((sum,b)=>sum+b.mass,0);
+      document.getElementById('status').textContent=(paused?'Paused':'Running')+' · '+route.name+' · '+route.phase+
+        ' · tick '+runTick+' · impacts '+world.nextImpactId+' · player '+formatMass(player.mass)+
+        ' / start '+formatMass(route.initialMass)+' · target loot '+formatMass(route.collectedTargetMass)+
+        ' · shards '+bodies.filter(isLooseDebris).length+' · mass error '+(mass-route.totalMass).toExponential(1)+
+        ' · target speed '+Math.hypot(route.target.vx,route.target.vy).toFixed(1)+
+        ' · target simulated '+world.ecology.has(route.target.id);
+    };
+    function replay(name){route=loadFragmentationScenario(name);paused=true;automatic=true;departing=false;stopAt='impact';}
+  </script>
+</body>
+</html>

@@ -67,13 +67,15 @@ function drawRockyMoonBody(body, baseColor, detailColor) {
 
 function makeShapeForType(type, radius, rng) {
   if (type === "moon") return makeAsteroidShape(radius, 24, 0.08, rng);
-  if (type === "planet") return [];
+  if (type === "planet" || type === "debris") return [];
   return makeAsteroidShape(radius, 9 + Math.floor(rng() * 5), 0.28, rng);
 }
 
 function createBody(id, type, x, y, r, rng, vx = 0, vy = 0) {
   return {
     id, type, x, y, r, vx, vy,
+    kind: type === "debris" ? "debris" : "intact", originId: id, ownerId: id === "player" ? "player" : null,
+    impactSpeedScale: 1, // controllers can calibrate impacts to their movement scale
     mass: massForRadius(r),
     ax: 0, ay: 0, gravityAx: 0, gravityAy: 0,
     gravitySource: id !== "player" && !!GRAVITY_SOURCE_PROFILES[type]?.enabled,
@@ -101,13 +103,15 @@ function drawPlanetBody(body, baseColor, detailColor) {
 
 function drawBody(body, isPlayer = false, detailed = true) {
   const { base: baseColor, detail: detailColor } = getBodyPalette(body, isPlayer);
-  if (!detailed) {
+  if (isLooseDebris(body)) {
+    drawDebrisBody(body, baseColor, detailColor, detailed);
+  } else if (!detailed) {
     // A display-only LOD. No radius, shape, mass, identity, or motion is modified.
     push();
     fill(baseColor);
     noStroke();
     if (!isPlayer) {
-      stroke(...getThreatVisual(body.r, player.r).ring);
+      stroke(...getThreatVisual(body.r, player.r, body).ring);
       strokeWeight(0.8 / camera.zoom);
     }
     circle(body.x, body.y, Math.max(body.r * 2, 2.5 / camera.zoom));
@@ -119,13 +123,30 @@ function drawBody(body, isPlayer = false, detailed = true) {
   } else {
     drawAsteroidBody(body, baseColor, detailColor);
   }
-  if (!isPlayer && detailed) {
-    // A thin, fixed-pixel rim communicates the exact eating rule on every difficulty.
+  if (!isPlayer && detailed && !isLooseDebris(body)) {
+    // A thin, fixed-pixel rim communicates food, shedding, or lethal contact.
     // Easy modes add the existing larger glow and pulsing ring.
     push(); noFill();
-    stroke(...getThreatVisual(body.r, player.r).ring);
+    stroke(...getThreatVisual(body.r, player.r, body).ring);
     strokeWeight(1 / camera.zoom);
     circle(body.x, body.y, body.r * 2);
     pop();
   }
+}
+
+function drawDebrisBody(body, baseColor, detailColor, detailed) {
+  // Angular gold shards at every mass/LOD, never a moon/planet silhouette.
+  const r = Math.max(debrisRenderRadius(body), 2 / camera.zoom);
+  push(); translate(body.x, body.y); rotate(body.angle);
+  fill(baseColor); stroke(255, 228, 145); strokeWeight(1 / camera.zoom);
+  beginShape();
+  vertex(-r, -r * 0.35); vertex(r * 0.15, -r);
+  vertex(r, -r * 0.1); vertex(r * 0.4, r * 0.8); vertex(-r * 0.65, r * 0.55);
+  endShape(CLOSE);
+  if (detailed) {
+    stroke(detailColor); strokeWeight(1.3 / camera.zoom);
+    line(-r * 0.6, -r * 0.15, r * 0.35, r * 0.25);
+    line(r * 0.35, r * 0.25, r * 0.2, -r * 0.6);
+  }
+  pop();
 }

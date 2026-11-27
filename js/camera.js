@@ -11,15 +11,22 @@ function targetZoomForRadius(radius) {
 function resetCamera() {
   followPlayer();
   camera.zoom = camera.targetZoom = targetZoomForRadius(player.r);
+  camera.backgroundZoom = camera.zoom;
 }
 
 function updateCamera(elapsedSeconds) {
   followPlayer();
   camera.targetZoom = targetZoomForRadius(player.r);
   const elapsed = constrain(elapsedSeconds, 0, MAX_FRAME_DELTA_MS / 1000);
+  // Mass/radius change immediately; zoom follows over a short interval. Easing
+  // in log space gives the same relative response at every physical scale.
+  const current = constrain(camera.zoom, CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
   const blend = -Math.expm1(-CAMERA_ZOOM_RESPONSE * elapsed);
-  camera.zoom = constrain(camera.zoom + (camera.targetZoom - camera.zoom) * blend,
-    CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM);
+  camera.zoom = Math.exp(Math.log(current) +
+    (Math.log(camera.targetZoom) - Math.log(current)) * blend);
+  const densityBlend = -Math.expm1(-BACKGROUND_DENSITY_RESPONSE * elapsed);
+  camera.backgroundZoom = Math.exp(Math.log(camera.backgroundZoom) +
+    (Math.log(camera.zoom) - Math.log(camera.backgroundZoom)) * densityBlend);
 }
 
 function worldToScreen(x, y) {

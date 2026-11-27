@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>Collision ecosystem checks</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.12/lib/p5.js"></script>
+  <style>
+    #checks{position:fixed;right:12px;bottom:12px;max-width:390px;padding:12px;background:#091320ed;
+      color:#dbe8f5;border:1px solid #35506a;border-radius:8px;font:12px/1.5 sans-serif}
+    button{margin:2px;padding:5px}output{display:block;color:#a5d9ed}summary{cursor:pointer}
+  </style>
+</head>
+<body>
+  <aside id="checks"><details open><summary>Ecosystem checks · test page</summary>
+    <p>Shared Node/browser scenes. Leave the player at the origin to watch the unattended region.
+      Entry moves the observer closer after ten seconds. Competition has two neutral collectors.</p>
+    <button onclick="replay('unattended')">Unattended region</button>
+    <button onclick="replay('entry')">Distant entry</button>
+    <button onclick="replay('competition')">Competing collectors</button>
+    <button onclick="paused=!paused">Pause / resume</button>
+    <output id="status"></output>
+  </details></aside>
+  <script src="../js/constants.js"></script>
+  <script src="../js/game-state.js"></script>
+  <script src="../js/camera.js"></script>
+  <script src="../js/growth.js"></script>
+  <script src="../js/bodies.js"></script>
+  <script src="../js/stage-visuals.js"></script>
+  <script src="../js/gravity.js"></script>
+  <script src="../js/world.js"></script>
+  <script src="../js/collisions.js"></script>
+  <script src="../js/ecology.js"></script>
+  <script src="../js/hazards.js"></script>
+  <script src="../js/movement-visuals.js"></script>
+  <script src="../js/spawn-and-init.js"></script>
+  <script src="../js/screens.js"></script>
+  <script src="../js/gameplay.js"></script>
+  <script src="../js/p5-entry.js"></script>
+  <script src="ecology-scenarios.js"></script>
+  <script>
+    let scene,paused=false,peakDebris=0;
+    const realSetup=setup;
+    setup=()=>{realSetup();replay('unattended');};
+    draw=()=>{
+      background(30);
+      if(!paused&&gameState==='playing') {
+        simulationAccumulator+=constrain(deltaTime,0,MAX_FRAME_DELTA_MS);
+        while(simulationAccumulator>=SIMULATION_STEP_MS&&gameState==='playing') {
+          simulationAccumulator-=SIMULATION_STEP_MS;
+          if(scene.name==='entry'&&runTick===600){player.x=2800;followPlayer();}
+          updateGame();
+        }
+      }
+      camera.zoom=camera.backgroundZoom=0.1;followPlayer();drawGame();
+      const bodies=[...world.regions.values()].flatMap(bucket=>[...bucket.values()]);
+      const mass=player.mass+bodies.reduce((sum,b)=>sum+b.mass,0);peakDebris=Math.max(peakDebris,world.debris.size);
+      document.getElementById('status').textContent=(paused?'Paused':'Running')+' · '+scene.name+' · '+(runTick/60).toFixed(1)+'s'+
+        ' · impacts '+world.nextImpactId+' · debris '+world.debris.size+' / peak '+peakDebris+
+        ' · simulated '+world.ecologyStats.simulated+' · pair checks '+world.ecologyStats.pairChecks+
+        ' · mass error '+(mass-scene.totalMass).toExponential(1);
+    };
+    function replay(name){scene=loadEcologyScenario(name);paused=false;peakDebris=world.debris.size;}
+  </script>
+</body>
+</html>

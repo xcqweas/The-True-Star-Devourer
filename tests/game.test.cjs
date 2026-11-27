@@ -12,6 +12,9 @@ const scripts = [...fs.readFileSync(path.join(root, "index.html"), "utf8")
   }));
 scripts.push({ filename: "tests/gravity-scenarios.js", source: fs.readFileSync(path.join(root, "tests/gravity-scenarios.js"), "utf8") });
 scripts.push({ filename: "tests/integration-scenario.js", source: fs.readFileSync(path.join(root, "tests/integration-scenario.js"), "utf8") });
+scripts.push({ filename: "tests/fragmentation-scenarios.js", source: fs.readFileSync(path.join(root, "tests/fragmentation-scenarios.js"), "utf8") });
+scripts.push({ filename: "tests/ecology-scenarios.js", source: fs.readFileSync(path.join(root, "tests/ecology-scenarios.js"), "utf8") });
+scripts.push({ filename: "tests/pacing-scenario.js", source: fs.readFileSync(path.join(root, "tests/pacing-scenario.js"), "utf8") });
 
 function createGame(width = 1600, height = 900, seed = 123456789, constants = {}) {
   const context = {
@@ -20,6 +23,7 @@ function createGame(width = 1600, height = 900, seed = 123456789, constants = {}
     frameCount: 0, deltaTime: 1000 / 60, key: "", keyCode: 0,
     LEFT_ARROW: 37, RIGHT_ARROW: 39, TWO_PI: Math.PI * 2, PI: Math.PI,
     LEFT: "left", TOP: "top", CENTER: "center", CORNER: "corner", CLOSE: "close", texts: [],
+    drawingContext: { globalAlpha: 1 },
     min: Math.min, max: Math.max, abs: Math.abs, round: Math.round,
     floor: Math.floor, sin: Math.sin, cos: Math.cos,
     dist: (x1, y1, x2, y2) => Math.hypot(x2 - x1, y2 - y1),
@@ -42,6 +46,9 @@ function createGame(width = 1600, height = 900, seed = 123456789, constants = {}
     context[name] = () => {};
   }
   context.text = value => context.texts.push(value);
+  const alphaStack = [];
+  context.push = () => alphaStack.push(context.drawingContext.globalAlpha);
+  context.pop = () => { context.drawingContext.globalAlpha = alphaStack.pop(); };
   context.createCanvas = context.resizeCanvas = (w, h) => {
     context.width = w;
     context.height = h;
@@ -72,6 +79,8 @@ function createGame(width = 1600, height = 900, seed = 123456789, constants = {}
 
 function beginGame(game, isolated = false) {
   game.run(`setup(); key = " "; keyPressed();
+    // Existing physics fixtures represent already-armed gameplay. Entry tests use the real transition below.
+    steering.armed = steering.engaged = true; steering.rampTicks = STEERING_ACTIVATION_TICKS;
     let testBodySerial = 0;
     function body(x, y, r, vx = 0, vy = 0, type = "asteroid") {
       const object = createBody("test:" + testBodySerial++, type, x, y, r, seededRandom(42), vx, vy);
@@ -99,6 +108,184 @@ function beginGame(game, isolated = false) {
 function close(actual, expected, tolerance = 1e-8) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 }
+
+function startNeutralFixture(game) {
+  game.run(`setup(); mouseX = width + 1000; mouseY = -1000; key = ' '; keyPressed();
+    world = createWorld(42, 0, 1, true); world.regions.clear(); syncWorldRegions();`);
+}
+
+test("far-cursor start stays neutral, requires a deliberate center hold and resets on restart", () => {
+  const game = createGame(); startNeutralFixture(game);
+  game.frames(120);
+  assert.deepEqual(game.json("[player.x,player.y,player.vx,player.vy,steering.armed,mouseX,mouseY]"),
+    [0,0,0,0,false,2600,-1000]);
+  assert.ok(game.context.texts.includes('Center cursor to steer'));
+  game.run(`mouseX=width/2;mouseY=height/2;`);
+  game.frames(game.run('STEERING_ARM_HOLD_TICKS') - 1);
+  assert.equal(game.run('steering.armed'),false);
+  game.run('mouseX=0;'); game.frames(1);
+  assert.equal(game.run('steering.centerTicks'),0);
+  game.run('mouseX=width/2;'); game.frames(game.run('STEERING_ARM_HOLD_TICKS'));
+  assert.ok(game.run('steering.armed && !steering.engaged && player.vx===0 && player.vy===0'));
+  game.run("gameState='gameover';mouseX=10000;keyPressed();");
+  assert.ok(game.run('!steering.armed && !steering.engaged && steering.rampTicks===0 && player.vx===0'));
+});
+
+test("first steering ramps smoothly even after waiting centered, then normal braking remains responsive", t => {
+  const game = createGame(); startNeutralFixture(game);
+  game.run('mouseX=width/2;mouseY=height/2;'); game.frames(120);
+  assert.equal(game.run('steering.rampTicks'),0);
+  game.run('mouseX=width/2+STEERING_MAX_DISTANCE;const speeds=[];');
+  for (let i=0;i<60;i++) {game.frames(1);game.run('speeds.push(player.vx);');}
+  const speeds=game.json('speeds');
+  assert.ok(speeds[0]>0 && speeds[0]<5 && speeds[5]<100);
+  assert.ok(speeds.every((v,i)=>!i || v>=speeds[i-1]));
+  assert.ok(speeds[23]>800 && speeds[41]>1050);
+  game.run('mouseX=width/2;');game.frames(30);
+  assert.ok(game.run('player.vx<2.3 && steering.rampTicks===STEERING_ACTIVATION_TICKS'));
+  t.diagnostic(`First drive: ${speeds[0].toFixed(2)}, at 0.4 s ${speeds[23].toFixed(1)}, at 0.7 s ${speeds[41].toFixed(1)} world units/s.`);
+});
+
+test("entry hold and steering activation match at 30, 60 and 144 render FPS", () => {
+  const snapshots=[];
+  for (const fps of [30,60,144]) {
+    const game=createGame();startNeutralFixture(game);
+    game.frames(fps,fps);
+    game.run('mouseX=width/2;mouseY=height/2;');game.frames(fps/2,fps);
+    game.run('mouseX=width/2+STEERING_MAX_DISTANCE;');game.frames(fps,fps);
+    snapshots.push(game.json('({player,steering,runTick})'));
+  }
+  assert.deepEqual(snapshots[0],snapshots[1]);assert.deepEqual(snapshots[1],snapshots[2]);
+});
+
+test("grown movement maintains apparent travel and matching acceleration/braking across Moon sizes", t => {
+  const game=createGame();beginGame(game,true);
+  game.run('let accelerated,startX,travel;');
+  const rows=[];
+  for (const radius of [20,60,120,240,600,1000,1200,2000]) {
+    game.run(`setBodyMass(player,massForRadius(${radius}));player.x=player.y=0;
+      player.vx=player.vy=player.gravityVx=player.gravityVy=0;
+      mouseX=width/2+STEERING_MAX_DISTANCE;mouseY=height/2;
+      for(let i=0;i<30;i++)movePlayer();accelerated=player.vx/playerMovementLimits().speed;
+      for(let i=0;i<90;i++)movePlayer();startX=player.x;
+      for(let i=0;i<60;i++)movePlayer();
+      travel=(player.x-startX)*targetZoomForRadius(player.r);
+      mouseX=width/2;for(let i=0;i<30;i++)movePlayer();`);
+    const row=game.json(`({radius:player.r,travel,speed:playerMovementLimits().speed,
+      accelerated,braked:player.vx/playerMovementLimits().speed,scale:playerMovementLimits().scale})`);
+    assert.ok(row.accelerated>0.995 && row.braked<0.0022);
+    if(radius>=120 && radius<=1200)close(row.travel,300,1e-7);
+    assert.ok(row.travel>=259 && row.scale<=20);
+    rows.push(row);
+  }
+  t.diagnostic(JSON.stringify(rows));
+});
+
+test("grown movement responds continuously to growth and ignores rendered zoom", () => {
+  const snapshots=[];
+  for(const zoom of [0.01,0.4,1]) {
+    const game=createGame();beginGame(game,true);
+    game.run(`camera.zoom=${zoom};setBodyMass(player,massForRadius(600));
+      mouseX=width/2+STEERING_MAX_DISTANCE;mouseY=height/2;
+      const before=player.vx;movePlayer();const first=player.vx;
+      for(let i=0;i<59;i++)movePlayer();`);
+    assert.ok(game.run('first>0 && first<=playerMovementLimits().acceleration*SIMULATION_STEP_SECONDS && first<playerMovementLimits().speed*0.1'));
+    snapshots.push(game.json('[player.x,player.y,player.vx,player.vy]'));
+    assert.ok(game.run(`Math.abs(playerMovementLimits(119.999).speed-playerMovementLimits(120.001).speed)<0.1`));
+  }
+  assert.deepEqual(snapshots[0],snapshots[1]);assert.deepEqual(snapshots[1],snapshots[2]);
+});
+
+test("scaled movement preserves proportional impact severity and keeps slow/glancing hits gentler", t => {
+  const game=createGame();beginGame(game,true);
+  game.run('const results=[];');
+  for(const radius of [120,240,600,1000]) {
+    game.run(`setBodyMass(player,massForRadius(${radius}));
+      player.impactSpeedScale=playerMovementLimits().scale;
+      const peer${radius}=body(0,0,player.r,0,0,'moon');
+      results.push({radius:player.r,full:impactMassLoss(player,peer${radius},playerMovementLimits().speed),
+        gentle:impactMassLoss(player,peer${radius},playerMovementLimits().speed*0.25)});`);
+  }
+  const rows=game.json('results');
+  for(const row of rows) {
+    close(row.full.a,rows[0].full.a);close(row.gentle.a,rows[0].gentle.a);
+    assert.ok(row.gentle.a<row.full.a && row.full.a<0.55);
+  }
+  game.run(`const npcA=body(0,0,240),npcB=body(0,0,240);`);
+  close(game.run('impactMassLoss(npcA,npcB,900).a'),rows[0].full.a);
+  t.diagnostic(`Comparable head-on loss ${(rows[0].full.a*100).toFixed(2)}%; quarter-drive loss ${(rows[0].gentle.a*100).toFixed(2)}% at every sampled Moon size.`);
+});
+
+test("procedural food tuning extends asteroid meals independently of movement or Moon thresholds", t => {
+  const rows=[];
+  for(const spread of [48,18]) {
+    const game=createGame(1600,900,1,{ASTEROID_RADIUS_SPREAD:spread});beginGame(game,true);
+    game.run(`difficultyFactor=1;
+      const sample=[];
+      for(let y=-8;y<=8;y++)for(let x=-8;x<=8;x++)
+        sample.push(...generateRegion(42,x,y,0,1).filter(b=>b.type==='asteroid'));
+      const mean=sample.reduce((n,b)=>n+b.mass,0)/sample.length;
+      let meals=0,skipped=0;
+      for(const food of sample) {
+        if(food.r>=player.r){skipped++;continue;}
+        food.x=player.x;food.y=player.y;food.gravitySource=false;
+        storeWorldBody(world,food);handlePlayerContact(food,resolveBodyImpact(player,food,null));meals++;
+        if(player.mass>=EVOLUTION_FORMS[1].mass)break;
+      }`);
+    rows.push(game.json(`({spread:${spread},mean,meals,skipped,mass:player.mass,type:player.type,
+      count:sample.length,threshold:EVOLUTION_FORMS[1].mass,speed:PLAYER_MAX_SPEED})`));
+    assert.equal(rows.at(-1).type,'moon');assert.equal(rows.at(-1).threshold,14400);
+  }
+  t.diagnostic(JSON.stringify(rows));
+  assert.ok(rows[1].mean/rows[0].mean>0.22 && rows[1].mean/rows[0].mean<0.29);
+  assert.ok(rows[1].meals>=60 && rows[1].meals>rows[0].meals);
+  assert.ok(rows[1].count>=rows[0].count && rows[1].speed===rows[0].speed);
+});
+
+test("normal procedural asteroid foraging progresses comfortably with real steering and food masses", t => {
+  const results=[];
+  for(const spread of [48,18]) {
+    const game=createGame(1600,900,1,{ASTEROID_RADIUS_SPREAD:spread});beginGame(game);
+    game.run(`const route=loadPacingScenario(42);
+      for(let i=0;i<10800 && route.phase!=='moon' && gameState==='playing';i++) {
+        steerPacingScenario(route);updateGame();
+      }`);
+    const result=game.json(`({spread:${spread},state:gameState,phase:route.phase,meals:score,
+      seconds:runTick/SIMULATION_FPS,mass:player.mass,impacts:world.nextImpactId})`);
+    results.push(result);t.diagnostic(JSON.stringify(result));
+    assert.equal(result.state,'playing');assert.equal(result.phase,'moon');
+    assert.ok(result.seconds<180);
+  }
+  assert.ok(results[1].meals>=60 && results[1].meals>results[0].meals && results[1].seconds>results[0].seconds*1.3);
+});
+
+test("grown approach warnings retain reaction time and cover distant planets on compact viewports", t => {
+  for(const radius of [120,600,1000,1900]) {
+    const game=createGame(320,180);beginGame(game,true);
+    game.run(`setBodyMass(player,massForRadius(${radius}));
+      const limits=playerMovementLimits();player.vx=limits.speed;
+      const planet=addSource(limits.speed*HAZARD_ASSIST_REACTION_SECONDS+player.r+1800+2500,0,1800);
+      // Register in the same distant-cell index used by procedural worlds.
+      const cellSize=PLANET_CELL_REGIONS*REGION_SIZE;
+      world.backgroundPlanets.set(planet.id,planet);
+      world.generatedPlanetCells.set(regionKey(Math.floor(planet.x/cellSize),Math.floor(planet.y/cellSize)),planet.id);
+      let warning=null,warningTick=null,minimumGap=Infinity;
+      for(let tick=0;tick<600;tick++) {
+        if(!warning) {warning=collectHazardWarnings().find(w=>w.id===planet.id);
+          if(warning)warningTick=runTick;}
+        const react=warningTick!==null && runTick-warningTick>=HAZARD_ASSIST_REACTION_SECONDS*SIMULATION_FPS;
+        mouseX=width/2+(react?-1:1)*STEERING_MAX_DISTANCE;
+        mouseY=height/2;updateGame();
+        minimumGap=Math.min(minimumGap,Math.hypot(player.x-planet.x,player.y-planet.y)-player.r-planet.r);
+      }`);
+    assert.ok(game.run('warning && minimumGap>100 && world.nextImpactId===0 && player.vx<0'));
+    t.diagnostic(JSON.stringify(game.json('({radius:player.r,warningGap:warning.surfaceGap,minimumGap,scan:hazardScanRadius()})')));
+  }
+  const procedural=createGame(320,180);beginGame(procedural);
+  procedural.run('setBodyMass(player,massForRadius(1900));syncWorldRegions();const bounds=backgroundCellBounds(hazardScanRadius(),hazardScanRadius());');
+  assert.ok(procedural.run(`world.generatedPlanetCells.has(regionKey(bounds.minX,bounds.minY)) &&
+    world.generatedPlanetCells.has(regionKey(bounds.maxX,bounds.maxY))`));
+});
 
 test("menu difficulty, safe startup, and restart retain existing rules", () => {
   const game = createGame();
@@ -175,9 +362,9 @@ test("steering uses center direction, dead zone, capped strength, and accelerati
       for (let i = 0; i < 120; i++) movePlayer();`);
     return game.run("player.vx");
   };
-  close(speedAt(96), 600);
-  close(speedAt(180), 1200);
-  close(speedAt(10000), 1200);
+  close(speedAt(96), game.run("PLAYER_MAX_SPEED / 2"));
+  close(speedAt(180), game.run("PLAYER_MAX_SPEED"));
+  close(speedAt(10000), game.run("PLAYER_MAX_SPEED"));
 });
 
 test("player supports explicit external acceleration in world units without gravity", () => {
@@ -272,6 +459,8 @@ test("the asteroid player can navigate a full route around the fixture planet", 
   const game = createGame();
   beginGame(game);
   game.run(`startGame({ seed: 42, fixture: true });
+    // This route tests already-active flight; neutral entry is covered separately.
+    steering.armed = steering.engaged = true; steering.rampTicks = STEERING_ACTIVATION_TICKS;
     for (const [x, y] of [[0, -2300], [4800, -2300], [4800, 2300], [0, 2300]]) {
       let ticks = 0;
       while (Math.hypot(player.x - x, player.y - y) > 20 && ticks++ < 600) {
@@ -392,17 +581,20 @@ test("eaten generated objects stay gone after leaving and revisiting", () => {
 test("distant moving bodies freeze and resume full state after revisiting", () => {
   const game = createGame();
   beginGame(game, true);
-  game.run("const moving = addBody(1023, 300, 10, 120, 0); updateGame();");
+  game.run("const moving = addBody(1023, 300, 10, 120, 0); for(let i=0;i<40;i++)updateGame();");
   const afterMove = game.json("moving");
   game.run("player.x = -30000; followPlayer();");
-  game.frames(120);
-  assert.deepEqual(game.json("moving"), afterMove);
+  game.frames(60);
+  const retired = game.json("moving");
+  assert.ok(retired.x > afterMove.x && retired.ecologyOpacity === 0);
+  game.frames(60);
+  assert.deepEqual(game.json("moving"), retired);
   assert.ok(game.run("!star_objects.includes(moving)"));
   game.run("player.x = 700; followPlayer(); syncWorldRegions();");
   assert.ok(game.run("star_objects.includes(moving)"));
-  assert.deepEqual(game.json("moving"), afterMove);
+  assert.deepEqual(game.json("moving"), retired);
   game.frames(1);
-  close(game.run("moving.x"), afterMove.x + 2);
+  close(game.run("moving.x"), retired.x + 2);
   assert.equal(game.run("allBodies().filter(b => b.id === moving.id).length"), 1);
 });
 
@@ -416,7 +608,7 @@ test("activation queries and active simulation stay bounded on huge viewports", 
     syncWorldRegions(); const frozen = allBodies().find(b => !star_objects.includes(b)); const frozenX = frozen.x;
     updateGame();`);
   assert.equal(game.run("star_objects.length"), 1024);
-  assert.equal(game.run("frozen.x"), game.run("frozenX"));
+  assert.ok(game.run("world.ecologyStats.simulated <= 1+MAX_ACTIVE_BODIES+ECOLOGY_BACKGROUND_BODIES+ECOLOGY_FADING_BODIES+2*GRAVITY_MAX_SOURCES && world.ecologyStats.pairChecks<=ECOLOGY_MAX_PAIR_CHECKS"));
 });
 
 test("bounded placement attempts terminate even when clearance rejects every position", () => {
@@ -424,7 +616,7 @@ test("bounded placement attempts terminate even when clearance rejects every pos
   beginGame(game);
   game.run("let placementChecks = 0; hasClearance = () => { placementChecks++; return false; }; const rejected = generateRegion(42, 20, -20);");
   assert.equal(game.run("rejected.filter(b => b.type === 'asteroid').length"), 0);
-  assert.ok(game.run("placementChecks <= (ASTEROIDS_PER_REGION + 9) * PLACEMENT_ATTEMPTS"));
+  assert.ok(game.run("placementChecks <= (Math.max(ASTEROIDS_PER_REGION,ASTEROIDS_IN_FIELD_REGION,ASTEROIDS_IN_TRAVEL_REGION) + 9) * PLACEMENT_ATTEMPTS + 9 * SYSTEM_MOON_MAX_COUNT"));
 });
 
 test("difficulty affects asteroid sizes without removing small types", () => {
@@ -437,6 +629,7 @@ test("difficulty affects asteroid sizes without removing small types", () => {
 
 test("30, 60, and 144 render FPS give identical world traversal and simulation", () => {
   const snapshots = [];
+  const zooms = [];
   for (const fps of [30, 60, 144]) {
     const game = createGame();
     beginGame(game);
@@ -448,10 +641,21 @@ test("30, 60, and 144 render FPS give identical world traversal and simulation",
     assert.equal(game.context.texts.filter(text => text.startsWith("Time Passed:")).at(-1), "Time Passed: 5");
     snapshots.push(game.json(`({ runTick, player, currentFormIndex, evolutionNotification, bodies: allBodies().sort((a,b) => a.id.localeCompare(b.id)),
       activeIds: star_objects.map(b => b.id), consumed: [...world.consumedIds],
-      regions: [...world.generatedRegions], score, gameState, camera })`));
+      regions: [...world.generatedRegions], score, gameState,
+      camera: { x: camera.x, y: camera.y, targetZoom: camera.targetZoom } })`));
+    // Meals can land between different render observations. Hold the identical
+    // final physical state for one second to compare settled camera/density,
+    // rather than demanding identical intermediate filters for different inputs.
+    game.run(`for(let frame=0;frame<${fps};frame++)updateCamera(1/${fps});`);
+    zooms.push(game.json("({ zoom:camera.zoom, background:camera.backgroundZoom })"));
   }
   assert.deepEqual(snapshots[0], snapshots[1]);
   assert.deepEqual(snapshots[1], snapshots[2]);
+  // Physical history is exact; both visual filters converge after growth stops.
+  for (const zoom of zooms) {
+    close(zoom.zoom, zooms[0].zoom, 0.00002);
+    close(zoom.background, zooms[0].background, 0.001);
+  }
 });
 
 test("suspended-tab deltas keep bounded fixed-tick catch-up", () => {
@@ -700,6 +904,7 @@ test("death restart resets growth and run data while keeping selected difficulty
   beginGame(game, true);
   game.run(`selectedDifficultyIndex = 4; difficultyFactor = 1.2;
     setBodyMass(player, EVOLUTION_FORMS[1].mass); updatePlayerEvolution();
+    setBodyMass(player, FRAGMENTATION_MIN_MASS / 2); // injured below the shedding threshold
     score = 75; runTick = 900; player.x = -1000; player.y = 2000;
     world.consumedIds.add('old-meal'); const oldWorld = world; const oldSeed = runSeed;
     addBody(player.x, player.y, player.r, 0, 0, 'planet');`);
@@ -778,7 +983,7 @@ test("size targets and actual zoom obey configurable bounds with visible growth"
   assert.ok(game.run("camera.zoom >= CAMERA_MIN_ZOOM && camera.zoom <= CAMERA_MAX_ZOOM"));
 });
 
-test("zoom easing is frame-rate independent and reveals space gradually after growth", () => {
+test("zoom eases over a short interval after immediate growth at every frame rate", () => {
   const values = [];
   for (const fps of [30, 60, 144]) {
     const game = createGame();
@@ -792,6 +997,180 @@ test("zoom easing is frame-rate independent and reveals space gradually after gr
   }
   close(values[0], values[1], 1e-12);
   close(values[1], values[2], 1e-12);
+});
+
+test("opening drive is ten percent slower and still accelerates and brakes promptly", t => {
+  const measurements = [];
+  for (const speed of [1200, 1080]) {
+    const game = createGame(1600, 900, 1, { PLAYER_MAX_SPEED: speed });
+    beginGame(game, true);
+    game.run(`mouseX = width / 2 + STEERING_MAX_DISTANCE;
+      movePlayer(); const firstTick = player.vx;
+      for (let i = 1; i < 15; i++) movePlayer();
+      const quarterSecond = player.vx;
+      for (let i = 15; i < 120; i++) movePlayer();
+      const cruising = player.vx, brakeStart = player.x;
+      mouseX = width / 2;
+      for (let i = 0; i < 30; i++) movePlayer();`);
+    measurements.push(game.json("({ firstTick, quarterSecond, cruising, brakingSpeed:player.vx, brakingDistance:player.x-brakeStart })"));
+  }
+  close(measurements[1].cruising / measurements[0].cruising, 0.9);
+  close(measurements[1].firstTick, measurements[0].firstTick);
+  assert.ok(measurements[1].quarterSecond > 1080 * 0.9);
+  assert.ok(measurements[1].brakingSpeed < 5 && measurements[1].brakingDistance < 110);
+  t.diagnostic(JSON.stringify(measurements[1]));
+});
+
+test("a meal commits mass immediately while camera zoom follows over a short interval", () => {
+  for (const fps of [30, 60, 144]) {
+    const game = createGame(); beginGame(game, true);
+    game.run("difficultyFactor = 1; addBody(0, 0, 15); const zoomBeforeMeal = camera.zoom; updateGame();");
+    assert.equal(game.run("player.mass"), 625);
+    assert.equal(game.run("player.r"), 25);
+    assert.equal(game.run("score"), 1);
+    assert.equal(game.run("camera.zoom"), game.run("zoomBeforeMeal"));
+    game.run(`updateCamera(1/${fps});`);
+    assert.ok(game.run("camera.zoom > camera.targetZoom && camera.zoom < zoomBeforeMeal"));
+    game.run(`for (let i=1; i<${fps/2}; i++) updateCamera(1/${fps});`);
+    close(game.run("(Math.log(camera.zoom)-Math.log(camera.targetZoom)) / (Math.log(zoomBeforeMeal)-Math.log(camera.targetZoom))"), Math.exp(-5), 1e-12);
+  }
+});
+
+test("gradual growth and late milestones keep screen occupancy within a slight increase", t => {
+  const game = createGame(); beginGame(game, true);
+  const targets = [20, 64, 120, 300, 1200, 2000].map(radius => game.run(`${radius} * targetZoomForRadius(${radius})`));
+  assert.ok(targets.every((size, i) => size >= 20 && size <= 24.1 && (i === 0 || size > targets[i - 1])));
+  for (const fps of [30, 60, 144]) {
+    game.run(`setBodyMass(player, massForRadius(20)); resetCamera();
+      for (let i = 1; i <= ${fps * 12}; i++) {
+        setBodyMass(player, massForRadius(20 * 100 ** (i / ${fps * 12})));
+        updateCamera(1 / ${fps});
+        if (player.r * camera.zoom < 19.99 || player.r * camera.zoom > 25.2) throw new Error('Occupancy out of bounds');
+      }`);
+    assert.ok(game.run("camera.zoom > CAMERA_MIN_ZOOM && player.r * camera.zoom > 23.8"));
+  }
+  t.diagnostic(`Settled screen radii at r20/64/120/300/1200/2000: ${targets.map(x => x.toFixed(2)).join(', ')} px.`);
+});
+
+test("relative camera response matches at small and large scales including instant growth", () => {
+  const relative = [];
+  for (const radius of [20, 400]) {
+    const game = createGame(); beginGame(game, true);
+    game.run(`setBodyMass(player, massForRadius(${radius})); resetCamera();
+      const originalSize = player.r * camera.zoom;
+      setBodyMass(player, massForRadius(${radius * 2}));
+      for (let i = 0; i < 30; i++) updateCamera(1 / 60);`);
+    relative.push(game.run("player.r * camera.zoom / originalSize"));
+  }
+  close(relative[0], relative[1], 1e-12);
+  const game = createGame(); beginGame(game, true);
+  game.run("setBodyMass(player, massForRadius(2000)); const before = camera.zoom; updateCamera(0);");
+  assert.equal(game.run("camera.zoom"), game.run("before"));
+  assert.equal(game.run("player.mass"), 4000000);
+  game.run("updateCamera(1/144);");
+  assert.ok(game.run("camera.zoom < before && camera.zoom > camera.targetZoom"));
+  game.run("for (let i = 1; i < 48; i++) updateCamera(1/144);");
+  assert.ok(game.run("player.r * camera.zoom > 24 && player.r * camera.zoom < 29"));
+  game.run("for (let i = 48; i < 144; i++) updateCamera(1/144);");
+  assert.ok(game.run("player.r * camera.zoom > 24 && player.r * camera.zoom < 24.1"));
+});
+
+test("distant specks fade continuously with scale while nearby food stays fully visible", t => {
+  const game = createGame(); beginGame(game, true);
+  game.run(`const sample = [6, 15, 40, 80, 180].map(r => body(6000, 2000, r));
+    const physicalBefore = JSON.stringify(sample);`);
+  const densities = [];
+  for (const radius of [20, 120, 300, 1200, 2000]) {
+    game.run(`setBodyMass(player, massForRadius(${radius})); resetCamera();`);
+    densities.push(game.run("sample.reduce((sum,b) => sum + backgroundBodyOpacity(b), 0)"));
+    close(game.run("backgroundBodyOpacity(body(player.r + 6 + BACKGROUND_FOOD_CLEARANCE, 0, 6))"), 1);
+  }
+  assert.ok(densities[0] > 4.9 && densities.at(-1) < 1);
+  assert.ok(densities.every((value, i) => i === 0 || value <= densities[i - 1]));
+  assert.ok(game.run("JSON.stringify(sample) === physicalBefore"));
+  game.run("setBodyMass(player, massForRadius(20)); resetCamera();");
+  const opacity = zoom => game.run(`camera.backgroundZoom = ${zoom}; backgroundBodyOpacity(sample[0])`);
+  close(opacity(0.1), 0);
+  assert.ok(opacity(0.10001) > 0 && opacity(0.10001) < 0.000001);
+  assert.ok(opacity(0.3) > 0.49 && opacity(0.3) < 0.51);
+  close(opacity(0.5), 1);
+  t.diagnostic(`Sum of five distant sample opacities at r20/120/300/1200/2000: ${densities.map(x=>x.toFixed(2)).join(', ')}.`);
+});
+
+test("rapid growth eases density and local coverage edges fade without deleting bodies", () => {
+  const game = createGame(); beginGame(game, true);
+  game.run(`const small = addBody(6000, 0, 6);
+    setBodyMass(player, massForRadius(1999)); updateCamera(1/144);`);
+  assert.ok(game.run("camera.backgroundZoom > camera.zoom && backgroundBodyOpacity(small) > 0.99"));
+  game.run("for (let i = 0; i < 144; i++) updateCamera(1/144);");
+  assert.equal(game.run("backgroundBodyOpacity(small)"), 0);
+  assert.ok(game.run("allBodies().includes(small) && !world.consumedIds.has(small.id)"));
+  game.run(`setBodyMass(player, massForRadius(20)); resetCamera();
+    const edge = worldDetailHalfExtents().x;
+    const distant = body(edge, 0, 80);`);
+  assert.equal(game.run("backgroundBodyOpacity(distant)"), 0);
+  game.run("distant.x -= 0.01;");
+  assert.ok(game.run("backgroundBodyOpacity(distant) > 0 && backgroundBodyOpacity(distant) < 0.000001"));
+  game.run("distant.x = edge - BACKGROUND_DETAIL_FADE_DISTANCE / 2;");
+  close(game.run("backgroundBodyOpacity(distant)"), 0.5);
+  game.run("distant.x = edge - BACKGROUND_DETAIL_FADE_DISTANCE;");
+  close(game.run("backgroundBodyOpacity(distant)"), 1);
+});
+
+test("wide late views retain deterministic distant planets and reuse them for local physics", () => {
+  const game = createGame(); beginGame(game);
+  game.run(`setBodyMass(player, massForRadius(1999)); resetCamera(); syncWorldRegions();
+    const distant = getRenderableBodies().find(b => b.type === 'planet' && Math.abs(b.x-player.x) > 30000);
+    const initialId = distant.id, initialMass = distant.mass;
+    const initialRegions = world.generatedRegions.size;
+    player.x = distant.x - distant.r - player.r - 100;
+    player.y = distant.y; followPlayer(); syncWorldRegions();`);
+  assert.ok(game.run("star_objects.includes(distant) && allBodies().filter(b=>b.id===initialId).length === 1"));
+  assert.ok(game.run("world.backgroundPlanets.get(initialId) === distant && distant.mass === initialMass"));
+  game.run("consumeWorldBody(distant); player.x = player.y = 0; followPlayer(); syncWorldRegions();");
+  assert.ok(game.run("!getRenderableBodies().some(b=>b.id===initialId) && !allBodies().some(b=>b.id===initialId) && world.consumedIds.has(initialId)"));
+  assert.ok(game.run("initialRegions <= (2*MAX_REGION_REACH+1)**2 && world.generatedPlanetCells.size <= 2*(2*MAX_BACKGROUND_CELL_REACH+1)**2"));
+});
+
+test("procedural opening retains accessible fully visible food across seeds and difficulties", t => {
+  const game = createGame(); beginGame(game);
+  game.run("let accessibleFood;");
+  let minimum = Infinity;
+  for (const seed of [1, 7, 42, 71, 1948, 123456]) {
+    for (const difficulty of [0.8, 1, 1.2]) {
+      game.run(`difficultyFactor = ${difficulty}; startGame({seed:${seed}});
+        accessibleFood = [...world.regions.values()].flatMap(b=>[...b.values()]).filter(b =>
+          b.type === 'asteroid' && b.r < player.r && Math.hypot(b.x,b.y)-b.r < 1600);`);
+      const count = game.run("accessibleFood.length");
+      minimum = Math.min(minimum, count);
+      assert.ok(count >= 5, `seed ${seed}, difficulty ${difficulty}: ${count} meals`);
+      assert.ok(game.run("accessibleFood.every(b=>backgroundBodyOpacity(b) === 1)"));
+    }
+  }
+  t.diagnostic(`At least ${minimum} edible, fully visible bodies within 1600 world units across 18 starts.`);
+});
+
+test("density fades the body and its threat cues together without leaking into player or HUD", () => {
+  const game = createGame(); beginGame(game, true);
+  game.run(`const faded = addBody(2500, 0, 6);
+    camera.zoom = camera.backgroundZoom = 0.3;
+    const alphas = [], realDrawBody = drawBody, realThreatRing = drawThreatRing;
+    drawBody = (b, isPlayer, detailed) => {
+      alphas.push({id:b.id, alpha:drawingContext.globalAlpha});
+      realDrawBody(b, isPlayer, detailed);
+    };
+    drawThreatRing = b => {
+      alphas.push({id:b.id+':ring', alpha:drawingContext.globalAlpha});
+      realThreatRing(b);
+    };
+    drawGame();`);
+  close(game.run("alphas.find(a=>a.id===faded.id).alpha"), 0.5);
+  close(game.run("alphas.find(a=>a.id==='player').alpha"), 1);
+  close(game.run("drawingContext.globalAlpha"), 1);
+  // Force detailed rendering so the assistance ring also receives the fade.
+  game.run("faded.r = 60; camera.zoom = 0.1; camera.backgroundZoom = 0.03; drawGame();");
+  close(game.run("alphas.findLast(a=>a.id===faded.id+':ring').alpha"), 0.5);
+  close(game.run("drawingContext.globalAlpha"), 1);
 });
 
 test("camera updates leave body state, mass, force inputs, and collision results untouched", () => {
@@ -857,7 +1236,7 @@ test("resize at low zoom preserves physical and visual state while keeping the p
   }
 });
 
-test("zoomed views render distant dormant bodies and oversized surfaces without waking them", () => {
+test("zoomed views retain oversized surfaces while distant movers participate in ecology", () => {
   const game = createGame(400, 300);
   beginGame(game, true);
   game.run(`const small = addBody(1800, 0, 10, 120);
@@ -866,7 +1245,7 @@ test("zoomed views render distant dormant bodies and oversized surfaces without 
   assert.ok(game.run("!star_objects.includes(small) && getRenderableBodies().includes(small)"));
   assert.ok(game.run("getRenderableBodies().includes(planet) && isBodyVisible(planet) && planet.x > width / (2 * camera.zoom)"));
   game.run("updateGame(); getRenderableBodies();");
-  assert.ok(game.run("JSON.stringify(small) === before"));
+  assert.ok(game.run("Math.hypot(small.x-planet.x,small.y-planet.y)>=small.r+planet.r && world.ecology.has(small.id) && small.mass===100"));
 });
 
 test("widest supported view has generated coverage before the camera zooms out", () => {
@@ -881,7 +1260,7 @@ test("widest supported view has generated coverage before the camera zooms out",
 test("LOD and render budgets keep large/near bodies while preserving hidden body state", () => {
   const game = createGame();
   beginGame(game, true);
-  game.run(`camera.zoom = CAMERA_MIN_ZOOM;
+  game.run(`camera.zoom = 0.1;
     for (let i = 0; i < MAX_RENDER_BODIES + 20; i++) storeWorldBody(world, body(3000 + i / 10, 2000, 6));
     for (let i = 0; i < MAX_DETAILED_BODIES + 20; i++) storeWorldBody(world, body(4000 + i / 10, 1500, 60));
     const planet = addBody(8500, 0, 1800, 0, 0, 'planet');
@@ -1123,7 +1502,7 @@ test("consuming a source removes its field permanently without creating player g
   const game = createGame();
   beginGame(game, true);
   game.run(`setBodyMass(player, massForRadius(700)); updatePlayerEvolution();
-    const source = addSource(1000, 0); updateGravitySources(true); updateGame();`);
+    const source = addSource(750, 0, 100, 'moon'); updateGravitySources(true); updateGame();`);
   assert.ok(game.run("world.consumedIds.has(source.id) && !world.gravitySources.has(source.id)"));
   game.run("updateGame();");
   assert.equal(game.run("player.gravityAx"), 0);
@@ -1173,7 +1552,7 @@ test("crowded gravity queries and integration stay within their explicit budgets
     integrateBody = body => { integrations++; realIntegration(body); };
     updateGame();`);
   assert.ok(game.run("world.gravitySources.size <= 2 * GRAVITY_MAX_SOURCES"));
-  assert.ok(game.run("integrations <= 1 + MAX_ACTIVE_BODIES + 2 * GRAVITY_MAX_SOURCES"));
+  assert.ok(game.run("integrations <= 1+MAX_ACTIVE_BODIES+ECOLOGY_BACKGROUND_BODIES+ECOLOGY_FADING_BODIES+2*GRAVITY_MAX_SOURCES"));
   assert.ok(game.run("Math.hypot(player.gravityAx, player.gravityAy) <= GRAVITY_MAX_ACCELERATION + 1e-8"));
 });
 
@@ -1222,6 +1601,8 @@ test("warnings reject distant receding bodies, edible sources, and harmless tang
   game.run("player.x = 2300; player.vx = -1200; player.vy = 0;");
   assert.ok(game.run("hazardMetrics(planet).priority === 0"));
   game.run("setBodyMass(player, massForRadius(700));");
+  assert.ok(game.run("hazardMetrics(planet) !== null && canFragmentTogether(player,planet)"));
+  game.run("setBodyMass(planet,massForRadius(100));");
   assert.equal(game.run("hazardMetrics(planet)"), null);
 });
 
@@ -1276,7 +1657,8 @@ test("hazard queries find oversized surfaces through signed seams without changi
   const game = createGame(400,300); beginGame(game, true);
   game.run("const planet = addSource(-1024, -1024, 1800); player.vx = 1200; player.y = -1024;");
   for (const x of [-4097,-4096,-4095,-3073,-3072,-3071]) {
-    game.run(`player.x = ${x}; followPlayer(); syncWorldRegions(); updateGravitySources(true);`);
+    game.run(`camera.zoom=1;windowWidth=400;windowHeight=300;windowResized();
+      player.x = ${x}; followPlayer(); syncWorldRegions(); updateGravitySources(true);`);
     assert.equal(game.run("collectHazardWarnings()[0]?.id"), game.run("planet.id"));
     const force = game.json("gravityAcceleration(player, [...world.gravitySources.values()])");
     game.run("camera.zoom = 0.1; drawHazardIndicators(); windowWidth = 800; windowHeight = 500; windowResized();");
@@ -1284,29 +1666,28 @@ test("hazard queries find oversized surfaces through signed seams without changi
   }
 });
 
-test("full consumption/evolution/gravity/death route matches at 30/60/144 FPS and restarts fresh", t => {
+test("full consumption/evolution/gravity/fragmentation route matches at 30/60/144 FPS", t => {
   const snapshots = [];
   for (const fps of [30,60,144]) {
     const game = createGame(); beginGame(game);
     game.run(`const route = loadIntegrationScenario();
       const realUpdate = updateGame;
       updateGame = () => { steerIntegrationScenario(route); realUpdate(); observeIntegrationScenario(route); };`);
-    // A fixed duration lets death happen at the same tick, regardless of render cadence.
+    // The route exercises the same fixed ticks regardless of render cadence.
     game.frames(24 * fps, fps);
     const result = game.json(`({ tick:runTick, state:gameState, player, score, phase:route.phase,
-      peakPull:route.peakPull, warnings:route.warnings, evolved:route.evolved, passClearance:route.passClearance,
+      peakPull:route.peakPull, warnings:route.warnings, visibleThreats:route.visibleThreats, evolved:route.evolved, passClearance:route.passClearance,
       consumed:[...world.consumedIds], seed:runSeed, bodies:[...world.regions].flatMap(([,b])=>[...b.values()]) })`);
-    assert.equal(result.state, "gameover", JSON.stringify(result));
-    assert.equal(result.score, 10); assert.ok(result.evolved && result.peakPull > 100 && result.warnings > 0);
-    assert.ok(result.passClearance > 100); assert.equal(result.phase, "impact");
+    assert.equal(result.state, "playing", JSON.stringify(result));
+    assert.ok(result.score >= 10); assert.ok(result.evolved && result.peakPull > 100 && result.visibleThreats > 0);
+    assert.ok(result.passClearance > 100 && ['escape','escaped'].includes(result.phase));
+    assert.equal(game.run("world.nextImpactId"),1);
     assert.ok(game.run("world === route.world && runSeed === route.seed && route.planet.type === 'planet'"));
     snapshots.push(result);
-    game.run("const deadWorld = world; key = ' '; keyCode = 0; keyPressed();");
-    assert.ok(game.run("gameState === 'playing' && world !== deadWorld && world.consumedIds.size === 0 && score === 0 && runTick === 0 && player.mass === EVOLUTION_FORMS[0].mass && player.x === 0 && player.y === 0 && player.vx === 0 && player.vy === 0"));
     assert.equal(game.run("selectedDifficultyIndex"), 2);
   }
   assert.deepEqual(snapshots[0],snapshots[1]); assert.deepEqual(snapshots[1],snapshots[2]);
-  t.diagnostic(`Route: ${snapshots[0].tick} ticks, 10 meals, Moon evolution, peak pull ${snapshots[0].peakPull.toFixed(1)}, safe pass then lethal impact.`);
+  t.diagnostic(`Route: ${snapshots[0].tick} ticks, Moon evolution, peak pull ${snapshots[0].peakPull.toFixed(1)}, safe pass then fragmentation and escape.`);
 });
 
 test("extended region streaming bounds active work and preserves eaten IDs on revisit", t => {
@@ -1314,7 +1695,7 @@ test("extended region streaming bounds active work and preserves eaten IDs on re
   const started = performance.now();
   game.run(`const eaten = star_objects.find(b => b.type === 'asteroid'); consumeWorldBody(eaten);
     let maxima = {active:0, sources:0, rendered:0, warnings:0};
-    camera.zoom = CAMERA_MIN_ZOOM;
+    camera.zoom = camera.backgroundZoom = CAMERA_MIN_ZOOM;
     for (let step = -80; step <= 80; step++) {
       player.x = step * REGION_SIZE; player.y = Math.sin(step / 8) * REGION_SIZE * 2;
       followPlayer(); syncWorldRegions(); const sources = updateGravitySources();
@@ -1353,8 +1734,9 @@ test("warning lead permits a delayed outward escape at maximum combined approach
 });
 
 test("hazard priorities retain the urgent bearing and deduplicate aligned warnings", () => {
-  const game = createGame(); beginGame(game, true);
-  game.run(`const near = addSource(750,0), aligned = addSource(800,0), behind = addSource(-850,0), below = addSource(0,850);
+  const game = createGame(800,600); beginGame(game, true);
+  // All physical surfaces are outside the viewport; visible threats have their own test.
+  game.run(`const near = addSource(1100,0), aligned = addSource(1150,0), behind = addSource(-1200,0), below = addSource(0,1300);
     const warnings = collectHazardWarnings(); const positions = layoutHazardIndicators(warnings);`);
   assert.equal(game.run("warnings[0].id"), game.run("near.id"));
   assert.equal(game.run("positions[0].id"), game.run("near.id"));
@@ -1404,4 +1786,532 @@ test("a lone hazard retains its arrow on every bearing at narrow viewport breakp
       close(positions[0].angle,Math.atan2(Math.sin(angle),Math.cos(angle)));
     }
   }
+});
+
+test("smaller, comparable and larger encounters conserve mass through impact, escape and collection", t => {
+  for (const name of ['smaller','comparable','larger']) {
+    const game = createGame(); beginGame(game, true);
+    game.run(`const encounter = loadFragmentationScenario('${name}');
+      let peakPieces = 0;
+      for (let i=0;i<1200 && encounter.phase !== 'done';i++) {
+        steerFragmentationScenario(encounter); updateGame(); observeFragmentationScenario(encounter);
+        if (gameState !== 'playing') throw new Error('Encounter death at tick '+runTick);
+        const mass = player.mass + allBodies().reduce((sum,b)=>sum+b.mass,0);
+        if (Math.abs(mass-encounter.totalMass)>encounter.totalMass*1e-12) throw new Error('Mass accounting: '+mass);
+        peakPieces = Math.max(peakPieces,allBodies().filter(isLooseDebris).length);
+      }`);
+    const result = game.json(`({name:encounter.name,phase:encounter.phase,ticks:runTick,impacts:world.nextImpactId,
+      initial:encounter.initialMass,after:encounter.afterImpactMass,final:player.mass,
+      collected:encounter.collectedMass,targetLoot:encounter.collectedTargetMass,
+      escapeGap:encounter.escapeGap,minGap:encounter.minimumGap,peakPieces})`);
+    t.diagnostic(JSON.stringify(result));
+    assert.equal(result.impacts,1);
+    assert.equal(result.phase,'done');
+    assert.ok(result.escapeGap > 100 && result.targetLoot > 0 && result.final > result.initial);
+    assert.ok(game.run("player === encounter.originalPlayer && player.id === 'player' && player.ownerId === 'player' && player.originId === 'player'"));
+    assert.ok(game.run("encounter.fragments.filter(b=>b.originId==='player').every(b=>b.ownerId==='player' && b.id!=='player' && b.mass<encounter.afterImpactMass)"));
+  }
+});
+
+test("fragmentation threshold, mass ratio and normal speed determine losses without changing camera", () => {
+  const game = createGame(); beginGame(game, true);
+  game.run(`const a=body(-200,0,240), b=body(200,0,240);
+    const slow=impactMassLoss(a,b,50), fast=impactMassLoss(a,b,900);
+    setBodyMass(b,a.mass*25); const raid=impactMassLoss(a,b,900);`);
+  assert.ok(game.run("fast.a > slow.a && fast.a === fast.b && raid.a > raid.b && fast.a > raid.b"));
+  assert.ok(game.run("canFragmentTogether(a,b) && !canFragmentTogether(player,b)"));
+  game.run("b.kind='debris';");
+  assert.ok(game.run("!canFragmentTogether(a,b) && collisionDisposition(player,b)==='collect'"));
+  const configured = createGame(1600,900,1,{FRAGMENTATION_MIN_MASS:100}); beginGame(configured,true);
+  assert.ok(configured.run("canFragmentTogether(player,body(0,0,15))"));
+});
+
+test("shared resolver preserves both owners, the largest own core and exact partition at every difficulty", () => {
+  for (const difficulty of [0.8,1,1.2]) {
+    const game=createGame(); beginGame(game,true);
+    game.run(`const route=loadFragmentationScenario('larger'); difficultyFactor=${difficulty};
+      const original=player, targetMass=route.target.mass, beforeZoom=camera.zoom;
+      player.x=-route.target.r-player.r+1; player.vx=900;
+      const contact=sweptBodyContact(player,player,route.target,route.target);
+      const event=resolveBodyImpact(player,route.target,contact);
+      const playerPieces=event.debris.filter(p=>p.originId===player.originId);
+      const targetPieces=event.debris.filter(p=>p.originId===route.target.originId);`);
+    close(game.run("player.mass+playerPieces.reduce((sum,p)=>sum+p.mass,0)"),57600,1e-8);
+    close(game.run("route.target.mass+targetPieces.reduce((sum,p)=>sum+p.mass,0)"),1440000,1e-7);
+    assert.ok(game.run("player===original && playerPieces.every(p=>p.ownerId==='player' && p.mass<player.mass) && targetPieces.every(p=>p.ownerId===null && p.mass<route.target.mass)"));
+    close(game.run("camera.zoom"),game.run("beforeZoom"));
+    game.run("runTick += DEBRIS_PUBLIC_COLLECTION_TICKS; const loot=targetPieces[0], before=player.mass; resolveBodyImpact(player,loot,null);");
+    close(game.run("player.mass-before"),game.run("loot.mass"),1e-8);
+    const after=game.run("player.mass");
+    game.run("resolveBodyImpact(player,loot,null);");
+    close(game.run("player.mass"),after);
+  }
+});
+
+test("sustained contact cannot repeat fragmentation and separate later contacts rearm", () => {
+  const game=createGame(); beginGame(game,true);
+  game.run(`const route=loadFragmentationScenario('comparable'); player.x=-player.r-route.target.r+1;
+    const first=resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
+    const massAfter=player.mass+route.target.mass;
+    for(let i=0;i<180;i++) {
+      runTick++; player.x=route.target.x-player.r-route.target.r+1; player.y=route.target.y;
+      updateCollisionContacts();
+      resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
+    }`);
+  assert.equal(game.run("world.nextImpactId"),1);
+  close(game.run("player.mass+route.target.mass"),game.run("massAfter"));
+  assert.equal(game.run("allBodies().filter(isLooseDebris).length"),10);
+  game.run(`player.x=route.target.x-player.r-route.target.r-FRAGMENTATION_RELEASE_GAP-1;
+    updateCollisionContacts(); player.x=route.target.x-player.r-route.target.r+1;
+    resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));`);
+  assert.equal(game.run("world.nextImpactId"),2);
+});
+
+test("fragments spawn outside both cores and each other and remain accessible beyond recovery", () => {
+  const game=createGame(); beginGame(game,true);
+  game.run(`const route=loadFragmentationScenario('larger');
+    for(let i=0;i<60 && !world.nextImpactId;i++) {steerFragmentationScenario(route);updateGame();observeFragmentationScenario(route);}
+    const pieces=allBodies().filter(isLooseDebris), originals=pieces.map(p=>({p,x:p.x,y:p.y}));
+    for(const p of pieces) for(const other of [player,route.target,...pieces]) {
+      if(p!==other && Math.hypot(p.x-other.x,p.y-other.y)<p.r+other.r-1e-8) throw new Error('Overlapping ejecta');
+    }
+    for(let i=0;i<600;i++) {for(const p of pieces){accumulateBodyForces(p,[]);integrateBody(p);} runTick++;}`);
+  assert.ok(game.run("originals.every(({p,x,y})=>Math.hypot(p.x-x,p.y-y)<125 && allBodies().includes(p))"));
+  assert.ok(game.run("pieces.every(p=>!isGravitySource(p) && !isGravityResponder(p) && backgroundBodyOpacity(p)===1)"));
+});
+
+test("large loose fragments use gold shard geometry at both LODs and cannot kill a small collector", () => {
+  const game=createGame(); beginGame(game,true);
+  game.run(`const shard=addBody(0,0,500,0,0,'debris'); shard.kind='debris'; shard.originId='other';
+    shard.collectAfterTick=0; shard.gravityAfterTick=10000; shard.highlightUntilTick=10000;
+    const calls=[]; drawPlanetBody=()=>calls.push('planet'); drawRockyMoonBody=()=>calls.push('moon');
+    beginShape=()=>calls.push('polygon'); circle=()=>calls.push('circle');
+    drawBody(shard,false,true); drawBody(shard,false,false);
+    const threat=getThreatVisual(shard.r,player.r,shard); updateGame();`);
+  assert.deepEqual(game.json("calls"),['polygon','polygon']);
+  assert.deepEqual(game.json("threat.ring"),[255,228,145,240]);
+  assert.equal(game.run("gameState"),'playing');
+  close(game.run("player.mass"),250400);
+  assert.ok(game.run("world.consumedIds.has(shard.id)"));
+});
+
+test("shared body-pair fragmentation works without a player participant", () => {
+  const game=createGame(); beginGame(game,true);
+  game.run(`const a=addBody(-200,0,240,800,0,'moon'), b=addBody(200,0,240,0,0,'moon');
+    a.ownerId='pilot-a'; b.ownerId='pilot-b';
+    const before=JSON.stringify(player), event=resolveBodyImpact(a,b,sweptBodyContact(a,a,b,b));`);
+  assert.equal(game.run("event.kind"),'fragmented');
+  assert.ok(game.run("JSON.stringify(player)===before && event.debris.every(p=>p.ownerId===(p.originId===a.originId?'pilot-a':'pilot-b'))"));
+  close(game.run("allBodies().reduce((sum,b)=>sum+b.mass,0)"),115200,1e-8);
+});
+
+test("all three raid loops have identical physics and mass accounting at 30, 60 and 144 render FPS", () => {
+  for (const name of ['smaller','comparable','larger']) {
+    const states=[];
+    for (const fps of [30,60,144]) {
+      const game=createGame(); beginGame(game,true);
+      game.run(`const route=loadFragmentationScenario('${name}'), realUpdate=updateGame;
+        updateGame=()=>{
+          if(route.phase==='done') {mouseX=width/2-STEERING_MAX_DISTANCE;mouseY=height/2;}
+          else steerFragmentationScenario(route);
+          realUpdate(); observeFragmentationScenario(route);
+        };`);
+      game.frames(fps*15,fps); // includes collection and continued travel away from the encounter
+      assert.ok(game.run("gameState==='playing' && world.nextImpactId===1 && route.phase==='done' && player.mass>route.initialMass"));
+      const state=game.json("({player,runTick,score,gameState,impacts:world.nextImpactId,consumed:[...world.consumedIds],bodies:allBodies().sort((a,b)=>a.id.localeCompare(b.id))})");
+      states.push(state);
+      close(game.run("player.mass+allBodies().reduce((sum,b)=>sum+b.mass,0)"),game.run("route.totalMass"),1e-6);
+    }
+    assert.deepEqual(states[0],states[1]); assert.deepEqual(states[1],states[2]);
+  }
+});
+
+test("swept impacts resolve at entry and keep a core largest under extreme configured losses", () => {
+  const game=createGame(1600,900,1,{FRAGMENTATION_BASE_LOSS:1,FRAGMENTATION_IMPACT_LOSS:1,FRAGMENTATION_MAX_LOSS:0.95,FRAGMENTATION_PIECES:2});
+  beginGame(game,true);
+  game.run(`setBodyMass(player,massForRadius(240)); const target=addBody(0,0,240,0,0,'moon');
+    const start={x:-3000,y:0}; player.x=3000;player.vx=360000;
+    const contact=sweptBodyContact(player,start,target,target);
+    const event=resolveBodyImpact(player,target,contact);`);
+  close(game.run("contact.ax"),-480);
+  assert.ok(game.run("contact.nx===-1 && player.x<target.x && event.debris.filter(p=>p.originId==='player').every(p=>p.mass<player.mass)"));
+  assert.ok(game.run("Math.hypot(player.x-target.x,player.y-target.y)>=player.r+target.r+FRAGMENTATION_SEPARATION-1e-8"));
+  close(game.run("player.mass+allBodies().reduce((sum,b)=>sum+b.mass,0)"),115200,1e-7);
+});
+
+test("recovery survives a second overlapping intact body and fragments cannot instantly reabsorb", () => {
+  const game=createGame(); beginGame(game,true);
+  game.run(`const route=loadFragmentationScenario('larger');
+    for(let i=0;i<60 && !world.nextImpactId;i++){steerFragmentationScenario(route);updateGame();observeFragmentationScenario(route);}
+    const before=player.mass, shard=allBodies().find(isLooseDebris);
+    const attempt=resolveBodyImpact(player,shard,null);
+    const neighbor=addBody(player.x,player.y,1300,0,0,'planet');
+    const protection=resolveBodyImpact(player,neighbor,sweptBodyContact(player,player,neighbor,neighbor));`);
+  assert.equal(game.run("attempt.kind"),'ignored');
+  assert.equal(game.run("protection.kind"),'protected');
+  assert.equal(game.run("world.nextImpactId"),1);
+  close(game.run("player.mass"),game.run("before"));
+  assert.ok(game.run("Math.hypot(player.x-neighbor.x,player.y-neighbor.y)>=player.r+neighbor.r+ECOLOGY_SURFACE_CLEARANCE-1e-8"));
+});
+
+test("a badly damaged Moon risks death on another unprotected strike and restart clears debris and contacts", () => {
+  const game=createGame(); beginGame(game,true);
+  game.run(`const route=loadFragmentationScenario('larger'); setBodyMass(player,FRAGMENTATION_MIN_MASS);
+    player.x=-route.target.r-player.r+1;
+    resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
+    const damagedMass=player.mass, oldWorld=world;
+    player.x=-9000; player.vx=player.vy=player.gravityVx=player.gravityVy=0;
+    mouseX=width/2;mouseY=height/2;
+    for(let i=0;i<=FRAGMENTATION_REARM_TICKS;i++) updateGame();
+    player.x=route.target.x;player.y=route.target.y;updateGame();`);
+  assert.ok(game.run("damagedMass<FRAGMENTATION_MIN_MASS && gameState==='gameover'"));
+  game.run("key=' ';keyCode=0;keyPressed();");
+  assert.ok(game.run("gameState==='playing' && world!==oldWorld && !world.contacts.size && world.nextImpactId===0 && !allBodies().some(isLooseDebris) && impactNotification===null && player.originId==='player' && player.ownerId==='player'"));
+});
+
+test("eating a shed core below the Moon threshold also preserves collision mass on Easy and Hard", () => {
+  for (const difficulty of [0.8,1.2]) {
+    const game=createGame();beginGame(game,true);
+    game.run(`const route=loadFragmentationScenario('smaller'); difficultyFactor=${difficulty};
+      player.x=-route.target.r-player.r+1;
+      const hit=resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
+      runTick+=FRAGMENTATION_REARM_TICKS+1;
+      player.x=route.target.x-player.r-route.target.r-FRAGMENTATION_RELEASE_GAP-1;updateCollisionContacts();
+      player.x=route.target.x;player.y=route.target.y;
+      player.vx=player.vy=player.gravityVx=player.gravityVy=0;
+      mouseX=width/2;mouseY=height/2;updateGame();`);
+    assert.ok(game.run("route.target.hasFragmented && route.target.mass<FRAGMENTATION_MIN_MASS && world.consumedIds.has(route.target.id)"));
+    close(game.run("player.mass+allBodies().reduce((sum,b)=>sum+b.mass,0)"),77200,1e-7);
+  }
+});
+
+test("alternate mass laws and zero configured shedding keep fragmentation finite and mass conserving", () => {
+  for(const loss of [0,0.36]) {
+    const game=createGame(1600,900,1,{MASS_SCALE:2.5,MASS_RADIUS_EXPONENT:3,
+      FRAGMENTATION_MIN_MASS:200,FRAGMENTATION_BASE_LOSS:0,FRAGMENTATION_IMPACT_LOSS:loss,FRAGMENTATION_PIECES:3});
+    beginGame(game,true);
+    game.run(`const target=addBody(0,0,radiusForMass(1000),0,0,'moon');
+      player.x=-player.r-target.r+0.1;player.vx=900;
+      const hit=resolveBodyImpact(player,target,sweptBodyContact(player,player,target,target));`);
+    close(game.run("player.mass+allBodies().reduce((sum,b)=>sum+b.mass,0)"),1400,1e-9);
+    assert.ok(game.run("allBodies().every(b=>[b.r,b.mass,b.vx,b.vy,b.rotationSpeed].every(Number.isFinite))"));
+    assert.equal(game.run("hit.debris.length"),loss===0?0:6);
+  }
+});
+
+test("impact feedback distinguishes smaller intact targets from food and preserves compact HUD rendering", () => {
+  const game=createGame(480,320);beginGame(game,true);
+  game.run(`const route=loadFragmentationScenario('smaller');
+    const visual=getThreatVisual(route.target.r,player.r,route.target);
+    for(let i=0;i<60 && !world.nextImpactId;i++){steerFragmentationScenario(route);updateGame();observeFragmentationScenario(route);}
+    drawGame();`);
+  assert.deepEqual(game.json("visual.ring"),[255,179,85,240]);
+  assert.ok(game.context.texts.some(text=>text.includes('hit: you -') && text.includes('target -')));
+  assert.ok(game.run("gameplayNotification()===impactNotification && indicatorObstacles().length===2 && hasImpactGrace(player)"));
+  game.run("windowWidth=320;windowHeight=180;windowResized();drawGame();");
+  assert.ok(game.run("getHudBounds().short && player.ownerId==='player'"));
+});
+
+test("debris highlighting fades into background density without despawning or losing mass", () => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const shard=addBody(6000,0,6,0,0,'debris');shard.kind='debris';
+    shard.highlightUntilTick=DEBRIS_HIGHLIGHT_TICKS;
+    camera.zoom=camera.backgroundZoom=CAMERA_MIN_ZOOM;runTick=DEBRIS_HIGHLIGHT_TICKS;`);
+  close(game.run("backgroundBodyOpacity(shard)"),1);
+  game.run("runTick+=DEBRIS_HIGHLIGHT_FADE_TICKS/2;");
+  close(game.run("backgroundBodyOpacity(shard)"),0.5);
+  game.run("runTick+=DEBRIS_HIGHLIGHT_FADE_TICKS/2;");
+  close(game.run("backgroundBodyOpacity(shard)"),0);
+  assert.ok(game.run("allBodies().includes(shard) && shard.mass===36 && !world.consumedIds.has(shard.id)"));
+});
+
+test("unattended ecology preserves food and mass, resolves surfaces and bounds debris over two minutes", t=>{
+  const game=createGame();beginGame(game,true);
+  game.context.now=()=>performance.now();
+  game.run(`const scene=loadEcologyScenario('unattended');
+    let peakDebris=world.debris.size,peakPairs=0,peakActors=0,merges=0;
+    const timings=[];
+    for(let i=0;i<7200;i++) {
+      const time=now();updateGame();timings.push(now()-time);
+      const mass=player.mass+allBodies().reduce((sum,b)=>sum+b.mass,0);
+      if(Math.abs(mass-scene.totalMass)>scene.totalMass*1e-11)throw Error('Mass drift '+mass);
+      if(gameState!=='playing')throw Error('Unattended player died');
+      peakDebris=Math.max(peakDebris,world.debris.size);
+      peakPairs=Math.max(peakPairs,world.ecologyStats.pairChecks);peakActors=Math.max(peakActors,world.ecologyStats.simulated);
+      merges+=world.ecologyStats.merges;
+    }
+    const survivors=allBodies(),intact=survivors.filter(b=>!isLooseDebris(b));
+    let penetration=0,worst=null;
+    for(let i=0;i<intact.length;i++)for(let j=i+1;j<intact.length;j++) {
+      const p=intact[i].r+intact[j].r-Math.hypot(intact[i].x-intact[j].x,intact[i].y-intact[j].y);
+      if(p>penetration){penetration=p;worst=[intact[i],intact[j]].map(b=>({id:b.id,x:b.x,y:b.y,r:b.r,active:world.ecology.has(b.id),opacity:b.ecologyOpacity}));}
+    }
+    const earlyMean=timings.slice(60,660).reduce((sum,t)=>sum+t,0)/600;
+    const lateMean=timings.slice(-600).reduce((sum,t)=>sum+t,0)/600;
+    timings.sort((a,b)=>a-b);`);
+  const result=game.json("({impacts:world.nextImpactId,peakDebris,remaining:world.debris.size,peakPairs,peakActors,merges,penetration,worst,foods:scene.foods.filter(residentBody).length,edibleFood:scene.foods.filter(b=>b.r<20).length,nearSourceFood:scene.foods.filter(b=>b.r<20&&Math.hypot(b.x-scene.source.x,b.y-scene.source.y)-scene.source.r<1600).length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),earlyMean,lateMean})");
+  t.diagnostic(JSON.stringify(result));
+  assert.equal(result.foods,24);assert.ok(result.penetration<0.01 && result.edibleFood>=12 && result.nearSourceFood>=5);
+  assert.ok(result.peakDebris<=game.run('MAX_WORLD_DEBRIS')&&result.peakPairs<=game.run('ECOLOGY_MAX_PAIR_CHECKS'));
+  assert.ok(result.remaining<result.peakDebris&&result.impacts>0&&result.merges>0);
+});
+
+test("distant visible fields already attract bodies before player entry without a second activation",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const scene=loadEcologyScenario('entry'), watched=scene.foods[0], startX=watched.x;
+    for(let i=0;i<180;i++)updateGame();
+    const before=watched.gravityAx, beforeWeight=world.ecology.get(watched.id).sources.get(scene.source.id).activation;
+    player.x=2800;followPlayer();syncWorldRegions();updateGame();`);
+  assert.ok(game.run("watched.x!==startX && before<0 && beforeWeight===1 && world.ecology.get(watched.id).sources.get(scene.source.id).activation===1"));
+  assert.ok(game.run("watched.ecologyOpacity>0 && player.mass===400 && gameState==='playing'"));
+});
+
+test("competing neutral collectors award a contacted fragment exactly once and preserve mass",t=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const scene=loadEcologyScenario('competition');
+    for(let i=0;i<90;i++)updateGame();`);
+  const masses=game.json('[scene.first.mass,scene.second.mass]');t.diagnostic(JSON.stringify(masses));
+  assert.ok(game.run("world.consumedIds.has(scene.debris[0].id) && world.debris.size===0"));
+  close(masses[0]+masses[1],3396,1e-8);
+  assert.equal(masses.filter(m=>m>1600).length,1);
+});
+
+test("tiny fragment merging preserves mass, ownership and shard visuals with a bounded fade",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`runTick=DEBRIS_MERGE_AGE_TICKS;
+    function crumb(id,x){const b=createBody(id,'debris',x,0,6,seededRandom(1));b.kind='debris';b.ownerId='pilot';b.originId='cloud';b.bornAtTick=0;b.collectAfterTick=0;b.highlightUntilTick=1e9;storeWorldBody(world,b);return b;}
+    const a=crumb('a',300),b=crumb('b',305),before=a.mass+b.mass;
+    const merged=tryMergeDebris(a,b);`);
+  assert.ok(game.run("merged && world.debris.size===1 && a.kind==='debris' && a.ownerId==='pilot' && a.originId==='cloud' && world.mergeGhosts.length===1"));
+  close(game.run('a.mass'),72);close(game.run('debrisRenderRadius(a)'),6);
+  game.run('runTick+=DEBRIS_MERGE_FADE_TICKS;');close(game.run('debrisRenderRadius(a)'),Math.sqrt(72));
+});
+
+test("a full debris budget defers shedding without deleting mass or overlapping intact cores",()=>{
+  const game=createGame(1600,900,1,{MAX_WORLD_DEBRIS:2});beginGame(game,true);
+  game.run(`const route=loadFragmentationScenario('comparable');player.x=-player.r-route.target.r+1;
+    const hit=resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
+    runTick+=FRAGMENTATION_REARM_TICKS+1;world.contacts.clear();player.impactGraceUntilTick=route.target.impactGraceUntilTick=0;
+    player.x=route.target.x-player.r-route.target.r+1;
+    const before=player.mass+route.target.mass;
+    const limited=resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));`);
+  assert.ok(game.run("world.debris.size===2 && limited.budgetLimited && player.mass+route.target.mass===before"));
+  assert.ok(game.run("Math.hypot(player.x-route.target.x,player.y-route.target.y)>=player.r+route.target.r"));
+});
+
+test("earlier ambient contact wins against a later player contact instead of resolving player first",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const npc=addBody(72,0,30,-120),shard=addBody(35,0,7,0,0,'debris');
+    shard.collectAfterTick=shard.publicAfterTick=shard.reclaimAfterTick=0;shard.gravityAfterTick=1e9;
+    player.vx=PLAYER_MAX_SPEED;mouseX=width/2+STEERING_MAX_DISTANCE;updateGame();`);
+  close(game.run('npc.mass'),949);close(game.run('player.mass'),400);
+  assert.ok(game.run("world.consumedIds.has(shard.id) && score===0 && gameState==='playing'"));
+});
+
+test("collector recovery windows use provenance and ownership consistently for every actor",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const parent=body(0,0,80),rival=body(0,0,60),shard=body(0,0,10);
+    shard.kind='debris';shard.originId=parent.originId;shard.ownerId=null;
+    shard.collectAfterTick=12;shard.publicAfterTick=120;shard.reclaimAfterTick=720;`);
+  assert.equal(game.run('canCollectDebris(parent,shard,120)'),false);
+  assert.equal(game.run('canCollectDebris(rival,shard,119)'),false);
+  assert.equal(game.run('canCollectDebris(rival,shard,120)'),true);
+  assert.equal(game.run('canCollectDebris(parent,shard,720)'),true);
+  game.run("parent.ownerId=shard.ownerId='pilot-a';");
+  assert.equal(game.run('canCollectDebris(parent,shard,12)'),true);
+});
+
+test("protected debris rests outside an ambient surface and cannot be swallowed before opening",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const npc=addBody(4000,0,40),shard=addBody(4030,0,14,0,0,'debris');
+    shard.collectAfterTick=12;shard.publicAfterTick=120;shard.gravityAfterTick=720;
+    updateGame();`);
+  assert.equal(game.run('npc.mass'),1600);
+  assert.ok(game.run('residentBody(shard) && Math.hypot(npc.x-shard.x,npc.y-shard.y)>=npc.r+shard.r'));
+});
+
+test("merging rejects young, distant, fast, oversized or differently owned shards",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`runTick=DEBRIS_MERGE_AGE_TICKS;
+    const a=body(0,0,6),b=body(5,0,6);a.kind=b.kind='debris';a.ownerId=b.ownerId='same';
+    a.originId=b.originId='same';a.bornAtTick=b.bornAtTick=0;
+    b.x=1000;const distant=tryMergeDebris(a,b);b.x=5;
+    b.bornAtTick=runTick;const young=tryMergeDebris(a,b);b.bornAtTick=0;
+    b.ownerId='other';const ownership=tryMergeDebris(a,b);b.ownerId='same';
+    b.vx=DEBRIS_MERGE_MAX_SPEED+1;const fast=tryMergeDebris(a,b);b.vx=0;
+    setBodyMass(b,massForRadius(DEBRIS_MERGE_MAX_RADIUS+1));const oversized=tryMergeDebris(a,b);`);
+  assert.deepEqual(game.json('[distant,young,ownership,fast,oversized]'),[false,false,false,false,false]);
+});
+
+test("dense region handoffs keep simulation, collision work, retirement and fragment counts bounded",()=>{
+  const game=createGame(1600,900,1,{GRAVITY_ENABLED:false});beginGame(game,true);
+  game.run(`for(const base of [0,20000])for(let i=0;i<MAX_ACTIVE_BODIES+20;i++)
+      storeWorldBody(world,body(base+300+(i%50)*20,-220+Math.floor(i/50)*20,5));
+    syncWorldRegions();syncEcology(true);updateGame();
+    player.x=20000;followPlayer();updateGame();
+    const bound=1+2*MAX_ACTIVE_BODIES+ECOLOGY_BACKGROUND_BODIES+ECOLOGY_FADING_BODIES+ECOLOGY_CONTINUITY_BODIES+2*GRAVITY_MAX_SOURCES;
+    if(world.ecologyStats.simulated>bound)throw Error('Handoff integration overflow');
+    for(let i=0;i<90;i++) {
+      updateGame();
+      if(world.ecologyStats.simulated>bound || world.ecologyStats.pairChecks>ECOLOGY_MAX_PAIR_CHECKS ||
+         world.ecologyStats.retirements>ECOLOGY_MAX_RETIREMENTS || world.debris.size>MAX_WORLD_DEBRIS)throw Error('Work overflow');
+    }`);
+  assert.ok(game.run('gameState===\'playing\' && world.ecology.size<=MAX_ACTIVE_BODIES+ECOLOGY_BACKGROUND_BODIES+ECOLOGY_FADING_BODIES+ECOLOGY_CONTINUITY_BODIES'));
+});
+
+test("competing collectors can contest fresh material from an unattended large-body impact",t=>{
+  const game=createGame(1600,900,1,{GRAVITY_ENABLED:false});beginGame(game,true);
+  game.run(`const a=addBody(900,0,240,900,0,'moon'),b=addBody(1379,0,240,0,0,'moon');
+    const hit=resolveBodyImpact(a,b,sweptBodyContact(a,a,b,b)),prize=hit.debris[5];
+    hit.debris.forEach((shard,i)=>{if(shard!==prize){shard.x=3000+i*300;shard.y=3500;storeWorldBody(world,shard);}});
+    for(let i=0;i<DEBRIS_PUBLIC_COLLECTION_TICKS;i++)updateGame();
+    const c=addBody(prize.x,prize.y-prize.r-50,30,0,300),d=addBody(prize.x,prize.y+prize.r+70,30,0,-300);
+    const before=player.mass+allBodies().reduce((sum,body)=>sum+body.mass,0);
+    for(let i=0;i<60;i++)updateGame();`);
+  t.diagnostic(JSON.stringify(game.json('({impacts:world.nextImpactId,consumed:world.consumedIds.has(prize.id),masses:[c.mass,d.mass],prize:{x:prize.x,y:prize.y,r:prize.r},c:{x:c.x,y:c.y},d:{x:d.x,y:d.y},cache:[world.ecology.has(c.id),world.ecology.has(d.id)]})')));
+  assert.ok(game.run('world.nextImpactId===1 && world.consumedIds.has(prize.id) && [c,d].filter(body=>body.mass>900).length===1'));
+  close(game.run('c.mass+d.mass'),game.run('1800+prize.mass'),1e-8);
+  close(game.run('player.mass+allBodies().reduce((sum,body)=>sum+body.mass,0)'),game.run('before'),1e-7);
+});
+
+test("debris is anchored to swept impact surfaces and does not follow the faster body's absolute velocity",()=>{
+  const clouds=[];
+  for(const boost of [0,-10000]) {
+    const game=createGame();beginGame(game,true);
+    game.run(`const a=addBody(-470,0,240,900+${boost},0,'moon'),b=addBody(0,0,240,${boost},0,'moon');
+      const contact=sweptBodyContact(a,{x:-600,y:0},b,{x:0,y:0});
+      const hit=resolveBodyImpact(a,b,contact);
+      const occupied=[a,b];
+      for(const piece of hit.debris) {
+        if(!occupied.every(body=>Math.hypot(piece.x-body.x,piece.y-body.y)>=piece.r+body.r+DEBRIS_SPACING-1e-8))throw Error('Overlapping ejecta');
+        occupied.push(piece);
+      }`);
+    close(game.run('hit.position.x'),-240);close(game.run('hit.position.y'),0);
+    assert.ok(game.run('hit.debris.some(p=>p.y>0)&&hit.debris.some(p=>p.y<0)&&hit.debris.some(p=>p.x>a.x)'));
+    close(game.run('a.mass+b.mass+hit.debris.reduce((m,p)=>m+p.mass,0)'),115200,1e-8);
+    clouds.push(game.json('hit.debris.map(p=>[p.x,p.y,p.mass])'));
+  }
+  assert.deepEqual(clouds[0],clouds[1]);
+});
+
+test("smaller, comparable and larger raids retain motion through escape, collection, departure and return",t=>{
+  for(const name of ['smaller','comparable','larger']) {
+    const game=createGame();beginGame(game,true);
+    game.run(`const route=loadFragmentationScenario('${name}');
+      for(let i=0;i<1500&&route.phase!=='done';i++) {
+        steerFragmentationScenario(route);updateGame();observeFragmentationScenario(route);
+        const mass=player.mass+allBodies().reduce((m,b)=>m+b.mass,0);
+        if(Math.abs(mass-route.totalMass)>route.totalMass*1e-12)throw Error('Impact/collection mass drift');
+        if(gameState!=='playing')throw Error('Raid failed');
+      }
+      if(route.phase!=='done')throw Error('Collection incomplete');
+      const collectedMass=player.mass,core=route.target;
+      for(let i=0;i<600;i++) {
+        steerFragmentationDeparture(route);updateGame();
+        if(!world.ecology.has(core.id)||!residentBody(core))throw Error('Recoil retired during departure');
+      }
+      steerFragmentationDeparture(route);
+      const elapsed=(runTick-route.departure.tick)*SIMULATION_STEP_SECONDS;
+      const driftError=Math.hypot(core.x-route.departure.x-core.vx*elapsed,core.y-route.departure.y-core.vy*elapsed);
+      const offLocal=!star_objects.includes(core)&&!world.gravitySources.has(core.id);
+      const before={x:core.x,y:core.y,vx:core.vx,vy:core.vy};
+      player.x=core.x-core.r-player.r-1000;player.y=core.y;
+      player.vx=player.vy=player.gravityVx=player.gravityVy=0;mouseX=width/2;mouseY=height/2;
+      followPlayer();updateGame();`);
+    assert.ok(game.run("route.phase==='departed'&&offLocal&&player.ownerId==='player'&&player===route.originalPlayer&&world.nextImpactId===1"));
+    close(game.run('driftError'),0,1e-6);
+    close(game.run('core.x-before.x'),game.run('before.vx*SIMULATION_STEP_SECONDS'),1e-7);
+    close(game.run('core.y-before.y'),game.run('before.vy*SIMULATION_STEP_SECONDS'),1e-7);
+    close(game.run('player.mass'),game.run('collectedMass'),1e-7);
+    close(game.run('player.mass+allBodies().reduce((m,b)=>m+b.mass,0)'),game.run('route.totalMass'),1e-6);
+    t.diagnostic(JSON.stringify(game.json(`({name:'${name}',tick:runTick,driftError,targetSpeed:Math.hypot(core.vx,core.vy),mass:player.mass})`)));
+  }
+});
+
+test("moving large bodies hit resident targets beyond player activation before approach",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const a=addBody(30000,0,240,900,0,'moon'),b=addBody(31000,0,240,0,0,'moon');
+    const total=player.mass+a.mass+b.mass;
+    for(let i=0;i<180;i++)updateGame();`);
+  assert.ok(game.run("world.nextImpactId===1&&a.hasFragmented&&b.hasFragmented&&world.ecology.has(a.id)&&world.ecology.has(b.id)&&!star_objects.includes(a)"));
+  close(game.run('player.mass+allBodies().reduce((m,b)=>m+b.mass,0)'),game.run('total'),1e-7);
+  game.run('const before={x:a.x,vx:a.vx};player.x=27000;followPlayer();updateGame();');
+  close(game.run('a.x-before.x'),game.run('before.vx*SIMULATION_STEP_SECONDS'),1e-7);
+});
+
+test("asteroids, protected shards and broken cores release from planet surfaces without losing mass",t=>{
+  for(const type of ['asteroid','debris','broken']) {
+    const game=createGame();beginGame(game,true);
+    game.run(`const planet=addSource(5000,0,600);
+      const object=addBody(planet.x-planet.r-${type==='broken'?90:10}+1,0,${type==='broken'?90:10},100,0,'${type==='broken'?'moon':type}');
+      ${type==='broken'?'object.hasFragmented=true;':''}
+      ${type==='debris'?`object.originId=planet.originId;object.collectAfterTick=12;object.publicAfterTick=120;
+        object.reclaimAfterTick=720;object.gravityAfterTick=0;object.highlightUntilTick=1e9;`:''}
+      const total=player.mass+planet.mass+object.mass;
+      let minGap=Infinity,maxGap=0,maxOutward=0;
+      for(let i=0;i<360;i++) {
+        updateGame();
+        const gap=Math.hypot(planet.x-object.x,planet.y-object.y)-planet.r-object.r;
+        minGap=Math.min(minGap,gap);maxGap=Math.max(maxGap,gap);
+        maxOutward=Math.max(maxOutward,planet.vx-object.vx);
+      }`);
+    assert.ok(game.run('residentBody(object)&&minGap>=-1e-7&&maxGap>80&&maxOutward>=ECOLOGY_SURFACE_RELEASE_SPEED-1e-7&&world.nextImpactId===0'));
+    close(game.run('player.mass+allBodies().reduce((m,b)=>m+b.mass,0)'),game.run('total'),1e-6);
+    t.diagnostic(JSON.stringify(game.json(`({type:'${type}',minGap,maxGap,maxOutward})`)));
+  }
+});
+
+test("surface release suppresses only the contacted source and restores its force smoothly",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run(`const planet=addSource(5000,0,600),other=addSource(4000,1200,600);
+    const food=addBody(4395,0,10,100);updateGame();
+    const release=food.surfaceRelease;
+    const held=gravityFromSource(food,planet),otherPull=gravityFromSource(food,other);
+    runTick=release.untilTick;const edge=gravityFromSource(food,planet);
+    runTick+=ECOLOGY_SURFACE_GRAVITY_FADE_TICKS/2;const halfway=gravityFromSource(food,planet);
+    runTick+=ECOLOGY_SURFACE_GRAVITY_FADE_TICKS/2;const full=gravityFromSource(food,planet);`);
+  close(game.run('Math.hypot(held.ax,held.ay)'),0);close(game.run('Math.hypot(edge.ax,edge.ay)'),0);
+  assert.ok(game.run('Math.hypot(otherPull.ax,otherPull.ay)>0'));
+  close(game.run('halfway.ax/full.ax'),0.5,1e-10);
+});
+
+test("border warnings omit visible surfaces, track zoom and resume only off screen",()=>{
+  const game=createGame();beginGame(game,true);
+  game.run('const planet=addSource(1100,0,600);player.vx=1200;');
+  assert.ok(game.run('hazardMetrics(planet)!==null&&collectHazardWarnings().length===0'));
+  game.run('planet.x=3000;storeWorldBody(world,planet);');
+  assert.equal(game.run('collectHazardWarnings()[0]?.id'),game.run('planet.id'));
+  game.run('camera.zoom=0.1;');assert.equal(game.run('collectHazardWarnings().length'),0);
+  game.run('camera.zoom=1;planet.x=750;storeWorldBody(world,planet);windowWidth=400;windowHeight=300;windowResized();');
+  assert.ok(game.run('planet.x>width/2&&collectHazardWarnings().length===0'));
+  game.run('planet.x=801;storeWorldBody(world,planet);');
+  assert.equal(game.run('collectHazardWarnings()[0]?.id'),game.run('planet.id'));
+});
+
+test("moving planet rendering and warning IDs follow current positions beyond the seed-cell window",()=>{
+  const game=createGame(400,300);beginGame(game,true);
+  game.run(`setBodyMass(player,massForRadius(1900));player.vx=playerMovementLimits().speed;
+    const planet=addSource(50000,0,1800);planet.vx=-200;storeWorldBody(world,planet);
+    world.backgroundPlanets.set(planet.id,planet);world.generatedPlanetCells.set(regionKey(-30,0),planet.id);`);
+  assert.equal(game.run('collectHazardWarnings()[0]?.id'),game.run('planet.id'));
+  assert.equal(game.run('collectHazardWarnings().filter(w=>w.id===planet.id).length'),1);
+  game.run('width=1600;height=900;camera.zoom=camera.backgroundZoom=0.01;');
+  assert.ok(game.run('getRenderableBodies().includes(planet)&&collectHazardWarnings().length===0'));
+  game.run('consumeWorldBody(planet);');
+  assert.ok(game.run('!world.movingBodies.has(planet.id)&&!getRenderableBodies().includes(planet)&&collectHazardWarnings().length===0'));
+});
+
+test("continuity pools retain bounded work when many distant movers compete for slots",()=>{
+  const game=createGame(1600,900,1,{GRAVITY_ENABLED:false});beginGame(game,true);
+  game.run(`for(let i=0;i<ECOLOGY_CONTINUITY_BODIES+40;i++)
+      addBody(30000+(i%13)*1200,Math.floor(i/13)*1200,120,20,0,'moon');
+    const starts=new Map([...world.movingBodies.values()].map(b=>[b.id,b.x]));
+    for(let i=0;i<90;i++) {
+      updateGame();
+      const capacity=MAX_ACTIVE_BODIES+ECOLOGY_BACKGROUND_BODIES+ECOLOGY_FADING_BODIES+ECOLOGY_CONTINUITY_BODIES;
+      if(world.ecologyMoving.length>ECOLOGY_CONTINUITY_BODIES||world.ecology.size>capacity||
+        world.ecologyStats.pairChecks>ECOLOGY_MAX_PAIR_CHECKS||world.debris.size>MAX_WORLD_DEBRIS)throw Error('Continuity budget overflow');
+    }`);
+  assert.equal(game.run('world.ecologyMoving.length'),game.run('ECOLOGY_CONTINUITY_BODIES'));
+  assert.ok(game.run('[...world.movingBodies.values()].every(b=>b.x-starts.get(b.id)>29)'));
 });

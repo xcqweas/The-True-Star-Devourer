@@ -5,8 +5,19 @@ function getHudBounds() {
     h: short ? 66 : compact ? 104 : 136, compact, short };
 }
 
+function hazardScanRadius() {
+  const limits = playerMovementLimits();
+  const speed = limits.speed + PLAYER_MAX_DRIFT_SPEED;
+  // Preserve the reaction allowance when grown drive covers more world space.
+  return Math.max(HAZARD_SCAN_RADIUS, speed * HAZARD_ASSIST_REACTION_SECONDS +
+    speed * speed / (2 * HAZARD_WARNING_DECELERATION * limits.scale) +
+    MAX_PLANET_RADIUS * (1 + HAZARD_RADIUS_PADDING) + player.r +
+    HAZARD_BASE_CLEARANCE + HAZARD_GRAVITY_PADDING);
+}
+
 function hazardMetrics(body) {
-  if (body === player || body.r < player.r || !["moon", "planet"].includes(body.type)) return null;
+  if (body === player || isLooseDebris(body) || !["moon", "planet"].includes(body.type) ||
+      ["eat", "collect"].includes(collisionDisposition(player, body))) return null;
   const dx = body.x - player.x, dy = body.y - player.y;
   const distance = Math.hypot(dx, dy);
   const ux = distance === 0 ? 0 : dx / distance;
@@ -19,7 +30,8 @@ function hazardMetrics(body) {
   const force = gravityFromSource(player, body);
   const inwardPull = Math.max(0, force.ax * ux + force.ay * uy);
   const pullMargin = Math.min(HAZARD_GRAVITY_PADDING, 0.5 * inwardPull * lead * lead);
-  const brakingDistance = closingSpeed * closingSpeed / (2 * HAZARD_WARNING_DECELERATION);
+  const brakingDistance = closingSpeed * closingSpeed /
+    (2 * HAZARD_WARNING_DECELERATION * playerMovementLimits().scale);
   const warningDistance = clearance + closingSpeed * lead + brakingDistance + pullMargin;
   const squaredSpeed = vx * vx + vy * vy;
   const closestTime = squaredSpeed === 0 ? 0 : Math.max(0, (dx * vx + dy * vy) / squaredSpeed);
@@ -34,13 +46,28 @@ function hazardMetrics(body) {
 
 function collectHazardWarnings() {
   const warnings = [];
-  visitRegionBodies(worldRegionBounds(player.x, player.y, HAZARD_SCAN_RADIUS + player.r,
-    HAZARD_SCAN_RADIUS + player.r, 0), body => {
+  const seen = new Set();
+  const visit = body => {
     // Query resident objects, not just visible or locally simulated centers.
-    if (body.type !== "moon" && body.type !== "planet") return;
+    if (seen.has(body.id) || (body.type !== "moon" && body.type !== "planet")) return;
+    seen.add(body.id);
+    if (bodyIntersectsView(body, camera.x, camera.y, width / (2 * camera.zoom),
+        height / (2 * camera.zoom), body.r)) return;
     const warning = hazardMetrics(body);
     if (warning) warnings.push(warning);
-  });
+  };
+  const scan = hazardScanRadius();
+  visitRegionBodies(worldRegionBounds(player.x, player.y, scan, scan, 0), visit);
+  for (const body of world.movingBodies.values()) visit(body);
+  // Fast grown approaches can exceed the detailed region window. Reuse the
+  // bounded planet index rather than generating distant food for warning queries.
+  const bounds = backgroundCellBounds(scan, scan);
+  for (let y = bounds.minY; y <= bounds.maxY; y++) {
+    for (let x = bounds.minX; x <= bounds.maxX; x++) {
+      const body = world.backgroundPlanets.get(world.generatedPlanetCells.get(regionKey(x, y)));
+      if (body) visit(body);
+    }
+  }
   warnings.sort((a, b) => a.priority - b.priority || a.timeToSurface - b.timeToSurface ||
     a.surfaceGap - b.surfaceGap || a.id.localeCompare(b.id));
   return warnings;
@@ -53,7 +80,7 @@ function rectanglesOverlap(a, b, padding = 5) {
 
 function indicatorObstacles() {
   const obstacles = [getHudBounds()];
-  if (evolutionNotification) {
+  if (gameplayNotification()) {
     const w = Math.min(280, width - 16);
     obstacles.push({ x: width / 2 - w / 2, y: height * 0.8 - 16, w, h: 32 });
   }
@@ -153,7 +180,8 @@ function drawHazardIndicators() {
     obstacles.push(box);
     noStroke(); fill(10, 14, 23, 225); rect(box.x, box.y, box.w, box.h, 5);
     fill(255, 150, 145); textSize(12);
-    text("DANGER · " + (warning.type === "planet" ? "Planet" : "Moon"), box.x + box.w / 2, box.y + 9);
+    text((canFragmentTogether(player, warning.body) ? "IMPACT" : "DANGER") + " · " +
+      (warning.type === "planet" ? "Planet" : "Moon"), box.x + box.w / 2, box.y + 9);
     fill(235); textSize(11);
     const detail = warning.closingSpeed >= HAZARD_MIN_CLOSING_SPEED ?
       "Closing · ~" + Math.min(99, warning.timeToSurface).toFixed(1) + "s" : "Nearby surface";

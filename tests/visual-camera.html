@@ -17,17 +17,22 @@
 <body>
   <aside id="checks">
     <strong>Camera visual checks · test page</strong>
-    <p>Buttons set test mass. Watch growth first, then the gradual pullback.
-      Move over the canvas to use normal mouse steering.</p>
+    <p>Mass changes immediately; zoom follows over about 0.3 seconds.
+      Settled apparent size grows only slightly.
+      Center the cursor briefly to arm steering, then move outward.</p>
+    <button onclick="neutralPreview()">Neutral start</button>
+    <button onclick="foragePreview()">Normal foraging</button>
     <button onclick="previewSize(20)">Asteroid r20</button>
     <button onclick="previewSize(120)">Moon r120</button>
     <button onclick="previewSize(300)">Grow r300</button>
     <button onclick="previewSize(1200)">Planet r1200</button>
+    <button onclick="previewSize(1999)">Late r1999</button>
+    <button onclick="previewGrowth = true">Gradual growth</button>
     <br>
     <button onclick="previewScene(false)">Scale scene</button>
     <button onclick="previewScene(true)">Procedural scene</button>
     <br>
-    <button onclick="previewCruise = true">Cruise right</button>
+    <button onclick="cruisePreview()">Cruise right</button>
     <button onclick="stopPreview()">Brake</button>
     <output id="visual-status"></output>
   </aside>
@@ -39,32 +44,73 @@
   <script src="../js/stage-visuals.js"></script>
   <script src="../js/gravity.js"></script>
   <script src="../js/world.js"></script>
+  <script src="../js/collisions.js"></script>
+  <script src="../js/ecology.js"></script>
   <script src="../js/hazards.js"></script>
   <script src="../js/movement-visuals.js"></script>
   <script src="../js/spawn-and-init.js"></script>
   <script src="../js/screens.js"></script>
   <script src="../js/gameplay.js"></script>
   <script src="../js/p5-entry.js"></script>
+  <script src="pacing-scenario.js"></script>
   <script>
     // Developer-only controls. This page is never loaded by the game entry point.
     let previewCruise = false;
+    let previewGrowth = false;
     let previewProcedural = false;
+    let previewForage = null;
     const originalSetup = setup;
     const originalDraw = draw;
+    const originalUpdate = updateGame;
+    updateGame = function () {
+      if (previewForage) steerPacingScenario(previewForage);
+      originalUpdate();
+    };
     setup = function () { originalSetup(); previewScene(false); };
     draw = function () {
       if (previewCruise) { mouseX = width / 2 + 180; mouseY = height / 2; }
+      if (previewGrowth && gameState === 'playing') {
+        setBodyMass(player, massForRadius(Math.min(1999, player.r * Math.exp(Math.min(deltaTime, MAX_FRAME_DELTA_MS) / 1000 * 0.3))));
+        updatePlayerEvolution();
+        if (player.r >= 1999) previewGrowth = false;
+      }
       originalDraw();
       if (frameCount % 6 === 0) {
+        const visible=getRenderableBodies();
+        const counts=type=>visible.filter(body=>body.type===type).length;
         document.getElementById('visual-status').textContent =
           'r ' + player.r.toFixed(1) + ' · zoom ' + camera.zoom.toFixed(3) +
           ' → ' + camera.targetZoom.toFixed(3) + ' · regions ' + world.generatedRegions.size +
-          ' · simulated ' + star_objects.length;
+          ' · simulated ' + star_objects.length + ' · screen r ' + (player.r * camera.zoom).toFixed(1) +
+          'px (' + (200 * player.r * camera.zoom / Math.min(width, height)).toFixed(1) + '%) · drawn ' + visible.length +
+          ' (asteroids '+counts('asteroid')+' / moons '+counts('moon')+' / planets '+counts('planet')+')' +
+          ' · travel ' + (Math.hypot(player.vx, player.vy) * camera.zoom).toFixed(0) + 'px/s' +
+          ' · drive limit ' + playerMovementLimits().speed.toFixed(0) +
+          ' · steering ' + (!steering.armed ? 'center to arm' : steering.rampTicks < STEERING_ACTIVATION_TICKS ? 'ramping' : 'active');
       }
     };
     function stopPreview() {
       previewCruise = false;
+      previewGrowth = false;
+      previewForage = null;
       mouseX = width / 2; mouseY = height / 2;
+    }
+    function neutralPreview() {
+      previewForage = null;
+      previewCruise = previewGrowth = false;
+      startGame({ seed: 42, fixture: !previewProcedural });
+      gameState = 'playing'; // deliberately retain the actual cursor position
+    }
+    function cruisePreview() {
+      previewForage = null;
+      // Automated movement fixture; Neutral start exercises the actual entry gate.
+      steering.armed = steering.engaged = true; steering.rampTicks = STEERING_ACTIVATION_TICKS;
+      previewCruise = true;
+    }
+    function foragePreview() {
+      previewCruise = previewGrowth = false;
+      previewProcedural = true;
+      previewForage = loadPacingScenario(42);
     }
     function previewScene(procedural) {
       previewProcedural = procedural;
