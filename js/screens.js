@@ -165,6 +165,22 @@ function drawMenuAsteroids() {
 }
 
 function drawMenuTextPanel() {
+  if (width < 640 || height < 420) {
+    push(); rectMode(CORNER); noStroke(); fill(7, 12, 34, 225);
+    rect(8, 8, width - 16, height - 16, 12);
+    textAlign(CENTER, CENTER); textFont("Trebuchet MS");
+    fill(248, 238, 255); textSize(Math.min(24, width / 13));
+    text("The True Star Devourer", width / 2, height * 0.14);
+    textSize(Math.min(13, width / 26)); fill(225, 230, 255);
+    text("Steer from center; farther out = faster.", width / 2, height * 0.3);
+    text("Center to brake; gravity still pulls.", width / 2, height * 0.39);
+    text("Steer outward to escape.", width / 2, height * 0.46);
+    text("Green: food · Red: danger · Cyan arrow: pull", width / 2, height * 0.55);
+    fill(255, 235, 170); textSize(16);
+    text("Difficulty: " + DIFFICULTY_PRESETS[selectedDifficultyIndex].name, width / 2, height * 0.65);
+    textSize(12); text("LEFT / RIGHT to change · SPACE to start", width / 2, height * 0.82);
+    pop(); return;
+  }
   const panelW = min(width * 0.78, 920);
   const panelH = min(height * 0.56, 500);
   const panelX = width / 2;
@@ -189,22 +205,24 @@ function drawMenuTextPanel() {
   textFont("Trebuchet MS");
   fill(225, 230, 255);
   textSize(constrain(width * 0.018, 14, 22));
-  text("Use Mouse to control your star and eat smaller stars!", width / 2, height * 0.5);
-  text("But watch out for bigger stars!", width / 2, height * 0.54);
+  text("Steer from screen center; move farther out to accelerate.", width / 2, height * 0.5);
+  text("Center to brake; gravity still pulls. Steer outward to escape.", width / 2, height * 0.54);
+  textSize(constrain(width * 0.016, 13, 18));
+  text("Green: edible · Red: danger · Cyan arrow: gravitational pull", width / 2, height * 0.58);
 
   const selected = DIFFICULTY_PRESETS[selectedDifficultyIndex];
   textSize(constrain(width * 0.024, 18, 30));
   fill(255, 235, 170);
-  text("Difficulty: " + selected.name, width / 2, height * 0.615);
+  text("Difficulty: " + selected.name, width / 2, height * 0.65);
 
   textSize(constrain(width * 0.016, 13, 18));
   fill(215, 222, 250);
-  text("LEFT/RIGHT ARROW: Change difficulty", width / 2, height * 0.665);
+  text("LEFT/RIGHT ARROW: Change difficulty", width / 2, height * 0.7);
 
   const pulse = map(sin(frameCount * 0.06), -1, 1, 150, 255);
   textSize(constrain(width * 0.03, 22, 36));
   fill(255, 245, 205, pulse);
-  text("Press SPACE to Start", width / 2, height * 0.74);
+  text("Press SPACE to Start", width / 2, height * 0.78);
 }
 
 function drawMenu() {
@@ -226,15 +244,6 @@ function drawGameOver() {
   text("Press SPACE to Restart", width / 2, height / 2 + 60);
 }
 
-function drawProgress() {
-  fill(255);
-  textAlign(CENTER, CENTER);
-  textSize(28);
-  text("Congratulations! You've evolved into the next stage!", width / 2, height / 2 - 60);
-  textSize(20);
-  text("Press SPACE to continue", width / 2, height / 2 - 20);
-}
-
 function drawEnding() {
   fill(255);
   textAlign(CENTER, CENTER);
@@ -242,6 +251,6 @@ function drawEnding() {
   text("You have become the True Star Devourer!", width / 2, height / 2 - 40);
   text("For now... Until the next BIG BOOM", width / 2, height / 2);
   textSize(20);
-  text("Well, until next update", width / 2, height / 2 + 40);
-  text("You can refresh the page to play again!", width / 2, height / 2 + 80);
+  text("Final Mass: " + formatMass(player.mass) + " | Score: " + score, width / 2, height / 2 + 40);
+  text("Press SPACE to play again!", width / 2, height / 2 + 80);
 }

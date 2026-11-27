@@ -1,42 +1,16 @@
-function getCurrentStageName() {
-  return GAME_STAGES[currentStageIndex] || GAME_STAGES[0];
-}
-
-function getStagePalette() {
-  if (currentStageIndex === 1) {
-    return {
-      playerBase: color(176, 184, 196),
-      playerDetail: color(128, 138, 150),
-      starBase: color(156, 162, 170),
-      starDetail: color(108, 116, 124)
-    };
+function getBodyPalette(body, isPlayer = false) {
+  if (body.type === "moon") {
+    if (isPlayer) return { base: color(176, 184, 196), detail: color(128, 138, 150) };
+    return { base: color(156, 162, 170), detail: color(108, 116, 124) };
   }
-
-  // Future stage palettes can be added here.
-  // if (currentStageIndex === 2) {
-  //   return { ... };
-  // }
-
-  // Stage 0 default visuals.
-  return {
-    playerBase: color(180, 205, 235),
-    playerDetail: color(130, 155, 185),
-    starBase: color(150, 128, 102),
-    starDetail: color(105, 88, 68)
-  };
-}
-
-function makeShapeForCurrentStage(radius) {
-  if (currentStageIndex === 1) {
-    // Stage 1: more points + low roughness to keep bodies very circular.
-    return makeAsteroidShape(radius, floor(random(18, 28)), 0.08);
+  if (body.type === "planet") {
+    const palettes = [
+      { base: color(65, 133, 182), detail: color(46, 100, 118) },
+      { base: color(183, 114, 78), detail: color(133, 75, 63) },
+      { base: color(125, 103, 170), detail: color(87, 76, 130) }
+    ];
+    return palettes[body.variant];
   }
-
-  // Future stage implementations:
-  // if (currentStageIndex === 2) {
-  //   return makeSomethingElse(radius);
-  // }
-
-  // Stage 0 default shape.
-  return makeAsteroidShape(radius, floor(random(9, 14)), 0.28);
+  if (isPlayer) return { base: color(180, 205, 235), detail: color(130, 155, 185) };
+  return { base: color(150, 128, 102), detail: color(105, 88, 68) };
 }

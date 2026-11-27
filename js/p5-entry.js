@@ -1,15 +1,16 @@
 function setup() {
   createCanvas(max(1, windowWidth), max(1, windowHeight));
-  initializeAdaptiveMaxStars();
   startGame();
   gameState = "menu";
 }
 
 function windowResized() {
-  const previousWidth = width;
-  const previousHeight = height;
   resizeCanvas(max(1, windowWidth), max(1, windowHeight), true);
-  resizeGameBodies(previousWidth, previousHeight);
+  // A resize changes only the viewport and which existing regions are active.
+  if (player) {
+    followPlayer();
+    syncWorldRegions();
+  }
 }
 
 function draw() {
@@ -17,12 +18,10 @@ function draw() {
 
   if (gameState === "menu") {
     drawMenu();
-  } else if (GAME_STAGES.includes(gameState)) {
+  } else if (gameState === "playing") {
     runGame();
   } else if (gameState === "gameover") {
     drawGameOver();
-  } else if (gameState === "progress") {
-    drawProgress();
   } else if (gameState === "ending") {
     drawEnding();
   }
@@ -42,15 +41,11 @@ function keyPressed() {
   if (key === " ") {
     if (gameState === "menu") {
       difficultyFactor = DIFFICULTY_PRESETS[selectedDifficultyIndex].factor;
-      currentStageIndex = 0;
       startGame();
-      gameState = getCurrentStageName();
-    } else if (gameState === "gameover") {
-      currentStageIndex = 0;
+      gameState = "playing";
+    } else if (gameState === "gameover" || gameState === "ending") {
       startGame();
-      gameState = getCurrentStageName();
-    } else if (gameState === "progress") {
-      handleStageProgression();
+      gameState = "playing";
     }
   }
 }

@@ -1,8 +1,8 @@
-function makeAsteroidShape(radius, pointCount, roughness) {
+function makeAsteroidShape(radius, pointCount, roughness, rng = Math.random) {
   let points = [];
   for (let i = 0; i < pointCount; i++) {
     let angle = map(i, 0, pointCount, 0, TWO_PI);
-    let localRadius = radius * random(1 - roughness, 1 + roughness);
+    let localRadius = radius * (1 - roughness + rng() * roughness * 2);
     points.push({
       x: cos(angle) * localRadius,
       y: sin(angle) * localRadius
@@ -65,17 +65,67 @@ function drawRockyMoonBody(body, baseColor, detailColor) {
   pop();
 }
 
-function drawBodyForCurrentStage(body, baseColor, detailColor) {
-  if (currentStageIndex === 1) {
+function makeShapeForType(type, radius, rng) {
+  if (type === "moon") return makeAsteroidShape(radius, 24, 0.08, rng);
+  if (type === "planet") return [];
+  return makeAsteroidShape(radius, 9 + Math.floor(rng() * 5), 0.28, rng);
+}
+
+function createBody(id, type, x, y, r, rng, vx = 0, vy = 0) {
+  return {
+    id, type, x, y, r, vx, vy,
+    mass: massForRadius(r),
+    ax: 0, ay: 0, gravityAx: 0, gravityAy: 0,
+    gravitySource: id !== "player" && !!GRAVITY_SOURCE_PROFILES[type]?.enabled,
+    angle: rng() * Math.PI * 2,
+    rotationSpeed: (rng() * 2 - 1) * (type === "planet" ? 0.015 : 30 / r),
+    variant: Math.floor(rng() * 3),
+    shapeRadius: r,
+    shape: makeShapeForType(type, r, rng)
+  };
+}
+
+function drawPlanetBody(body, baseColor, detailColor) {
+  push();
+  translate(body.x, body.y);
+  rotate(body.angle);
+  noStroke();
+  fill(baseColor);
+  circle(0, 0, body.r * 2);
+  fill(detailColor);
+  ellipse(-body.r * 0.25, -body.r * 0.2, body.r * 0.8, body.r * 0.4);
+  ellipse(body.r * 0.3, body.r * 0.3, body.r * 0.55, body.r * 0.7);
+  circle(body.r * 0.25, -body.r * 0.4, body.r * 0.3);
+  pop();
+}
+
+function drawBody(body, isPlayer = false, detailed = true) {
+  const { base: baseColor, detail: detailColor } = getBodyPalette(body, isPlayer);
+  if (!detailed) {
+    // A display-only LOD. No radius, shape, mass, identity, or motion is modified.
+    push();
+    fill(baseColor);
+    noStroke();
+    if (!isPlayer) {
+      stroke(...getThreatVisual(body.r, player.r).ring);
+      strokeWeight(0.8 / camera.zoom);
+    }
+    circle(body.x, body.y, Math.max(body.r * 2, 2.5 / camera.zoom));
+    pop();
+  } else if (body.type === "planet") {
+    drawPlanetBody(body, baseColor, detailColor);
+  } else if (body.type === "moon") {
     drawRockyMoonBody(body, baseColor, detailColor);
-    return;
+  } else {
+    drawAsteroidBody(body, baseColor, detailColor);
   }
-
-  // Future stage implementations:
-  // if (currentStageIndex === 2) {
-  //   drawPlanetBody(body, baseColor, detailColor);
-  //   return;
-  // }
-
-  drawAsteroidBody(body, baseColor, detailColor);
+  if (!isPlayer && detailed) {
+    // A thin, fixed-pixel rim communicates the exact eating rule on every difficulty.
+    // Easy modes add the existing larger glow and pulsing ring.
+    push(); noFill();
+    stroke(...getThreatVisual(body.r, player.r).ring);
+    strokeWeight(1 / camera.zoom);
+    circle(body.x, body.y, body.r * 2);
+    pop();
+  }
 }

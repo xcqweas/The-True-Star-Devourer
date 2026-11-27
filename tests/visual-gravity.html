@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Gravity play checks</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.12/lib/p5.js"></script>
+  <style>
+    #checks { position: fixed; right: 12px; bottom: 12px; width: 300px; padding: 14px;
+      color: #dbe8f5; background: #091320ed; border: 1px solid #35506a; border-radius: 8px;
+      font: 13px/1.5 sans-serif; }
+    #checks p { margin: 4px 0 8px; }
+    button { margin: 2px; padding: 6px 9px; cursor: pointer; }
+    #status { display: block; margin: 8px 0; color: #90c8ed; }
+  </style>
+</head>
+<body>
+  <aside id="checks">
+    <strong>Gravity play checks · test page</strong>
+    <p>Each scenario replays the tested inputs, then pauses. Use Mouse control to
+      steer yourself. Center the cursor to brake; steer outward to escape.</p>
+    <button onclick="replay('one')">One source</button>
+    <button onclick="replay('multiple')">Multiple sources</button>
+    <button onclick="replay('close')">Close pass</button>
+    <button onclick="replay('escape')">Escape</button>
+    <br>
+    <button onclick="replay(previewName)">Replay</button>
+    <button onclick="autoSteer = false; previewPaused = false">Mouse control</button>
+    <button onclick="previewPaused = !previewPaused">Pause / resume</button>
+    <label><input type="checkbox" id="overview" checked> Overview (0.45×)</label>
+    <output id="status"></output>
+  </aside>
+  <script src="../js/constants.js"></script>
+  <script src="../js/game-state.js"></script>
+  <script src="../js/camera.js"></script>
+  <script src="../js/growth.js"></script>
+  <script src="../js/bodies.js"></script>
+  <script src="../js/stage-visuals.js"></script>
+  <script src="../js/gravity.js"></script>
+  <script src="../js/world.js"></script>
+  <script src="../js/hazards.js"></script>
+  <script src="../js/movement-visuals.js"></script>
+  <script src="../js/spawn-and-init.js"></script>
+  <script src="../js/screens.js"></script>
+  <script src="../js/gameplay.js"></script>
+  <script src="../js/p5-entry.js"></script>
+  <script src="gravity-scenarios.js"></script>
+  <script>
+    let previewName = 'one', previewScenario, autoSteer = true, previewPaused = false;
+    const gameSetup = setup, gameDraw = draw, gameCamera = updateCamera;
+    setup = function () { gameSetup(); replay('one'); };
+    updateCamera = function (dt) {
+      gameCamera(dt);
+      if (document.getElementById('overview').checked) camera.zoom = 0.45;
+    };
+    draw = function () {
+      if (previewPaused) { background(30); drawGame(); }
+      else {
+        if (autoSteer) steerGravityScenario(previewScenario);
+        gameDraw();
+        if (autoSteer && runTick >= previewScenario.ticks) previewPaused = true;
+      }
+      if (frameCount % 6 === 0) {
+        document.getElementById('status').textContent =
+          (previewPaused ? 'Paused' : 'Running') + ' · tick ' + runTick +
+          ' · speed ' + Math.hypot(player.vx, player.vy).toFixed(1) +
+          ' · gravity ' + Math.hypot(player.gravityAx, player.gravityAy).toFixed(1) +
+          ' · field sources ' + world.gravitySources.size + ' · ' + gameState;
+      }
+    };
+    function replay(name) {
+      previewName = name;
+      previewScenario = loadGravityScenario(name);
+      autoSteer = true;
+      previewPaused = false;
+    }
+  </script>
+</body>
+</html>

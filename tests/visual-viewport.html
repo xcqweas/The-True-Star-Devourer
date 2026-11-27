@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>Real viewport resize checks</title>
+  <style>body{margin:8px;background:#141a23;color:#ddd;font:14px sans-serif}button{margin:4px;padding:8px}iframe{display:block;border:1px solid #526071;max-width:100%}</style>
+</head>
+<body>
+  <button onclick="resizeScene(1100,680)">Wide viewport</button>
+  <button onclick="resizeScene(480,320)">Compact viewport</button>
+  <button onclick="resizeScene(320,560)">Portrait viewport</button>
+  <button onclick="resizeScene(320,180)">Short viewport</button>
+  <span>Resizes the game frame's real browser viewport, preserving its running world.</span>
+  <iframe title="Game viewport" src="visual-integration.html" width="1100" height="680"></iframe>
+  <script>function resizeScene(w,h){const frame=document.querySelector('iframe');frame.width=w;frame.height=h;}</script>
+</body>
+</html>

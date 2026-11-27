@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><title>Integration play checks</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.12/lib/p5.js"></script>
+  <style>
+    #checks { position:fixed; bottom:12px; left:12px; max-width:440px; padding:12px;
+      background:#091320ed; color:#dbe8f5; border:1px solid #35506a; border-radius:8px;
+      font:12px/1.5 sans-serif; } button { margin:2px; padding:5px 8px; }
+    output { display:block; color:#90c8ed; } p { margin:4px 0; }
+    summary { cursor:pointer; }
+    @media(max-height:400px) { #checks { bottom:2px; left:2px; width:150px; padding:4px; font-size:10px; } #checks p { display:none; } button { padding:2px; font-size:10px; } }
+  </style>
+</head>
+<body>
+  <aside id="checks">
+    <details open><summary>Integration checks · test page</summary>
+    <p>Shared deterministic route; real steering, physics, eating, and evolution.
+      Stopping points pause for inspection. SPACE performs the real death restart.</p>
+    <button onclick="replay('start')">Safe start</button>
+    <button onclick="replay('evolved')">Growth &amp; evolution</button>
+    <button onclick="replay('pass')">Gravity pass</button>
+    <button onclick="replay('death')">Impact</button>
+    <button onclick="approach()">Fast approach</button>
+    <button onclick="approach(true)">Pull behind HUD</button>
+    <button onclick="paused = !paused; if (!paused) stoppingPoint = 'death'">Pause / resume</button>
+    <button onclick="automatic = false; paused = false">Mouse control</button>
+    <button onclick="gameState = 'menu'; paused = false; automatic = false">Menu</button>
+    <output id="status"></output>
+    </details>
+  </aside>
+  <script src="../js/constants.js"></script>
+  <script src="../js/game-state.js"></script>
+  <script src="../js/camera.js"></script>
+  <script src="../js/growth.js"></script>
+  <script src="../js/bodies.js"></script>
+  <script src="../js/stage-visuals.js"></script>
+  <script src="../js/gravity.js"></script>
+  <script src="../js/world.js"></script>
+  <script src="../js/hazards.js"></script>
+  <script src="../js/movement-visuals.js"></script>
+  <script src="../js/spawn-and-init.js"></script>
+  <script src="../js/screens.js"></script>
+  <script src="../js/gameplay.js"></script>
+  <script src="../js/p5-entry.js"></script>
+  <script src="integration-scenario.js"></script>
+  <script>
+    let route, stoppingPoint, paused = true, automatic = true;
+    const realSetup = setup, realDraw = draw, realUpdate = updateGame, realKeys = keyPressed;
+    setup = () => { realSetup(); replay('start'); };
+    updateGame = () => {
+      if (automatic) steerIntegrationScenario(route);
+      realUpdate();
+      if (automatic) observeIntegrationScenario(route);
+    };
+    keyPressed = () => {
+      const wasDead = gameState === 'gameover'; realKeys();
+      if (wasDead && gameState === 'playing') { automatic = false; paused = false; }
+    };
+    draw = () => {
+      if (paused && gameState === 'playing') { background(30); drawGame(); } else realDraw();
+      if (automatic && (gameState === 'gameover' ||
+        (stoppingPoint === 'evolved' && route.evolved) ||
+        (stoppingPoint === 'pass' && route.phase === 'impact'))) paused = true;
+      document.getElementById('status').textContent =
+        (paused ? 'Paused' : 'Running') + ' · ' + gameState + ' · tick ' + runTick +
+        ' · ' + player.type + ' · score ' + score + ' · zoom ' + camera.zoom.toFixed(3) +
+        ' · pull ' + Math.hypot(player.gravityAx,player.gravityAy).toFixed(1) +
+        ' · warnings ' + collectHazardWarnings().length + ' · active ' + star_objects.length +
+        ' · seed ' + runSeed + ' · consumed ' + world.consumedIds.size;
+    };
+    function replay(stop) {
+      route = loadIntegrationScenario(); stoppingPoint = stop;
+      automatic = true; paused = stop === 'start';
+    }
+    function approach(near = false) {
+      replay('start'); automatic = false;
+      world.regions.clear(); world.gravitySources.clear();
+      storeWorldBody(world, createBody('approach:planet','planet',near ? 0 : 6000,near ? -2500 : 0,1800,seededRandom(1)));
+      player.vx = near ? 0 : 1200; syncWorldRegions(); updateGravitySources(true);
+      selectedDifficultyIndex = 1;
+      if (near) { mouseX = width/2; mouseY = height/2; realUpdate(); }
+    }
+  </script>
+</body>
+</html>

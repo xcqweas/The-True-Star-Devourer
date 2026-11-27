@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Camera and movement visual checks</title>
+  <link rel="stylesheet" href="../style.css">
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.12/lib/p5.js"></script>
+  <style>
+    #checks { position: fixed; right: 12px; bottom: 12px; width: 290px; padding: 14px;
+      color: #dbe8f5; background: #091320ed; border: 1px solid #35506a; border-radius: 8px;
+      font: 13px/1.5 sans-serif; }
+    #checks p { margin: 4px 0 8px; }
+    #checks button { padding: 5px 8px; margin: 2px; cursor: pointer; }
+    #visual-status { display: block; margin-top: 8px; color: #90c8ed; }
+  </style>
+</head>
+<body>
+  <aside id="checks">
+    <strong>Camera visual checks · test page</strong>
+    <p>Buttons set test mass. Watch growth first, then the gradual pullback.
+      Move over the canvas to use normal mouse steering.</p>
+    <button onclick="previewSize(20)">Asteroid r20</button>
+    <button onclick="previewSize(120)">Moon r120</button>
+    <button onclick="previewSize(300)">Grow r300</button>
+    <button onclick="previewSize(1200)">Planet r1200</button>
+    <br>
+    <button onclick="previewScene(false)">Scale scene</button>
+    <button onclick="previewScene(true)">Procedural scene</button>
+    <br>
+    <button onclick="previewCruise = true">Cruise right</button>
+    <button onclick="stopPreview()">Brake</button>
+    <output id="visual-status"></output>
+  </aside>
+  <script src="../js/constants.js"></script>
+  <script src="../js/game-state.js"></script>
+  <script src="../js/camera.js"></script>
+  <script src="../js/growth.js"></script>
+  <script src="../js/bodies.js"></script>
+  <script src="../js/stage-visuals.js"></script>
+  <script src="../js/gravity.js"></script>
+  <script src="../js/world.js"></script>
+  <script src="../js/hazards.js"></script>
+  <script src="../js/movement-visuals.js"></script>
+  <script src="../js/spawn-and-init.js"></script>
+  <script src="../js/screens.js"></script>
+  <script src="../js/gameplay.js"></script>
+  <script src="../js/p5-entry.js"></script>
+  <script>
+    // Developer-only controls. This page is never loaded by the game entry point.
+    let previewCruise = false;
+    let previewProcedural = false;
+    const originalSetup = setup;
+    const originalDraw = draw;
+    setup = function () { originalSetup(); previewScene(false); };
+    draw = function () {
+      if (previewCruise) { mouseX = width / 2 + 180; mouseY = height / 2; }
+      originalDraw();
+      if (frameCount % 6 === 0) {
+        document.getElementById('visual-status').textContent =
+          'r ' + player.r.toFixed(1) + ' · zoom ' + camera.zoom.toFixed(3) +
+          ' → ' + camera.targetZoom.toFixed(3) + ' · regions ' + world.generatedRegions.size +
+          ' · simulated ' + star_objects.length;
+      }
+    };
+    function stopPreview() {
+      previewCruise = false;
+      mouseX = width / 2; mouseY = height / 2;
+    }
+    function previewScene(procedural) {
+      previewProcedural = procedural;
+      startGame({ seed: 42, fixture: !procedural });
+      if (!procedural) {
+        const bodies = [...world.regions.values()].flatMap(bucket => [...bucket.values()]);
+        for (const body of bodies) {
+          if (body.type === 'moon') { body.x = -3500; body.y = -1800; }
+          if (body.type === 'planet') { body.x = 7200; body.y = 1000; }
+          storeWorldBody(world, body);
+        }
+        syncWorldRegions();
+      }
+      gameState = 'playing';
+      stopPreview();
+    }
+    function previewSize(radius) {
+      if (massForRadius(radius) < player.mass || gameState !== 'playing') previewScene(previewProcedural);
+      setBodyMass(player, massForRadius(radius));
+      updatePlayerEvolution();
+      stopPreview();
+    }
+  </script>
+</body>
+</html>
