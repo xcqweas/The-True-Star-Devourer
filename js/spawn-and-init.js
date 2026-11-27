@@ -17,27 +17,71 @@ function initializeAdaptiveMaxStars() {
   currentMaxStars = constrain(round(MAX_STARS * areaScale), 8, MAX_STARS);
 }
 
+function getMaxStarRadius() {
+  // Leave room for a body to enter and move even on a narrow canvas.
+  return min(width, height) / 4;
+}
+
+function constrainBodyToCanvas(body) {
+  const marginX = min(body.r, width / 2);
+  const marginY = min(body.r, height / 2);
+  body.x = constrain(body.x, marginX, width - marginX);
+  body.y = constrain(body.y, marginY, height - marginY);
+}
+
+function resizeGameBodies(previousWidth, previousHeight) {
+  initializeAdaptiveMaxStars();
+  if (!player) return;
+
+  const scaleX = width / max(1, previousWidth);
+  const scaleY = height / max(1, previousHeight);
+  player.x *= scaleX;
+  player.y *= scaleY;
+  constrainBodyToCanvas(player);
+
+  star_objects = star_objects.slice(0, currentMaxStars);
+  for (const body of star_objects) {
+    body.x *= scaleX;
+    body.y *= scaleY;
+    body.r = min(body.r, getMaxStarRadius());
+    constrainBodyToCanvas(body);
+    body.entered = true;
+  }
+}
+
 function getInitialSpawnPosition(r) {
   let centerX = width / 2;
   let centerY = height / 2;
   let halfBlockW = (width * START_CENTER_BLOCK_W) / 2;
   let halfBlockH = (height * START_CENTER_BLOCK_H) / 2;
 
+  function isSafePosition(x, y) {
+    const inCenterBlock = abs(x - centerX) < halfBlockW && abs(y - centerY) < halfBlockH;
+    const clearance = player.r + r + INITIAL_SPAWN_CLEARANCE;
+    return !inCenterBlock && dist(x, y, player.x, player.y) >= clearance;
+  }
+
   for (let i = 0; i < 50; i++) {
     let x = random(r, width - r);
     let y = random(r, height - r);
-    let inCenterBlock = abs(x - centerX) < halfBlockW && abs(y - centerY) < halfBlockH;
-    if (!inCenterBlock) {
+    if (isSafePosition(x, y)) {
       return { x, y };
     }
   }
 
-  // Fallback to corners if random sampling fails.
+  // Check corners too, but skip the spawn if this canvas has no safe position.
+  const corners = [
+    { x: r, y: r },
+    { x: width - r, y: r },
+    { x: r, y: height - r },
+    { x: width - r, y: height - r }
+  ];
   let corner = floor(random(4));
-  if (corner === 0) return { x: r, y: r };
-  if (corner === 1) return { x: width - r, y: r };
-  if (corner === 2) return { x: r, y: height - r };
-  return { x: width - r, y: height - r };
+  for (let i = 0; i < corners.length; i++) {
+    const position = corners[(corner + i) % corners.length];
+    if (isSafePosition(position.x, position.y)) return position;
+  }
+  return null;
 }
 
 function startGame(newGame = true) {
@@ -45,8 +89,9 @@ function startGame(newGame = true) {
     score = 0;
   }
 
-  startFrame = frameCount;
-  lastSpawnFrame = frameCount;
+  stageTick = 0;
+  lastSpawnTick = 0;
+  simulationAccumulator = 0;
 
   player = {
     x: width / 2,
@@ -68,15 +113,15 @@ function startGame(newGame = true) {
 
 function spawnStar(initial = false) {
   // Radius range grows with elapsed time.
-  let elapsed = (frameCount - startFrame) / 60; // time in seconds
-  let growth = elapsed / GROW_TIME; // reaches highest after given time
+  let elapsed = stageTick / SIMULATION_FPS;
+  let growth = constrain(elapsed / GROW_TIME, 0, 1);
 
   // Combine the factors, and game is slightly harder in later stages.
   let factor = difficultyFactor * growth + min(max(0, currentStageIndex * 0.05), 0.25);
 
-  // Cap the growth factor to prevent excessively large stars in later stages.
-  let minR = factor * 80 + 8;
-  let maxR = factor * 160 + 30;
+  // Both ends of the range must fit the current canvas.
+  let minR = min(factor * 80 + 8, getMaxStarRadius());
+  let maxR = min(factor * 160 + 30, getMaxStarRadius());
   let r = random(minR, maxR);
 
   // Smaller stars tend to move faster, but all new stars spawn faster as time goes on.
@@ -92,6 +137,7 @@ function spawnStar(initial = false) {
   if (initial) {
     // Place at startup away from the center area to avoid immediate collisions.
     let spawnPos = getInitialSpawnPosition(r);
+    if (!spawnPos) return;
     x = spawnPos.x;
     y = spawnPos.y;
     let initialAngle = random(TWO_PI);

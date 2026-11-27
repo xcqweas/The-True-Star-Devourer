@@ -32,3 +32,11 @@ The game is now split into stage-oriented and responsibility-oriented files:
 You can move your asteroid with your mouse (it will try to follow it, but at a speed limit), and you can collide with smaller asteroids to eat them! But colliding with larger asteroids will... well, make yourself eaten.
 
 Currently the only goal is to eat smaller asteroids and avoid larger asteroids, and by eating, you will also grow larger!
+
+Gameplay uses a fixed 60-tick simulation so movement, spawning, and the stage clock stay consistent across rendering frame rates. Cursor following is capped at 1200 pixels per second. A suspended tab catches up by at most 250 ms when it resumes.
+
+Spawn sizes stop growing after 90 seconds in each stage and are limited to fit the canvas. Resizing adjusts the body positions, star sizes, and population cap.
+
+## Logic checks
+
+With Node.js installed, run `node --test` from the project folder. The tests use p5 math and drawing stubs to check gameplay behavior; visual checks still require a browser.

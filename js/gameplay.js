@@ -44,45 +44,60 @@ function isThreatAssistEnabled() {
 }
 
 function runGame() {
-  let palette = getStagePalette();
-  const showThreatAssist = isThreatAssistEnabled();
+  simulationAccumulator += constrain(deltaTime, 0, MAX_FRAME_DELTA_MS);
+  while (simulationAccumulator + 0.000001 >= SIMULATION_STEP_MS && GAME_STAGES.includes(gameState)) {
+    simulationAccumulator = max(0, simulationAccumulator - SIMULATION_STEP_MS);
+    updateGame();
+  }
 
-  // UI
-  fill(255);
-  textAlign(LEFT, TOP);
-  textSize(16);
-  text("Time Passed: " + floor((frameCount - startFrame) / 60), 20, 20);
-  text("Score: " + score, 20, 40);
-  text("Stage: " + (currentStageIndex + 1), 20, 60);
+  drawGame();
+}
+
+function bodiesCollidedDuringStep(playerStartX, playerStartY, bodyStartX, bodyStartY, body) {
+  // Sweep relative motion so neither body can skip a collision between ticks.
+  const startX = playerStartX - bodyStartX;
+  const startY = playerStartY - bodyStartY;
+  const moveX = (player.x - playerStartX) - (body.x - bodyStartX);
+  const moveY = (player.y - playerStartY) - (body.y - bodyStartY);
+  const lengthSquared = moveX * moveX + moveY * moveY;
+  const t = lengthSquared === 0 ? 0 : constrain(-(startX * moveX + startY * moveY) / lengthSquared, 0, 1);
+  const closestX = startX + moveX * t;
+  const closestY = startY + moveY * t;
+  const radius = player.r + body.r;
+  return closestX * closestX + closestY * closestY < radius * radius;
+}
+
+function updateGame() {
+  stageTick++;
+  const playerStartX = player.x;
+  const playerStartY = player.y;
 
   // Move player toward mouse.
   let dx = mouseX - player.x;
   let dy = mouseY - player.y;
-  player.x += dx * 0.05;
-  player.y += dy * 0.05;
+  const distance = Math.hypot(dx, dy);
+  const moveScale = distance === 0 ? 0 : min(0.05, PLAYER_MAX_SPEED / SIMULATION_FPS / distance);
+  player.x += dx * moveScale;
+  player.y += dy * moveScale;
+  constrainBodyToCanvas(player);
   player.angle += player.rotationSpeed;
 
-  // Draw player.
-  drawBodyForCurrentStage(player, palette.playerBase, palette.playerDetail);
-
   // Respawn stars over time.
-  if (frameCount - lastSpawnFrame >= getSpawnInterval() && star_objects.length < currentMaxStars) {
+  if (stageTick - lastSpawnTick >= getSpawnInterval() && star_objects.length < currentMaxStars) {
     spawnStar();
-    lastSpawnFrame = frameCount;
+    lastSpawnTick = stageTick;
   }
 
-  // Draw, move, and resolve collision for all stars.
+  // Move and resolve collisions before rendering.
   for (let i = star_objects.length - 1; i >= 0; i--) {
     let f = star_objects[i];
+    const bodyStartX = f.x;
+    const bodyStartY = f.y;
 
     f.x += f.vx;
     f.y += f.vy;
     f.angle += f.rotationSpeed;
-
-    if (showThreatAssist) {
-      drawThreatRing(f);
-    }
-    drawBodyForCurrentStage(f, palette.starBase, palette.starDetail);
+    const escaped = !f.entered && (f.x + f.r < 0 || f.x - f.r > width || f.y + f.r < 0 || f.y - f.r > height);
 
     // Bounce once fully on-screen.
     if (!f.entered) {
@@ -90,13 +105,14 @@ function runGame() {
         f.entered = true;
       }
     } else {
-      if (f.x - f.r < 0 || f.x + f.r > width) f.vx *= -1;
-      if (f.y - f.r < 0 || f.y + f.r > height) f.vy *= -1;
+      if (f.x - f.r < 0) f.vx = abs(f.vx);
+      else if (f.x + f.r > width) f.vx = -abs(f.vx);
+      if (f.y - f.r < 0) f.vy = abs(f.vy);
+      else if (f.y + f.r > height) f.vy = -abs(f.vy);
+      constrainBodyToCanvas(f);
     }
 
-    let d = dist(player.x, player.y, f.x, f.y);
-
-    if (d < player.r + f.r) {
+    if (bodiesCollidedDuringStep(playerStartX, playerStartY, bodyStartX, bodyStartY, f)) {
       if (player.r > f.r) {
         // Harder difficulties grow less per eaten star, vice versa
         player.r += f.r * 0.05 / difficultyFactor;
@@ -113,7 +129,28 @@ function runGame() {
         gameState = "gameover";
         return;
       }
+    } else if (escaped) {
+      // Free missed entry slots after checking for any collision along the path.
+      star_objects.splice(i, 1);
     }
+  }
+}
+
+function drawGame() {
+  const palette = getStagePalette();
+  const showThreatAssist = isThreatAssistEnabled();
+
+  fill(255);
+  textAlign(LEFT, TOP);
+  textSize(16);
+  text("Time Passed: " + floor(stageTick / SIMULATION_FPS), 20, 20);
+  text("Score: " + score, 20, 40);
+  text("Stage: " + (currentStageIndex + 1), 20, 60);
+
+  drawBodyForCurrentStage(player, palette.playerBase, palette.playerDetail);
+  for (const body of star_objects) {
+    if (showThreatAssist) drawThreatRing(body);
+    drawBodyForCurrentStage(body, palette.starBase, palette.starDetail);
   }
 }
 

@@ -1,12 +1,15 @@
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(max(1, windowWidth), max(1, windowHeight));
   initializeAdaptiveMaxStars();
   startGame();
   gameState = "menu";
 }
 
 function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
+  const previousWidth = width;
+  const previousHeight = height;
+  resizeCanvas(max(1, windowWidth), max(1, windowHeight), true);
+  resizeGameBodies(previousWidth, previousHeight);
 }
 
 function draw() {
