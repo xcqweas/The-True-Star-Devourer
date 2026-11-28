@@ -6,14 +6,24 @@ function radiusForMass(mass) {
   return (mass / MASS_SCALE) ** (1 / MASS_RADIUS_EXPONENT);
 }
 
+function bodyRadiusScale(type) { return MASSIVE_PLANET_BRANCHES[type]?.radiusScale ?? 1; }
+
+function isPlanetaryBody(body) { return body.type === "planet" || !!MASSIVE_PLANET_BRANCHES[body.type]; }
+
+function playerFormLabel() {
+  return MASSIVE_PLANET_BRANCHES[player.type]?.label ?? EVOLUTION_FORMS[currentFormIndex].label;
+}
+
 function setBodyMass(body, mass) {
   body.mass = mass;
-  body.r = radiusForMass(mass);
+  body.r = radiusForMass(mass) * bodyRadiusScale(body.type);
 }
 
 function updatePlayerEvolution() {
+  if (pendingEvolutionIndex !== null) return;
   let nextIndex = currentFormIndex;
   while (nextIndex + 1 < EVOLUTION_FORMS.length && player.mass >= EVOLUTION_FORMS[nextIndex + 1].mass) {
+    if (EVOLUTION_FORMS[nextIndex + 1].choices) break;
     nextIndex++;
   }
   if (nextIndex !== currentFormIndex) {
@@ -29,7 +39,31 @@ function updatePlayerEvolution() {
       expiresAtTick: runTick + EVOLUTION_NOTICE_TICKS
     };
   }
+  const next = EVOLUTION_FORMS[currentFormIndex + 1];
+  if (next?.choices && player.mass >= next.mass) {
+    pendingEvolutionIndex = currentFormIndex + 1;
+    gameState = "evolving";
+    return;
+  }
   if (player.mass >= FINAL_MASS_MILESTONE) gameState = "ending";
+}
+
+function choosePlayerEvolution(type) {
+  const form = EVOLUTION_FORMS[pendingEvolutionIndex];
+  if (gameState !== "evolving" || !form?.choices?.includes(type)) return false;
+  currentFormIndex = pendingEvolutionIndex;
+  pendingEvolutionIndex = null;
+  player.type = type;
+  // Preserve the exact mass and the same controlled core; only density changes.
+  setBodyMass(player, player.mass);
+  player.shapeRadius = player.r;
+  player.shape = makeShapeForType(type, player.r, seededRandom(hashSeed(runSeed, "evolution", type)));
+  evolutionNotification = { text: "Evolved into " + playerFormLabel() + "!",
+    expiresAtTick: runTick + EVOLUTION_NOTICE_TICKS };
+  simulationAccumulator = 0; // no catch-up for time spent making the choice
+  gameState = "playing";
+  updatePlayerEvolution(); // retain overshoot, including a configured final threshold
+  return true;
 }
 
 function absorbBodyMass(body, collector = player) {

@@ -14,6 +14,7 @@ function startGame(options = getRunOptions()) {
   runTick = 0;
   simulationAccumulator = 0;
   currentFormIndex = 0;
+  pendingEvolutionIndex = null;
   evolutionNotification = null;
   impactNotification = null;
   steering.armed = steering.engaged = false;

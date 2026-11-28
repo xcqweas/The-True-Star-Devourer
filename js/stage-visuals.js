@@ -1,5 +1,7 @@
 function getBodyPalette(body, isPlayer = false) {
   if (isLooseDebris(body)) return { base: color(225, 170, 65), detail: color(110, 65, 30) };
+  if (body.type === "massiveSolid") return { base: color(164, 80, 62), detail: color(93, 49, 51) };
+  if (body.type === "gasGiant") return { base: color(231, 192, 130), detail: color(167, 128, 96) };
   if (body.type === "moon") {
     if (isPlayer) return { base: color(176, 184, 196), detail: color(128, 138, 150) };
     return { base: color(156, 162, 170), detail: color(108, 116, 124) };

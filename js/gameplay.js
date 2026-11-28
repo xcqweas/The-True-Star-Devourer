@@ -31,6 +31,7 @@ function runGame() {
   updateCamera(deltaTime / 1000);
   updateParallax();
   drawGame();
+  if (gameState === "evolving") drawEvolutionChoice();
 }
 
 function bodiesCollidedDuringStep(playerStartX, playerStartY, bodyStartX, bodyStartY, body) {
@@ -108,6 +109,7 @@ function accumulatePlayerForces(gravity = { ax: 0, ay: 0 }) {
 }
 
 function updateGame() {
+  if (gameState !== "playing") return;
   runTick++;
   if (evolutionNotification && runTick >= evolutionNotification.expiresAtTick) evolutionNotification = null;
   if (impactNotification && runTick >= impactNotification.expiresAtTick) impactNotification = null;
@@ -177,7 +179,8 @@ function drawGame() {
   const lineHeight = hud.compact ? 16 : 20;
   text("Time Passed: " + floor(runTick / SIMULATION_FPS), x, y);
   text("Score: " + score, hud.short ? 144 : x, hud.short ? y : y + lineHeight);
-  text("Form: " + EVOLUTION_FORMS[currentFormIndex].label, x, y + lineHeight * (hud.short ? 1 : 2));
+  const formLabel = hud.short && player.type === "massiveSolid" ? "Solid planet" : playerFormLabel();
+  text("Form: " + formLabel, x, y + lineHeight * (hud.short ? 1 : 2));
   text("Mass: " + formatMass(player.mass), hud.short ? 144 : x, y + lineHeight * (hud.short ? 1 : 3));
   const progress = getEvolutionProgress();
   text("Next: " + progress.label + " " + (progress.fraction * 100).toFixed(1) + "% / " + formatMass(progress.mass), x, y + lineHeight * (hud.short ? 2 : 4));

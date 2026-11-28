@@ -20,6 +20,10 @@ function draw() {
     drawMenu();
   } else if (gameState === "playing") {
     runGame();
+  } else if (gameState === "evolving") {
+    updateCamera(deltaTime / 1000);
+    drawGame();
+    drawEvolutionChoice();
   } else if (gameState === "gameover") {
     drawGameOver();
   } else if (gameState === "ending") {
@@ -28,6 +32,11 @@ function draw() {
 }
 
 function keyPressed() {
+  if (gameState === "evolving") {
+    if (key === "1") choosePlayerEvolution("massiveSolid");
+    if (key === "2") choosePlayerEvolution("gasGiant");
+    return;
+  }
   if (gameState === "menu") {
     if (keyCode === LEFT_ARROW) {
       selectedDifficultyIndex = (selectedDifficultyIndex - 1 + DIFFICULTY_PRESETS.length) % DIFFICULTY_PRESETS.length;
@@ -46,6 +55,16 @@ function keyPressed() {
     } else if (gameState === "gameover" || gameState === "ending") {
       startGame();
       gameState = "playing";
+    }
+  }
+}
+
+function mousePressed() {
+  if (gameState !== "evolving") return;
+  for (const box of evolutionChoiceBounds()) {
+    if (mouseX >= box.x && mouseX <= box.x + box.w && mouseY >= box.y && mouseY <= box.y + box.h) {
+      choosePlayerEvolution(box.type);
+      return;
     }
   }
 }

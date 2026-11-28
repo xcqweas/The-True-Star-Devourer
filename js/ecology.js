@@ -48,8 +48,8 @@ function settleDormantBody(body) {
   // Apply the same contact policy at zero background activation, bounded to
   // neighboring resident buckets; retirement never discards physical mass.
   const neighbors=[];
-  visitRegionBodies(worldRegionBounds(body.x,body.y,body.r+MAX_PLANET_RADIUS,
-    body.r+MAX_PLANET_RADIUS,0),other=>{
+  visitRegionBodies(worldRegionBounds(body.x,body.y,body.r+MAX_LARGE_BODY_RADIUS,
+    body.r+MAX_LARGE_BODY_RADIUS,0),other=>{
     if(other!==body&&!isLooseDebris(other)&&residentBody(other))neighbors.push(other);
   });
   neighbors.sort((a,b)=>b.r-a.r||a.id.localeCompare(b.id));
@@ -245,6 +245,9 @@ function resolveEcologyContacts(bodies, starts) {
       contacts.push({a,b,contact,key});
     };
     const lists=[...cells.values()];
+    // Expanded players can span the whole grid. Reserve their contacts before
+    // dense ambient buckets exhaust the shared narrow-phase budget.
+    if (bodies.includes(player)) for (const body of bodies) consider(player, body);
     // Rotate crowded buckets so the fixed check budget does not starve one pair.
     const offset=lists.length?runTick%lists.length:0;
     for(let i=0;i<lists.length && world.ecologyStats.pairChecks<ECOLOGY_MAX_PAIR_CHECKS;i++) {

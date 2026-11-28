@@ -31,14 +31,24 @@ function isOutsideStartingArea(body) {
 function planetForCell(seed, cx, cy) {
   const rng = seededRandom(hashSeed(seed, "planet", cx, cy));
   if (rng() > PLANET_CELL_CHANCE) return null;
+  // Independent stream leaves ordinary planets and their mass range unchanged.
+  const lateRng = seededRandom(hashSeed(seed, "massive-planet", cx, cy));
+  const late = lateRng() < MASSIVE_PLANET_STAGE.targetChance;
+  const type = late ? (lateRng() < 0.5 ? "massiveSolid" : "gasGiant") : "planet";
   const size = PLANET_CELL_REGIONS * REGION_SIZE;
-  const inset = MAX_PLANET_RADIUS + SYSTEM_MOON_MAX_GAP + 2 * MAX_MOON_RADIUS + PLANET_ROUTE_GAP / 2;
+  const inset = (late ? MAX_LARGE_BODY_RADIUS : MAX_PLANET_RADIUS) +
+    SYSTEM_MOON_MAX_GAP + 2 * MAX_MOON_RADIUS + PLANET_ROUTE_GAP / 2;
   const body = {
-    type: "planet", systemId: regionKey(cx,cy),
+    type, systemId: regionKey(cx,cy),
     x: cx * size + inset + rng() * (size - 2 * inset),
     y: cy * size + inset + rng() * (size - 2 * inset),
     r: 1200 + rng() * (MAX_PLANET_RADIUS - 1200)
   };
+  if (late) {
+    body.mass = MASSIVE_PLANET_STAGE.targetMinMass + lateRng() *
+      (MASSIVE_PLANET_STAGE.targetMaxMass - MASSIVE_PLANET_STAGE.targetMinMass);
+    body.r = radiusForMass(body.mass) * bodyRadiusScale(type);
+  }
   return isOutsideStartingArea(body) ? body : null;
 }
 
@@ -177,6 +187,7 @@ function createGeneratedBody(seed, stageIndex, rx, ry, body) {
   const speed = body.type === "asteroid" ? (1 + motionRng()) * (25 / body.r) * SIMULATION_FPS : 0;
   const object = createBody(id, body.type, body.x, body.y, body.r, appearanceRng,
     Math.cos(direction) * speed, Math.sin(direction) * speed);
+  if (body.mass !== undefined) setBodyMass(object, body.mass);
   if(body.systemId !== undefined) object.systemId = `${seed}:system:${body.systemId}`;
   return object;
 }
@@ -258,7 +269,7 @@ function consumeWorldBody(body, state = world) {
   if (bucket?.size === 0) state.regions.delete(body.regionKey);
 }
 
-function worldRegionBounds(centerX, centerY, halfWidth, halfHeight, halo = MAX_PLANET_RADIUS * 1.3 + 8) {
+function worldRegionBounds(centerX, centerY, halfWidth, halfHeight, halo = MAX_LARGE_BODY_RADIUS * 1.3 + 8) {
   const rx = coordinateRegion(centerX);
   const ry = coordinateRegion(centerY);
   return {
@@ -288,9 +299,9 @@ function backgroundCellBounds(halfWidth, halfHeight) {
   const size = PLANET_CELL_REGIONS * REGION_SIZE;
   const cx = Math.floor(player.x / size), cy = Math.floor(player.y / size);
   const reachX = Math.min(MAX_BACKGROUND_CELL_REACH,
-    Math.ceil((halfWidth + MAX_PLANET_RADIUS + ACTIVE_MARGIN) / size));
+    Math.ceil((halfWidth + MAX_LARGE_BODY_RADIUS + ACTIVE_MARGIN) / size));
   const reachY = Math.min(MAX_BACKGROUND_CELL_REACH,
-    Math.ceil((halfHeight + MAX_PLANET_RADIUS + ACTIVE_MARGIN) / size));
+    Math.ceil((halfHeight + MAX_LARGE_BODY_RADIUS + ACTIVE_MARGIN) / size));
   return { minX: cx - reachX, maxX: cx + reachX, minY: cy - reachY, maxY: cy + reachY };
 }
 
@@ -399,7 +410,7 @@ function backgroundBodyOpacity(body) {
     (BACKGROUND_FULL_SCREEN_RADIUS - BACKGROUND_MIN_SCREEN_RADIUS));
   const gap = Math.hypot(body.x - player.x, body.y - player.y) - body.r - player.r;
   const proximity = 1 - smooth((gap - BACKGROUND_FOOD_CLEARANCE) / BACKGROUND_FOOD_FADE_DISTANCE);
-  if (body.type === "planet") return size + (1 - size) * proximity;
+  if (isPlanetaryBody(body)) return size + (1 - size) * proximity;
   const detail = worldDetailHalfExtents();
   const edge = Math.max(Math.abs(body.x - player.x) - detail.x, Math.abs(body.y - player.y) - detail.y);
   const coverage = 1 - smooth(1 + edge / BACKGROUND_DETAIL_FADE_DISTANCE);

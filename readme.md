@@ -9,7 +9,9 @@ Serve this folder with a local web server (for example VS Code Live Server or
 p5.js and the menu font currently load from external CDNs, so initial loading
 requires network access. The repository has no build step or new dependencies.
 
-- SPACE starts or begins a fresh run after death or the ending. Evolution needs no keypress.
+- SPACE starts or begins a fresh run after death or the ending. Moon and Planet
+  evolution are automatic. At 4M mass, press 1 or 2 (or click a card) to choose
+  a massive solid planet or gas giant; the simulation pauses for this one choice.
 - LEFT/RIGHT changes difficulty in the menu.
 - After starting/restarting, hold the cursor within 24 pixels of center for seven
   simulation ticks (about 0.12 seconds) to arm steering. A center ring and prompt
@@ -36,12 +38,14 @@ requires network access. The repository has no build step or new dependencies.
 
 ## Continuous growth and evolution
 
-All physical bodies share the configurable relationship
-`mass = MASS_SCALE * radius ** MASS_RADIUS_EXPONENT`. The defaults are scale 1 and
-exponent 2, representing constant-density area in this 2D game: mass equals radius
-squared, and radius equals the square root of mass. Types do not introduce different
-densities. New procedural and fixture bodies derive their mass from their radius;
-the player starts at mass 400 (radius 20).
+Bodies use the configurable base relationship
+`mass = MASS_SCALE * (radius / radiusScale) ** MASS_RADIUS_EXPONENT`. The defaults
+are scale 1 and exponent 2, representing area in this 2D game. Asteroids, moons,
+ordinary planets and loose debris have radiusScale 1. The new massive solid and
+gas branches use 0.85 and 1.4 respectively, giving different physical densities
+at identical mass. `massForRadius` / `radiusForMass` describe the base law;
+constructors and `setBodyMass` apply the body's configured radiusScale.
+The player starts at mass 400 (radius 20).
 
 Each absorption transfers the consumed body's exact mass to its collector, then
 recomputes physical radius. This conserves mass for player and ambient collectors
@@ -57,19 +61,22 @@ therefore gives noticeable growth; tiny prey still gives its smaller mass contri
 | Asteroid (start) | 400 | 20 |
 | Moon | 14,400 | 120 |
 | Planet | 810,000 | 900 |
-| True Star Devourer (ending) | 4,000,000 | 2,000 |
+| Massive planet choice | 4,000,000 | Solid 1,700 / gas 2,800 |
+| True Star Devourer (ending) | 16,000,000 | Solid 3,400 / gas 5,600 |
 
-Keep thresholds increasing and the final threshold above the Planet threshold.
-Retune thresholds when changing the mass law. Form thresholds are cosmetic changes;
-they never add mass or snap radius to a new size. Excess mass is retained, including
+Keep thresholds increasing and the final threshold above the massive-planet threshold.
+Retune thresholds when changing the mass law. Automatic form thresholds change appearance;
+the massive-planet choice also changes physical density and impact retention.
+Evolution never adds mass. Excess mass is retained, including
 when a meal crosses multiple configured thresholds. Moon form is near the smallest
 generated moons. Physical mass and the body's emitter profile determine interaction
 eligibility; form appearance retains the highest milestone
 already reached when mass is lost. It never grants mass or changes ownership.
 Planet form now starts below the size of generated planets. Moon's required gain
-is 795,600 mass, down from 1,425,600; the Asteroid entry/exit and final goal are unchanged.
+is 795,600 mass, down from 1,425,600; the Asteroid entry/exit are unchanged.
 
-Evolution changes only the player's type and stored shape. Position, velocity,
+Evolution changes the player's type and stored shape; the new branch also derives
+its physical radius from the same preserved mass. Position, velocity,
 acceleration, angle, mass, score, elapsed ticks, camera zoom, world seed, world objects,
 and consumed records continue through each change. Other objects keep their types.
 A three-second simulation-time notification appears while gameplay continues.
@@ -77,6 +84,45 @@ The HUD shows current form, mass, and progress through the current mass interval
 toward the next form or final goal. Only the final mass milestone opens the ending.
 Death/ending restart clears growth, notifications, score, time, and world records,
 keeps the selected difficulty, and chooses a new seed unless a URL seed is pinned.
+
+### Massive-planet tuning
+
+`MASSIVE_PLANET_STAGE` keeps the 4M entry, 16M victory, target mass range and spawn
+chance together in `js/constants.js`. `MASSIVE_PLANET_BRANCHES` defines the branch
+labels, radius scales, loss scales and choice descriptions. The branch persists
+after damage, cannot be switched, and resets on a fresh run. Selection retains
+the same player/core, mass (including overshoot), world, consumed IDs, motion,
+score, tick, steering state and current camera zoom. Paused wall time is discarded.
+
+| Branch | Radius at equal mass | Collision loss multiplier | Appearance |
+| --- | ---: | ---: | --- |
+| Massive solid planet | 0.85x base | 0.60x | Rust-colored crust, dark craters, bright fault lines |
+| Gas giant | 1.40x base | 1.35x | Gold atmosphere, horizontal bands, red storm |
+
+The gas giant's diameter/sweep is about 65% wider than the solid's; the solid's
+smaller footprint is harder to hit but collects less scattered material. At an
+equal-mass reference-speed impact, the unmodified loss is 39.19%, solid loses
+23.51%, and gas loses 52.91%. Existing loss caps and largest-own-core guarantees
+still apply. Debris has ordinary density and inherits ownership, not branch traits.
+All intact feeding thresholds continue to use mass; rim colors continue to use
+actual physical radius, even when a green target still requires a risky raid.
+
+24% of occupied planetary cells become a seeded massive solid or gas target with
+4M–6.4M mass. With 60% planet-cell occupancy, that is about one late target per
+seven 24,576-unit cells. This replaces a sparse subset of planetary landmarks,
+preserves ordinary planet sizes and keeps existing system moons useful as food.
+The larger footprint reserves room for its moons and inter-system approach gap.
+These targets exist throughout the run and never respawn or resize on evolution.
+They retain planetary emitter/64:1 feeding behavior; the player remains a receiver.
+Ordinary planets and repeated raids also contribute substantial gains. The new
+stage requires another 12M mass, so a single configured late target cannot end it.
+
+Camera minimum zoom is 0.003 and maximum movement scale is 64. At 16M mass, settled
+solid/gas zoom is 0.007224 / 0.004474, with player screen radii about 24.6 / 25.1 px.
+Both retain 300 px/s full-drive travel and the existing acceleration/braking response.
+Large-body spatial margins, background rendering, gravity profiles and warnings
+include both branches. Player contact candidates receive budget priority before
+ambient grid work; actual resolution still sorts all candidates by contact time.
 
 ## Impacts and collision debris
 
@@ -106,7 +152,9 @@ For each body:
 
 `comparableLoss = (0.08 + 0.36*s) * (1 + 0.35) * 0.5^0.6`
 
-`lossFraction = clamp(comparableLoss * (otherMass / ownMass)^0.6, 0, maxLoss)`
+`lossFraction = clamp(comparableLoss * (otherMass / ownMass)^0.6 * impactLossScale, 0, maxLoss)`
+
+`impactLossScale` is 1 for ordinary bodies, 0.6 for massive solids and 1.35 for gas giants.
 
 `retainedMass = ownMass * (1 - lossFraction)`
 
@@ -253,7 +301,7 @@ coordinates after the world.
 ## Camera and movement cues
 
 Camera tuning lives in `js/constants.js`. The default target is
-`clamp((20 / max(radius, 20)) ** 0.96, 0.01, 1)` pixels per world unit. Pullback begins
+`clamp((20 / max(radius, 20)) ** 0.96, 0.003, 1)` pixels per world unit. Pullback begins
 with the first growth. Settled player screen radii at physical radii 20, 120, 300,
 1200, and 2000 are approximately 20, 21.49, 22.29, 23.56, and 24.05 pixels: about
 20% apparent radius growth over 100x physical growth. Screen occupancy scales by
@@ -277,7 +325,7 @@ so centering to brake or recovering from an impact does not rearm the entry gate
 Grown movement uses the settled physical-size zoom target, never the current eased
 camera zoom. Its multiplier is
 `clamp(PLAYER_SCREEN_TRAVEL_SPEED / (PLAYER_MAX_SPEED * targetZoomForRadius(radius)), 1, PLAYER_MAX_MOVEMENT_SCALE)`.
-Defaults are 300 screen pixels/second and a maximum multiplier of 20. Drive speed
+Defaults are 300 screen pixels/second and a maximum multiplier of 64. Drive speed
 and acceleration both receive this multiplier; response/braking time stays consistent.
 The base speed is a floor, so opening travel slows gradually with growth before
 reaching the 300-pixel target. There are no jumps at evolution thresholds.
@@ -291,7 +339,7 @@ reaching the 300-pixel target. There are no jumps at evolution thresholds.
 | 600 | 7855 | 300 |
 | 1000 | 12827 | 300 |
 | 1200 | 15281 | 300 |
-| 2000 | 21600 | 260 |
+| 2000 | 24953 | 300 |
 
 The maximum multiplier bounds world speed at extreme size. Gravity/drift remains
 in world units and its cap stays 880, retaining at least the opening's 200-unit
@@ -524,6 +572,12 @@ Open `tests/visual-ecology.html` for the Unattended region, Distant entry, and C
 collectors scenes shared with Node through `tests/ecology-scenarios.js`. The readout
 reports mass error, live/peak debris, impacts, simulated bodies, and pair checks.
 
+Open `tests/visual-massive-stage.html` for the paused evolution choice, individual
+solid/gas raids, manual mouse control, and an automated route through the 16M ending.
+Its panel hides during the choice and reports physical radius,
+zoom, mass accounting and encounter timing. These developer controls are absent
+from the normal game.
+
 ## Project structure
 
 - `js/constants.js`: units, steering/generation limits, difficulty, and mass milestones
@@ -541,11 +595,56 @@ reports mass error, live/peak debris, impacts, simulated bodies, and pair checks
 - `js/spawn-and-init.js`: run options and initialization
 - `js/screens.js`: menu and non-gameplay screens
 - `js/gameplay.js`: fixed ticks, acceleration, swept collisions, world/HUD rendering
-- `js/p5-entry.js`: p5 lifecycle and key controls
+- `js/p5-entry.js`: p5 lifecycle, key controls and evolution-card mouse input
 
 `index.html` loads the scripts in dependency order. `sketch.js` is a legacy marker.
 
 ## Validation and limits
+
+Massive-planet stage (2026-11-27): the pre-change baseline passed all 147 Node tests.
+The final `node --test --test-reporter=spec tests/game.test.cjs` run passed all
+156 tests, with zero failures/skips (248.5 seconds). Syntax checks also passed for
+23 JavaScript files, seven inline scripts and every local script reference;
+`git diff --check` passed.
+The stage checks cover exact threshold/pause and both keyboard choices, mouse choice,
+overshoot, immutable branches after mass loss, restart, branch density and loss,
+the wider physical shard sweep, useful moons, mass-based 64:1 planetary feeding,
+physical-size rims, deterministic sparse target supply, clearances, streaming IDs,
+camera framing and movement/braking through the revised ending. The browser test
+page is `tests/visual-massive-stage.html`, sharing its actual steering/impact/collection
+route with Node through `tests/massive-stage-scenarios.js`.
+Additional checks cover the full debris-capacity aftermath, bounded source fields
+and branch rims at both LODs. Both ending routes produce identical physical state,
+collected IDs and ending ticks at 30, 60 and 144 rendering FPS.
+
+The isolated Normal route alternates maximum-mass 6.4M gas and solid targets,
+preserves old remnants and uses ordinary steering, escape and shard collection.
+Solid reached 16.214M in 20.3 simulation seconds across five encounters/five impacts;
+gas reached 16.195M in 20.6 seconds across four encounters/five impacts. Peak shard
+counts were 10/16 and pair checks 156/228; total mass error stayed below 7.5e-9.
+These favorable, close-spaced fixtures validate mechanics and ending reachability,
+not average procedural play duration. Supply sampling found 124 late targets among
+520 occupied cells over three seeds. Runtime rendering remains unverified for this
+pass: Windows denied binding the local server (WinError 10013), including outside
+the sandbox, and browser security rejected a direct file preview. Drawing in Node
+uses p5 stubs and does not establish visual appearance or browser frame rate.
+
+A one-second full-drive streaming probe in the generated seed-42 world started
+at 16M mass, temporarily raising victory to 1e12 only for the probe. Solid/gas
+peaks were 1,019/1,007 local bodies, 1,712/1,604 simulated bodies, 8,737/10,148 pair
+checks and 416/550 rendered bodies; no debris was generated. Both stayed centered
+and inside the existing budgets. They generated 2,850/5,191 regions. Headless
+execution took 5.2/8.9 seconds respectively on this host; generation at the expanded
+scale is costly in this VM, and these numbers do not establish browser frame rate.
+
+A separate 30-second seed-42 cruise started at 4M mass at (32,000, 16,000), with
+already edible material inside the pre-choice planet footprint marked consumed.
+It used default victory and ordinary full-right steering without aiming at loot.
+Neither branch won: solid ended at 3.669M and gas at 0.457M after incidental hits,
+despite 4,556/5,003 collections. This demonstrates the sampled route's collision
+cost and gas vulnerability, not average player pacing or a complete natural run.
+The existing center-distance gravity cap remains 6,000; sufficiently wide gas
+bodies can touch before their centers enter a source's field.
 
 Moon progression tuning (2026-11-27): no test suites were run for this pass.
 `tools/inspect-moon-progression.cjs` is a standalone measurement tool that loads the

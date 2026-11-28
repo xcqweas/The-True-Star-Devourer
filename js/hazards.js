@@ -11,12 +11,12 @@ function hazardScanRadius() {
   // Preserve the reaction allowance when grown drive covers more world space.
   return Math.max(HAZARD_SCAN_RADIUS, speed * HAZARD_ASSIST_REACTION_SECONDS +
     speed * speed / (2 * HAZARD_WARNING_DECELERATION * limits.scale) +
-    MAX_PLANET_RADIUS * (1 + HAZARD_RADIUS_PADDING) + player.r +
+    MAX_LARGE_BODY_RADIUS * (1 + HAZARD_RADIUS_PADDING) + player.r +
     HAZARD_BASE_CLEARANCE + HAZARD_GRAVITY_PADDING);
 }
 
 function hazardMetrics(body) {
-  if (body === player || isLooseDebris(body) || !["moon", "planet"].includes(body.type) ||
+  if (body === player || isLooseDebris(body) || !(body.type === "moon" || isPlanetaryBody(body)) ||
       ["eat", "collect"].includes(collisionDisposition(player, body))) return null;
   const dx = body.x - player.x, dy = body.y - player.y;
   const distance = Math.hypot(dx, dy);
@@ -49,7 +49,7 @@ function collectHazardWarnings() {
   const seen = new Set();
   const visit = body => {
     // Query resident objects, not just visible or locally simulated centers.
-    if (seen.has(body.id) || (body.type !== "moon" && body.type !== "planet")) return;
+    if (seen.has(body.id) || (body.type !== "moon" && !isPlanetaryBody(body))) return;
     seen.add(body.id);
     if (bodyIntersectsView(body, camera.x, camera.y, width / (2 * camera.zoom),
         height / (2 * camera.zoom), body.r)) return;
@@ -181,7 +181,9 @@ function drawHazardIndicators() {
     noStroke(); fill(10, 14, 23, 225); rect(box.x, box.y, box.w, box.h, 5);
     fill(255, 150, 145); textSize(12);
     text((canFragmentTogether(player, warning.body) ? "IMPACT" : "DANGER") + " · " +
-      (warning.type === "planet" ? "Planet" : "Moon"), box.x + box.w / 2, box.y + 9);
+      (warning.type === "massiveSolid" ? "Solid planet" : warning.type === "gasGiant" ? "Gas giant" :
+        warning.type === "planet" ? "Planet" : "Moon"),
+      box.x + box.w / 2, box.y + 9);
     fill(235); textSize(11);
     const detail = warning.closingSpeed >= HAZARD_MIN_CLOSING_SPEED ?
       "Closing · ~" + Math.min(99, warning.timeToSurface).toFixed(1) + "s" : "Nearby surface";

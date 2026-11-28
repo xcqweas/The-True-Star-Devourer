@@ -2,7 +2,7 @@ const SIMULATION_FPS = 60;
 const SIMULATION_STEP_MS = 1000 / SIMULATION_FPS;
 const SIMULATION_STEP_SECONDS = 1 / SIMULATION_FPS;
 const MAX_FRAME_DELTA_MS = 250; // avoid a long catch-up after a suspended tab
-const CAMERA_MIN_ZOOM = 0.01; // covers radius 20 -> 2000 without hitting the floor
+const CAMERA_MIN_ZOOM = 0.003; // includes a gas giant at the revised ending (radius 5600)
 const CAMERA_MAX_ZOOM = 1;
 const CAMERA_REFERENCE_RADIUS = 20; // start pulling back with the first growth
 const CAMERA_GROWTH_EXPONENT = 0.96; // 100x physical radius gives about 1.2x screen radius
@@ -11,7 +11,7 @@ const PLAYER_MAX_SPEED = 1080; // 10% gentler opening; world units / second
 const PLAYER_MAX_ACCELERATION = 6000; // world units / second squared
 const PLAYER_STEERING_RESPONSE = 12; // velocity response / second (also brakes at center)
 const PLAYER_SCREEN_TRAVEL_SPEED = 300; // settled full-drive target before the world-speed bound
-const PLAYER_MAX_MOVEMENT_SCALE = 20; // bounds world speed/acceleration at extreme sizes
+const PLAYER_MAX_MOVEMENT_SCALE = 64; // maintains apparent travel through the massive-planet stage
 const STEERING_DEAD_ZONE = 12; // screen pixels
 const STEERING_MAX_DISTANCE = 180; // screen pixels, independent of viewport size
 const STEERING_ARM_RADIUS = 24; // return to the center after entering/restarting gameplay
@@ -23,7 +23,9 @@ const GRAVITY_ENABLED = true;
 const GRAVITY_G = 500;
 const GRAVITY_SOURCE_PROFILES = {
   moon: { enabled: true, strength: 0.3, reach: 1000 },
-  planet: { enabled: true, strength: 1, reach: 3600 }
+  planet: { enabled: true, strength: 1, reach: 3600 },
+  massiveSolid: { enabled: true, strength: 1, reach: 3600 },
+  gasGiant: { enabled: true, strength: 1, reach: 3600 }
 };
 const GRAVITY_MAX_INFLUENCE = 6000; // center distance; hard query bound in world units
 const GRAVITY_MIN_SOFTENING = 40;
@@ -40,20 +42,38 @@ const PLAYER_GRAVITY_DAMPING = 0.12; // drift decay / second at full throttle
 const PLAYER_BRAKE_DAMPING = 2.4; // center the mouse to brake drift more strongly
 const PLAYER_MAX_DRIFT_SPEED = 880; // retains at least the opening's 200-unit outward headroom
 
-// Every body uses mass = MASS_SCALE * radius ^ MASS_RADIUS_EXPONENT.
-// Defaults model constant-density 2D area; growth uses the inverse relationship.
+// The base mass law models 2D area. Massive branches scale physical radius,
+// without changing mass or mass-based feeding eligibility.
 const MASS_SCALE = 1;
 const MASS_RADIUS_EXPONENT = 2;
 const ABSORPTION_MIN_MASS_RATIO = 1; // strictly exceed this ratio for sub-Moon meals
 const ABSORPTION_MOON_MASS_RATIO = 3; // inclusive; 1.73x radius under the default mass law
 const ABSORPTION_LARGE_MASS_RATIO = 64; // planet emitters retain the risky-raid threshold
 const OUTLINE_SIMILAR_RADIUS_RATIO = 1.25; // reciprocal band around the player's physical radius
+// Tune the new stage's required gain alongside its substantial raid targets.
+const MASSIVE_PLANET_STAGE = {
+  mass: 4000000,
+  finalMass: 16000000,
+  targetMinMass: 4000000,
+  targetMaxMass: 6400000,
+  targetChance: 0.24 // fraction of occupied planet cells; about one per seven cells overall
+};
+const MASSIVE_PLANET_BRANCHES = {
+  massiveSolid: { label: "Massive solid planet", radiusScale: 0.85, impactLossScale: 0.6,
+    strength: "Compact core: 40% less impact loss",
+    weakness: "Smaller radius: narrower collection sweep" },
+  gasGiant: { label: "Gas giant", radiusScale: 1.4, impactLossScale: 1.35,
+    strength: "Wide sweep: 65% wider than solid",
+    weakness: "Fragile envelope: 35% more impact loss" }
+};
 const EVOLUTION_FORMS = [
   { type: "asteroid", label: "Asteroid", mass: 400 }, // initial radius 20
   { type: "moon", label: "Moon", mass: 14400 }, // radius 120
-  { type: "planet", label: "Planet", mass: 810000 } // radius 900 (56.25x Moon entry mass)
+  { type: "planet", label: "Planet", mass: 810000 }, // radius 900 (56.25x Moon entry mass)
+  { type: "massivePlanet", label: "Massive planet", mass: MASSIVE_PLANET_STAGE.mass,
+    choices: ["massiveSolid", "gasGiant"] }
 ];
-const FINAL_MASS_MILESTONE = 4000000; // radius 2000; triggers the existing ending
+const FINAL_MASS_MILESTONE = MASSIVE_PLANET_STAGE.finalMass;
 const EVOLUTION_NOTICE_TICKS = 3 * SIMULATION_FPS;
 
 // Cohesive Moon-mass pairs shed unless their disparity permits direct absorption.
@@ -134,6 +154,9 @@ const PLACEMENT_ATTEMPTS = 16;
 const MAX_ASTEROID_RADIUS = 80;
 const MAX_MOON_RADIUS = 240;
 const MAX_PLANET_RADIUS = 1800;
+const MAX_LARGE_BODY_RADIUS = Math.max(MAX_PLANET_RADIUS,
+  (MASSIVE_PLANET_STAGE.targetMaxMass / MASS_SCALE) ** (1 / MASS_RADIUS_EXPONENT) *
+  Math.max(...Object.values(MASSIVE_PLANET_BRANCHES).map(branch => branch.radiusScale)));
 const PLANET_CELL_REGIONS = 24;
 const PLANET_CELL_CHANCE = 0.6;
 const PLANET_ROUTE_GAP = 6144; // gap between complete planetary systems, not just planet surfaces

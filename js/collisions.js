@@ -11,7 +11,7 @@ function absorptionPair(a, b) {
   // Planet emitters keep their raid resistance. Use the stored source profile,
   // not the gravity enable switch or the player's cosmetic evolution milestone.
   // The same body-property policy applies to every pair, including ambient pairs.
-  const planetary = [a, b].some(body => body.type === "planet" && body.gravitySource !== false);
+  const planetary = [a, b].some(body => isPlanetaryBody(body) && body.gravitySource !== false);
   const requiredRatio = planetary ? ABSORPTION_LARGE_MASS_RATIO : ABSORPTION_MOON_MASS_RATIO;
   if (a.mass >= FRAGMENTATION_MIN_MASS && b.mass >= FRAGMENTATION_MIN_MASS &&
       ratio + tolerance < requiredRatio) return null;
@@ -73,7 +73,8 @@ function impactMassLoss(a, b, normalSpeed) {
   // Each participant retains its own mass independently. The other/self ratio
   // raises the smaller body's loss as disparity grows, rather than reducing a
   // shared comparable-pair severity. Available-piece caps still preserve cores.
-  const fraction = (self, other) => comparableLoss * (other.mass / self.mass) ** FRAGMENTATION_MASS_BIAS;
+  const fraction = (self, other) => comparableLoss * (other.mass / self.mass) ** FRAGMENTATION_MASS_BIAS *
+    (MASSIVE_PLANET_BRANCHES[self.type]?.impactLossScale ?? 1);
   return { a: constrain(fraction(a, b), 0, maximum), b: constrain(fraction(b, a), 0, maximum), strength };
 }
 

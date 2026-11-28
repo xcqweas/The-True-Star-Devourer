@@ -254,3 +254,38 @@ function drawEnding() {
   text("Final Mass: " + formatMass(player.mass) + " | Score: " + score, width / 2, height / 2 + 40);
   text("Press SPACE to play again!", width / 2, height / 2 + 80);
 }
+
+function evolutionChoiceBounds() {
+  const w = Math.max(0, Math.min(500, width - 24));
+  const h = Math.min(112, height * 0.27);
+  const top = height / 2 - h + 12;
+  return EVOLUTION_FORMS[pendingEvolutionIndex].choices.map((type, i) =>
+    ({ type, x: (width - w) / 2, y: top + i * (h + 10), w, h }));
+}
+
+function drawEvolutionChoice() {
+  push(); rectMode(CORNER); noStroke();
+  fill(3, 8, 18, 235); rect(0, 0, width, height);
+  const boxes = evolutionChoiceBounds();
+  const compact = width < 460 || height < 360;
+  textAlign(CENTER, CENTER); fill(237, 242, 250);
+  textSize(compact ? 18 : 26);
+  text("Choose your massive planet", width / 2, boxes[0].y - (compact ? 44 : 56));
+  textSize(compact ? 11 : 14);
+  text("Mass preserved: " + formatMass(player.mass) + " · Simulation paused", width / 2, boxes[0].y - 22);
+  for (const [i, box] of boxes.entries()) {
+    const branch = MASSIVE_PLANET_BRANCHES[box.type];
+    const hovered = mouseX >= box.x && mouseX <= box.x + box.w && mouseY >= box.y && mouseY <= box.y + box.h;
+    fill(hovered ? 35 : 20, hovered ? 51 : 31, hovered ? 72 : 48); rect(box.x, box.y, box.w, box.h, 8);
+    fill(i === 0 ? color(246, 174, 128) : color(246, 213, 154));
+    textSize(compact ? 15 : 20);
+    text((i + 1) + " · " + branch.label, width / 2, box.y + box.h * 0.25);
+    fill(220, 232, 243); textSize(compact ? 10 : 14);
+    text(branch.strength, width / 2, box.y + box.h * 0.55);
+    text(branch.weakness, width / 2, box.y + box.h * 0.78);
+  }
+  fill(196, 210, 230); textSize(compact ? 10 : 13);
+  text("Press 1 or 2, or click a branch · Choice lasts this run", width / 2,
+    Math.min(height - 10, boxes[1].y + boxes[1].h + 24));
+  pop();
+}

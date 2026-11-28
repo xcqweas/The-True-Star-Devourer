@@ -15,6 +15,7 @@ scripts.push({ filename: "tests/integration-scenario.js", source: fs.readFileSyn
 scripts.push({ filename: "tests/fragmentation-scenarios.js", source: fs.readFileSync(path.join(root, "tests/fragmentation-scenarios.js"), "utf8") });
 scripts.push({ filename: "tests/ecology-scenarios.js", source: fs.readFileSync(path.join(root, "tests/ecology-scenarios.js"), "utf8") });
 scripts.push({ filename: "tests/pacing-scenario.js", source: fs.readFileSync(path.join(root, "tests/pacing-scenario.js"), "utf8") });
+scripts.push({ filename: "tests/massive-stage-scenarios.js", source: fs.readFileSync(path.join(root, "tests/massive-stage-scenarios.js"), "utf8") });
 
 function createGame(width = 1600, height = 900, seed = 123456789, constants = {}) {
   const context = {
@@ -109,6 +110,228 @@ function close(actual, expected, tolerance = 1e-8) {
   assert.ok(Math.abs(actual - expected) <= tolerance, `${actual} != ${expected}`);
 }
 
+test("massive stage choice pauses at the former ending and preserves exact run state for both branches", () => {
+  for (const [key, type] of [['1','massiveSolid'], ['2','gasGiant']]) {
+    const game = createGame(); beginGame(game, true);
+    game.run(`setBodyMass(player, MASSIVE_PLANET_STAGE.mass - 100); updatePlayerEvolution();
+      player.x = -20000; player.y = 30000; player.vx = 123; player.vy = -45;
+      score = 55; runTick = 321; world.consumedIds.add('earlier');
+      const originalPlayer = player, originalWorld = world, originalSeed = runSeed;
+      addBody(player.x, player.y, 10); updateGame();
+      const frozen = JSON.stringify({player, runTick, score, ids:[...world.consumedIds]});
+      const choiceZoom = camera.zoom;`);
+    assert.equal(game.run('gameState'), 'evolving');
+    assert.equal(game.run('player.mass'), 4000000);
+    game.frames(60); game.run('updateGame();');
+    assert.ok(game.run('frozen === JSON.stringify({player, runTick, score, ids:[...world.consumedIds]})'));
+    assert.equal(game.run("choosePlayerEvolution('planet')"), false);
+    game.run(`const motionBefore = [player.x,player.y,player.vx,player.vy,player.ax,player.ay];
+      const zoomBefore = camera.zoom; key='${key}'; keyPressed();`);
+    assert.equal(game.run('gameState'), 'playing');
+    assert.equal(game.run('player.type'), type);
+    assert.equal(game.run('player.mass'), 4000000);
+    assert.ok(game.run('player === originalPlayer && world === originalWorld && runSeed === originalSeed'));
+    assert.deepEqual(game.json('[player.x,player.y,player.vx,player.vy,player.ax,player.ay]'), game.json('motionBefore'));
+    assert.equal(game.run('camera.zoom'), game.run('zoomBefore'));
+    close(game.run('player.r'), 2000 * game.run(`bodyRadiusScale('${type}')`));
+    assert.equal(game.run("choosePlayerEvolution('gasGiant')"), false);
+    game.run('setBodyMass(player, 1000000); updatePlayerEvolution();');
+    assert.equal(game.run('player.type'), type);
+    game.run('setBodyMass(player, 5000000); updatePlayerEvolution();');
+    assert.equal(game.run('gameState'), 'playing');
+    assert.equal(game.run('pendingEvolutionIndex'), null);
+    game.run('windowWidth=320;windowHeight=180;windowResized();drawGame();');
+    assert.ok(game.context.texts.includes('Form: '+(type==='massiveSolid'?'Solid planet':'Gas giant')));
+    game.run("gameState='gameover';key=' ';keyPressed();");
+    assert.ok(game.run('currentFormIndex===0 && pendingEvolutionIndex===null && player.type==="asteroid" && player.mass===400'));
+  }
+});
+
+test("massive choice supports mouse, excess mass, a configured ending and compact layouts", () => {
+  for (const [width, height] of [[1600,900],[320,560],[320,180]]) {
+    const game = createGame(width,height); beginGame(game,true);
+    game.run(`setBodyMass(player, FINAL_MASS_MILESTONE + 123.5); updatePlayerEvolution(); draw();
+      const boxes = evolutionChoiceBounds();`);
+    assert.equal(game.run('gameState'), 'evolving');
+    assert.ok(game.run('boxes.every(b=>b.x>=0 && b.y>=0 && b.x+b.w<=width && b.y+b.h<=height)'));
+    game.run(`mouseX=boxes[1].x+boxes[1].w/2;mouseY=boxes[1].y+boxes[1].h/2;mousePressed();`);
+    assert.equal(game.run('player.type'), 'gasGiant');
+    assert.equal(game.run('gameState'), 'ending');
+    assert.equal(game.run('player.mass'), game.run('FINAL_MASS_MILESTONE + 123.5'));
+    assert.equal(game.run('getEvolutionProgress().fraction'),1);
+  }
+});
+
+test("massive branches have different physical sweep and retention while feeding and rims retain their rules", t => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const solid=body(0,0,1700,0,0,'massiveSolid'),gas=body(0,0,2800,0,0,'gasGiant');
+    const peer=body(0,0,2000,0,0,'planet');peer.gravitySource=true;
+    const solidLoss=impactMassLoss(solid,peer,900), gasLoss=impactMassLoss(gas,peer,900);`);
+  close(game.run('solid.mass'),4000000);close(game.run('gas.mass'),4000000);
+  close(game.run('solidLoss.a/gasLoss.a'),0.6/1.35);
+  close(game.run('solidLoss.b'),game.run('gasLoss.b'));
+  assert.equal(game.run('collisionDisposition(solid,peer)'),game.run('collisionDisposition(gas,peer)'));
+  assert.deepEqual(game.json('getThreatVisual(peer.r,solid.r).ring'),[255,215,95,240]);
+  assert.deepEqual(game.json('getThreatVisual(peer.r,gas.r).ring'),[92,244,176,235]);
+  // Exact same scattered shard is outside the solid and inside the atmosphere.
+  game.run(`const shard=body(2300,0,50,0,0,'debris');shard.publicAfterTick=0;`);
+  assert.equal(game.run('sweptBodyContact(solid,solid,shard,shard)'),null);
+  assert.ok(game.run('sweptBodyContact(gas,gas,shard,shard)!==null'));
+  for(const type of ['massiveSolid','gasGiant']) {
+    game.run(`const actor${type}=body(0,0,bodyRadiusScale('${type}')*2000,0,0,'${type}');
+      const moon${type}=body(0,0,240,0,0,'moon');
+      const before${type}=actor${type}.mass;const result${type}=resolveBodyImpact(actor${type},moon${type});`);
+    assert.equal(game.run(`result${type}.kind`),'absorbed');
+    close(game.run(`actor${type}.mass-before${type}`),57600);
+    game.run(`setBodyMass(actor${type},peer.mass*64);`);
+    assert.equal(game.run(`collisionDisposition(actor${type},peer)`),'eat');
+    game.run(`setBodyMass(actor${type},peer.mass*63.9);`);
+    assert.equal(game.run(`collisionDisposition(actor${type},peer)`),'fragment');
+  }
+  t.diagnostic(`Equal-mass reference impact: solid loses ${game.run('solidLoss.a*100').toFixed(2)}%, gas ${game.run('gasLoss.a*100').toFixed(2)}%; radii 1700 / 2800 at 4M mass.`);
+});
+
+test("massive targets are sparse deterministic planet-cell residents with safe footprints and persistent IDs", t => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const planets=[];
+    for(const seed of [1,42,1948])for(let y=-8;y<=8;y++)for(let x=-8;x<=8;x++) {
+      const p=planetForCell(seed,x,y);if(p)planets.push({...p,seed});
+    }
+    const late=planets.filter(p=>MASSIVE_PLANET_BRANCHES[p.type]);
+    const generated=late.map(p=>createGeneratedBody(p.seed,0,coordinateRegion(p.x),coordinateRegion(p.y),p));`);
+  assert.ok(game.run('late.length>30 && late.length<planets.length*0.35 && late.length>planets.length*0.14'));
+  assert.ok(game.run(`generated.every(p=>p.mass>=MASSIVE_PLANET_STAGE.targetMinMass &&
+    p.mass<=MASSIVE_PLANET_STAGE.targetMaxMass && p.gravitySource && p.r<=MAX_LARGE_BODY_RADIUS)`));
+  assert.deepEqual(game.json('[...new Set(late.map(p=>p.type))].sort()'),['gasGiant','massiveSolid']);
+  game.run(`for(const p of late) {
+    const moons=systemMoonsForPlanet(p.seed,p);
+    if(moons.length<2 || !moons.every(m=>hasClearance(m,[p],SYSTEM_MOON_MIN_GAP-1e-7))) throw Error('Moon clearance');
+    const neighbors=nearbyPlanets(p.seed,coordinateRegion(p.x),coordinateRegion(p.y)).filter(q=>q.systemId!==p.systemId);
+    if(!hasClearance(p,neighbors,PLANET_ROUTE_GAP))throw Error('Planet clearance');
+  }
+  const description=late.find(p=>p.seed===42);
+  const target=createGeneratedBody(42,0,coordinateRegion(description.x),coordinateRegion(description.y),description);
+  world=createWorld(42,0,1);player.x=target.x+target.r+600;player.y=target.y;followPlayer();syncWorldRegions();
+  const resident=[...world.regions.values()].flatMap(b=>[...b.values()]).find(b=>b.id===target.id);`);
+  assert.ok(game.run('resident && star_objects.includes(resident) && getRenderableBodies().includes(resident)'));
+  game.run(`consumeWorldBody(resident);player.x+=100000;syncWorldRegions();player.x=target.x;syncWorldRegions();`);
+  assert.ok(game.run('![...world.regions.values()].some(b=>b.has(target.id)) && !world.backgroundPlanets.has(target.id)'));
+  t.diagnostic(game.run('`${late.length} late targets among ${planets.length} occupied cells; target mass ${MASSIVE_PLANET_STAGE.targetMinMass}-${MASSIVE_PLANET_STAGE.targetMaxMass}, required gain ${FINAL_MASS_MILESTONE-MASSIVE_PLANET_STAGE.mass}.`'));
+});
+
+test("massive camera and movement stay centered, responsive and zoom independent through the revised ending", t => {
+  const rows=[];
+  for(const branch of ['massiveSolid','gasGiant'])for(const mass of [4000000,10000000,16000000]) {
+    const game=createGame();beginGame(game,true);
+    game.run(`setBodyMass(player,MASSIVE_PLANET_STAGE.mass);updatePlayerEvolution();choosePlayerEvolution('${branch}');
+      setBodyMass(player,${mass});resetCamera();
+      mouseX=width/2+STEERING_MAX_DISTANCE;
+      for(let i=0;i<60;i++)movePlayer();
+      const fullSpeed=player.vx, zoom=camera.zoom, scale=playerMovementLimits().scale;
+      mouseX=width/2;for(let i=0;i<30;i++)movePlayer();followPlayer();`);
+    close(game.run('fullSpeed*zoom'),300,0.01);
+    assert.ok(game.run('zoom>CAMERA_MIN_ZOOM && player.r*zoom>23 && player.r*zoom<26 && scale<PLAYER_MAX_MOVEMENT_SCALE'));
+    assert.ok(game.run('player.vx/fullSpeed<0.0022'));
+    assert.deepEqual(game.json('worldToScreen(player.x,player.y)'),{x:800,y:450});
+    assert.equal(game.run('getEvolutionProgress().label'),'True Star Devourer');
+    close(game.run('getEvolutionProgress().fraction'),(mass-4000000)/12000000);
+    rows.push(game.json(`({branch:'${branch}',mass:player.mass,radius:player.r,zoom,scale})`));
+  }
+  t.diagnostic(JSON.stringify(rows));
+});
+
+test("massive stage actual steering raids recover material and reach the revised ending on both paths", t => {
+  for(const branch of ['massiveSolid','gasGiant']) {
+    const game=createGame();
+    game.run(`const route=loadMassiveStageScenario('${branch}');
+      for(let i=0;i<18000 && gameState==='playing';i++) {
+        steerMassiveStageScenario(route);updateGame();observeMassiveStageScenario(route);
+        if(route.phase==='recovered')addMassiveStageEncounter(route);
+      }`);
+    const stats=game.json(`({branch:'${branch}',state:gameState,phase:route.phase,mass:player.mass,
+      seconds:runTick/SIMULATION_FPS,encounters:route.encounters,impacts:route.impactCount,
+      massError:route.massError,peakPairs:route.peakPairs,peakBodies:route.peakBodies,peakDebris:route.peakDebris,
+      recoveries:route.recoveries})`);
+    t.diagnostic(JSON.stringify(stats));
+    assert.equal(stats.state,'ending');
+    assert.ok(stats.seconds>10 && stats.encounters>=3 && stats.recoveries.length>=2);
+    assert.ok(stats.mass>=game.run('FINAL_MASS_MILESTONE'));
+    assert.ok(stats.massError<1e-6 && stats.peakPairs<=game.run('ECOLOGY_MAX_PAIR_CHECKS') && stats.peakDebris<=game.run('MAX_WORLD_DEBRIS'));
+    assert.ok(game.run('player===route.originalPlayer && world===route.originalWorld && currentFormIndex===3'));
+  }
+});
+
+test("massive collision aftermath keeps the owned core largest, releases surfaces and retains branch density at capacity", () => {
+  for(const branch of ['massiveSolid','gasGiant']) {
+    const game=createGame();beginGame(game,true);
+    game.run(`setBodyMass(player,4000000);updatePlayerEvolution();choosePlayerEvolution('${branch}');
+      const target=body(player.r+3500,0,3500,0,0,'gasGiant');target.gravitySource=true;
+      for(let i=0;i<MAX_WORLD_DEBRIS-2;i++){
+        const shard=body(100000+i*100,100000,1,0,0,'debris');storeWorldBody(world,shard);
+      }
+      player.impactSpeedScale=playerMovementLimits().scale;
+      const total=player.mass+target.mass;
+      const contact={time:0,ax:player.x,ay:player.y,bx:target.x,by:target.y,nx:-1,ny:0,speed:playerMovementLimits().speed};
+      const event=resolveBodyImpact(player,target,contact);`);
+    assert.equal(game.run('event.kind'),'fragmented');
+    assert.equal(game.run('event.debris.length'),2);
+    assert.ok(game.run(`event.debris.every(d=>(d.parentId===player.id?player:target).mass>d.mass &&
+      d.kind==='debris' && d.type==='debris' && !d.gravitySource && bodyRadiusScale(d.type)===1)`));
+    close(game.run('player.mass+target.mass+event.debris.reduce((n,b)=>n+b.mass,0)'),game.run('total'),1e-7);
+    close(game.run('player.r/radiusForMass(player.mass)'),game.run(`bodyRadiusScale('${branch}')`));
+    assert.ok(game.run(`player.ownerId==='player' && player.type==='${branch}' &&
+      hasImpactGrace(player) && Math.hypot(player.x-target.x,player.y-target.y)>=player.r+target.r`));
+    game.run(`const massAfter=player.mass,px=player.x;mouseX=width/2-STEERING_MAX_DISTANCE;
+      for(let i=0;i<30;i++)movePlayer();`);
+    assert.ok(game.run('player.x<px && player.mass===massAfter'));
+  }
+});
+
+test("massive paths retain physical-size rims at both LODs and emit bounded gravity and warnings", () => {
+  const game=createGame(400,300);beginGame(game,true);
+  const strokes=[];game.context.stroke=(...channels)=>strokes.push(channels);
+  for(const branch of ['massiveSolid','gasGiant']) {
+    game.run(`startGame({seed:42,fixture:true});world.regions.clear();gameState='playing';
+      setBodyMass(player,4000000);updatePlayerEvolution();choosePlayerEvolution('${branch}');
+      player.vx=playerMovementLimits().speed;camera.zoom=1;
+      var target=createBody('warning:${branch}','${branch}',50000,0,
+        radiusForMass(6400000)*bodyRadiusScale('${branch}'),seededRandom(65));
+      storeWorldBody(world,target);world.backgroundPlanets.set(target.id,target);
+      world.generatedPlanetCells.set(regionKey(2,0),target.id);
+      var expected=getThreatVisual(target.r,player.r).ring;`);
+    assert.equal(game.run('collectHazardWarnings()[0]?.id'),game.run('target.id'));
+    game.run(`target.x=player.r+target.r+50;storeWorldBody(world,target);
+      var receiver=body(target.x-target.r-100,0,20);
+      var force=gravityFromSource(receiver,target);
+      var playerForce=gravityFromSource(player,target);`);
+    assert.ok(game.run('Math.hypot(force.ax,force.ay)>0 && Math.hypot(force.ax,force.ay)<=GRAVITY_MAX_SOURCE_ACCELERATION'));
+    assert.ok(game.run('Number.isFinite(playerForce.ax) && Number.isFinite(playerForce.ay)'));
+    for(const detail of [true,false]) {
+      strokes.length=0;game.run(`drawBody(target,false,${detail});drawBody(player,true);`);
+      assert.ok(strokes.some(c=>JSON.stringify(c)===JSON.stringify(game.json('expected'))));
+    }
+    game.run('var drawnPalette=getBodyPalette(target);');
+    assert.ok(game.run('drawnPalette.base.length===3 && player.gravitySource===false'));
+  }
+});
+
+test("massive raid ending and collection are identical at 30, 60 and 144 rendering FPS", () => {
+  for(const branch of ['massiveSolid','gasGiant']) {
+    const snapshots=[];
+    for(const fps of [30,60,144]) {
+      const game=createGame();
+      game.run(`const route=loadMassiveStageScenario('${branch}');const actualUpdate=updateGame;
+        updateGame=()=>{steerMassiveStageScenario(route);actualUpdate();observeMassiveStageScenario(route);
+          if(route.phase==='recovered')addMassiveStageEncounter(route);};`);
+      game.frames(22*fps,fps);
+      assert.equal(game.run('gameState'),'ending');
+      snapshots.push(game.json(`({player,runTick,score,form:currentFormIndex,encounters:route.encounters,
+        ids:[...world.consumedIds],impacts:world.nextImpactId})`));
+    }
+    assert.deepEqual(snapshots[0],snapshots[1]);assert.deepEqual(snapshots[1],snapshots[2]);
+  }
+});
+
 function startNeutralFixture(game) {
   game.run(`setup(); mouseX = width + 1000; mouseY = -1000; key = ' '; keyPressed();
     world = createWorld(42, 0, 1, true); world.regions.clear(); syncWorldRegions();`);
@@ -175,7 +398,7 @@ test("grown movement maintains apparent travel and matching acceleration/braking
       accelerated,braked:player.vx/playerMovementLimits().speed,scale:playerMovementLimits().scale})`);
     assert.ok(row.accelerated>0.995 && row.braked<0.0022);
     if(radius>=120 && radius<=1200)close(row.travel,300,1e-7);
-    assert.ok(row.travel>=259 && row.scale<=20);
+    assert.ok(row.travel>=259 && row.scale<=game.run('PLAYER_MAX_MOVEMENT_SCALE'));
     rows.push(row);
   }
   t.diagnostic(JSON.stringify(rows));
@@ -679,10 +902,11 @@ test("tiny canvases keep safe world sizes and every screen renders", () => {
   }
 });
 
-test("every generated, fixture, and player body shares the invertible mass/radius law", () => {
+test("every generated, fixture, and player body follows the base mass law with its configured density", () => {
   const game = createGame();
   beginGame(game);
-  assert.ok(game.run("[player, ...allBodies()].every(b => b.mass === massForRadius(b.r))"));
+  assert.ok(game.run(`[player, ...allBodies()].every(b =>
+    Math.abs(b.mass - massForRadius(b.r / bodyRadiusScale(b.type))) <= Math.max(1,b.mass)*1e-12)`));
   game.run(`const fixture = createWorld(42, 0, 1, true);
     const fixtureBodies = [...fixture.regions.values()].flatMap(bucket => [...bucket.values()]);`);
   assert.ok(game.run("fixtureBodies.every(b => b.mass === massForRadius(b.r))"));
@@ -861,9 +1085,9 @@ test("HUD reports interval mass progress, current form, and the final goal", () 
       const to = EVOLUTION_FORMS[${index + 1}]?.mass ?? FINAL_MASS_MILESTONE;
       setBodyMass(player, (from + to) / 2); updatePlayerEvolution(); drawGame(); }`);
     close(game.run("getEvolutionProgress().fraction"), 0.5);
-    assert.equal(game.run("getEvolutionProgress().label"), ["Moon", "Planet", "True Star Devourer"][index]);
+    assert.equal(game.run("getEvolutionProgress().label"), ["Moon", "Planet", "Massive planet"][index]);
     assert.ok(game.context.texts.includes(`Form: ${["Asteroid", "Moon", "Planet"][index]}`));
-    assert.ok(game.context.texts.some(text => text.startsWith(`Next: ${["Moon", "Planet", "True Star Devourer"][index]} 50.0%`)));
+    assert.ok(game.context.texts.some(text => text.startsWith(`Next: ${["Moon", "Planet", "Massive planet"][index]} 50.0%`)));
   }
 });
 
@@ -883,18 +1107,19 @@ test("only the explicit final mass milestone ends the run, preserving its world"
   beginGame(game, true);
   game.run(`difficultyFactor = 1; score = 9999;
     setBodyMass(player, FINAL_MASS_MILESTONE - 100); updatePlayerEvolution();
+    choosePlayerEvolution('massiveSolid');
     const originalWorld = world; const originalSeed = runSeed; addBody(0, 0, 10);`);
   assert.equal(game.run("gameState"), "playing");
   game.frames(1);
   assert.equal(game.run("gameState"), "ending");
-  assert.equal(game.run("player.mass"), 4000000);
-  assert.equal(game.run("player.type"), "planet");
+  assert.equal(game.run("player.mass"), game.run('FINAL_MASS_MILESTONE'));
+  assert.equal(game.run("player.type"), "massiveSolid");
   assert.equal(game.run("getEvolutionProgress().fraction"), 1);
   assert.ok(game.run("world === originalWorld && runSeed === originalSeed && world.consumedIds.size === 1"));
   assert.equal(game.run("score"), 10000);
   game.frames(30);
   assert.equal(game.run("runTick"), 1);
-  assert.ok(game.context.texts.includes("Final Mass: 4.00M | Score: 10000"));
+  assert.ok(game.context.texts.includes("Final Mass: 16.00M | Score: 10000"));
   game.run("keyPressed();");
   assert.equal(game.run("gameState"), "playing");
   assert.equal(game.run("player.mass"), 400);
