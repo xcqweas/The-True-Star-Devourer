@@ -124,7 +124,7 @@ function drawBody(body, isPlayer = false, detailed = true) {
     drawAsteroidBody(body, baseColor, detailColor);
   }
   if (!isPlayer && detailed && !isLooseDebris(body)) {
-    // A thin, fixed-pixel rim communicates food, shedding, or lethal contact.
+    // A thin, fixed-pixel rim communicates relative physical size at every form.
     // Easy modes add the existing larger glow and pulsing ring.
     push(); noFill();
     stroke(...getThreatVisual(body.r, player.r, body).ring);
@@ -138,7 +138,7 @@ function drawDebrisBody(body, baseColor, detailColor, detailed) {
   // Angular gold shards at every mass/LOD, never a moon/planet silhouette.
   const r = Math.max(debrisRenderRadius(body), 2 / camera.zoom);
   push(); translate(body.x, body.y); rotate(body.angle);
-  fill(baseColor); stroke(255, 228, 145); strokeWeight(1 / camera.zoom);
+  fill(baseColor); stroke(...getThreatVisual(body.r, player.r).ring); strokeWeight(1 / camera.zoom);
   beginShape();
   vertex(-r, -r * 0.35); vertex(r * 0.15, -r);
   vertex(r, -r * 0.1); vertex(r * 0.4, r * 0.8); vertex(-r * 0.65, r * 0.55);

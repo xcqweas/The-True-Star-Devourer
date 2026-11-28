@@ -1,8 +1,8 @@
-function getThreatVisual(enemyRadius, playerRadius, body = null) {
-  if (body && isLooseDebris(body)) return { ring: [255, 228, 145, 240], glow: [225, 170, 65, 45] };
-  if (body && canFragmentTogether(player, body)) return { ring: [255, 179, 85, 240], glow: [240, 145, 50, 45] };
-  // Below the shedding threshold, equal radius is lethal.
-  if (enemyRadius < playerRadius) return { ring: [92, 244, 176, 235], glow: [64, 205, 150, 45] };
+function getThreatVisual(enemyRadius, playerRadius) {
+  const band = Math.max(1, OUTLINE_SIMILAR_RADIUS_RATIO);
+  const ratio = enemyRadius / playerRadius;
+  if (ratio >= 1 / band && ratio <= band) return { ring: [255, 215, 95, 240], glow: [240, 195, 50, 45] };
+  if (ratio < 1 / band) return { ring: [92, 244, 176, 235], glow: [64, 205, 150, 45] };
   return { ring: [255, 112, 110, 240], glow: [230, 70, 80, 50] };
 }
 

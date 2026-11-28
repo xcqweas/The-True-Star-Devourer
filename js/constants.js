@@ -44,37 +44,40 @@ const PLAYER_MAX_DRIFT_SPEED = 880; // retains at least the opening's 200-unit o
 // Defaults model constant-density 2D area; growth uses the inverse relationship.
 const MASS_SCALE = 1;
 const MASS_RADIUS_EXPONENT = 2;
-const CONSUMPTION_MASS_GAIN = 1; // absorbed prey mass, divided by difficulty factor
+const ABSORPTION_MIN_MASS_RATIO = 1; // strictly exceed this ratio for sub-Moon meals
+const ABSORPTION_MOON_MASS_RATIO = 3; // inclusive; 1.73x radius under the default mass law
+const ABSORPTION_LARGE_MASS_RATIO = 64; // planet emitters retain the risky-raid threshold
+const OUTLINE_SIMILAR_RADIUS_RATIO = 1.25; // reciprocal band around the player's physical radius
 const EVOLUTION_FORMS = [
   { type: "asteroid", label: "Asteroid", mass: 400 }, // initial radius 20
   { type: "moon", label: "Moon", mass: 14400 }, // radius 120
-  { type: "planet", label: "Planet", mass: 1440000 } // radius 1200
+  { type: "planet", label: "Planet", mass: 810000 } // radius 900 (56.25x Moon entry mass)
 ];
 const FINAL_MASS_MILESTONE = 4000000; // radius 2000; triggers the existing ending
 const EVOLUTION_NOTICE_TICKS = 3 * SIMULATION_FPS;
 
-// Intact bodies at the existing Moon threshold shed mass instead of being eaten.
+// Cohesive Moon-mass pairs shed unless their disparity permits direct absorption.
 const FRAGMENTATION_MIN_MASS = EVOLUTION_FORMS[1].mass;
 const FRAGMENTATION_REFERENCE_SPEED = 900; // normal world speed at drive scale 1; scaled with controlled movement
 const FRAGMENTATION_BASE_LOSS = 0.08;
 const FRAGMENTATION_IMPACT_LOSS = 0.36;
-const FRAGMENTATION_COMPARABLE_BONUS = 0.35;
-const FRAGMENTATION_MASS_BIAS = 0.6; // larger bodies lose less proportionally
-const FRAGMENTATION_MAX_LOSS = 0.55; // the retained core is always the largest own piece
+const FRAGMENTATION_COMPARABLE_BONUS = 0.35; // calibrates equal-mass loss
+const FRAGMENTATION_MASS_BIAS = 0.6; // per-participant other/self mass exponent
+const FRAGMENTATION_MAX_LOSS = 0.8; // bounded again by available pieces to keep each own core largest
 const FRAGMENTATION_PIECES = 5; // per participant; no recursive debris fragmentation
 const FRAGMENTATION_SEPARATION = 60; // surface clearance after resolving an impact
 const FRAGMENTATION_ESCAPE_SPEED = 240;
 const FRAGMENTATION_RESTITUTION = 0.2;
-const FRAGMENTATION_GRACE_TICKS = Math.round(1.25 * SIMULATION_FPS);
+const FRAGMENTATION_GRACE_TICKS = Math.round(2.5 * SIMULATION_FPS); // room to turn back toward fresh loot
 const FRAGMENTATION_REARM_TICKS = Math.round(1.5 * SIMULATION_FPS);
 const FRAGMENTATION_RELEASE_GAP = 100;
-const DEBRIS_EJECTION_SPEED = 140;
-const DEBRIS_DRAG = 1.2; // slows ejecta to keep it collectible
-const DEBRIS_GRAVITY_DELAY_TICKS = 12 * SIMULATION_FPS;
-const DEBRIS_HIGHLIGHT_TICKS = 15 * SIMULATION_FPS; // visibility only; debris never expires
+const DEBRIS_EJECTION_SPEED = 100;
+const DEBRIS_DRAG = 2; // compact clouds; no expiry or collection-size gate
+const DEBRIS_GRAVITY_DELAY_TICKS = 20 * SIMULATION_FPS;
+const DEBRIS_HIGHLIGHT_TICKS = 20 * SIMULATION_FPS; // visible throughout the protected collection window
 const DEBRIS_HIGHLIGHT_FADE_TICKS = 2 * SIMULATION_FPS;
-const DEBRIS_COLLECTION_DELAY_TICKS = 12; // avoid instant reabsorption at birth
-const DEBRIS_SPACING = 32;
+const DEBRIS_COLLECTION_DELAY_TICKS = 12; // owned source-body recovery only; never blocks other collectors
+const DEBRIS_SPACING = 16;
 const DEBRIS_FAN_ANGLE = 2.2; // radians; two lateral lobes around the impact site
 
 // Bounded ambient simulation; independent of camera zoom and rendering cadence.
@@ -98,8 +101,8 @@ const ECOLOGY_SURFACE_GRAVITY_FADE_TICKS = Math.round(0.5 * SIMULATION_FPS);
 const ECOLOGY_MAX_RETIREMENTS = 8;
 const ECOLOGY_RETIRE_NEIGHBORS = 64;
 const MAX_WORLD_DEBRIS = 512;
-const DEBRIS_PUBLIC_COLLECTION_TICKS = 2 * SIMULATION_FPS;
-const DEBRIS_RECLAIM_TICKS = 12 * SIMULATION_FPS;
+const DEBRIS_PUBLIC_COLLECTION_TICKS = 0; // unrelated collectors can collect on the impact tick
+const DEBRIS_RECLAIM_TICKS = 20 * SIMULATION_FPS; // neutral parents do not reclaim during a normal collection pass
 const DEBRIS_MERGE_AGE_TICKS = 20 * SIMULATION_FPS;
 const DEBRIS_MERGE_MAX_RADIUS = 24;
 const DEBRIS_MERGED_MAX_RADIUS = 36;
@@ -124,6 +127,9 @@ const MOON_REGION_CHANCE = 0.24;
 const MOON_TRAVEL_DENSITY = 0.08; // isolated stepping stones between asteroid regions
 const ASTEROID_MIN_RADIUS = 6;
 const ASTEROID_RADIUS_SPREAD = 18; // previously 48; mean Normal food mass 688.8 -> 172.8
+const ASTEROID_OUTER_RADIUS_SPREAD = 42; // larger existing food outside the protected opening
+const ASTEROID_OUTER_START_DISTANCE = 8000; // fixed world distance, independent of player stage
+const ASTEROID_OUTER_FADE_DISTANCE = 4000; // full outer spread at distance 12000
 const PLACEMENT_ATTEMPTS = 16;
 const MAX_ASTEROID_RADIUS = 80;
 const MAX_MOON_RADIUS = 240;

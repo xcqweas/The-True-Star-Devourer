@@ -2,15 +2,33 @@ function isLooseDebris(body) { return body.kind === "debris"; }
 
 function fragmentationPieceCount() { return Math.max(2, Math.floor(FRAGMENTATION_PIECES)); }
 
+function absorptionPair(a, b) {
+  const collector = a.mass > b.mass ? a : b, consumed = collector === a ? b : a;
+  const ratio = collector.mass / consumed.mass;
+  // Radius -> mass round trips must not turn nominally equal bodies into meals.
+  const tolerance = Number.EPSILON * 8 * ratio;
+  if (ratio - Math.max(1, ABSORPTION_MIN_MASS_RATIO) <= tolerance) return null;
+  // Planet emitters keep their raid resistance. Use the stored source profile,
+  // not the gravity enable switch or the player's cosmetic evolution milestone.
+  // The same body-property policy applies to every pair, including ambient pairs.
+  const planetary = [a, b].some(body => body.type === "planet" && body.gravitySource !== false);
+  const requiredRatio = planetary ? ABSORPTION_LARGE_MASS_RATIO : ABSORPTION_MOON_MASS_RATIO;
+  if (a.mass >= FRAGMENTATION_MIN_MASS && b.mass >= FRAGMENTATION_MIN_MASS &&
+      ratio + tolerance < requiredRatio) return null;
+  return { collector, consumed };
+}
+
 function canFragmentTogether(a, b) {
   return !isLooseDebris(a) && !isLooseDebris(b) &&
-    a.mass >= FRAGMENTATION_MIN_MASS && b.mass >= FRAGMENTATION_MIN_MASS;
+    a.mass >= FRAGMENTATION_MIN_MASS && b.mass >= FRAGMENTATION_MIN_MASS && !absorptionPair(a, b);
 }
 
 function collisionDisposition(actor, other) {
   if (isLooseDebris(other)) return "collect";
+  const absorption = absorptionPair(actor, other);
+  if (absorption) return absorption.collector === actor ? "eat" : "fatal";
   if (canFragmentTogether(actor, other)) return "fragment";
-  return actor.r > other.r ? "eat" : "fatal";
+  return "separate";
 }
 
 // The geometry and resolution accept any player or ambient body pair.
@@ -46,16 +64,17 @@ function sweptBodyContact(a, startA, b, startB) {
 }
 
 function impactMassLoss(a, b, normalSpeed) {
-  const ratio = Math.min(a.mass, b.mass) / Math.max(a.mass, b.mass);
   const speedScale = Math.max(1, a.impactSpeedScale ?? 1, b.impactSpeedScale ?? 1);
   const strength = constrain(normalSpeed / (FRAGMENTATION_REFERENCE_SPEED * speedScale), 0, 1);
-  const severity = (FRAGMENTATION_BASE_LOSS + FRAGMENTATION_IMPACT_LOSS * strength) *
-    (1 + FRAGMENTATION_COMPARABLE_BONUS * ratio);
+  const comparableLoss = (FRAGMENTATION_BASE_LOSS + FRAGMENTATION_IMPACT_LOSS * strength) *
+    (1 + FRAGMENTATION_COMPARABLE_BONUS) * 0.5 ** FRAGMENTATION_MASS_BIAS;
   const count = fragmentationPieceCount();
   const maximum = Math.min(FRAGMENTATION_MAX_LOSS, count / (count + 1) * (1 - 1e-9));
-  const fraction = body => severity *
-    ((body === a ? b.mass : a.mass) / (a.mass + b.mass)) ** FRAGMENTATION_MASS_BIAS;
-  return { a: constrain(fraction(a), 0, maximum), b: constrain(fraction(b), 0, maximum), strength };
+  // Each participant retains its own mass independently. The other/self ratio
+  // raises the smaller body's loss as disparity grows, rather than reducing a
+  // shared comparable-pair severity. Available-piece caps still preserve cores.
+  const fraction = (self, other) => comparableLoss * (other.mass / self.mass) ** FRAGMENTATION_MASS_BIAS;
+  return { a: constrain(fraction(a, b), 0, maximum), b: constrain(fraction(b, a), 0, maximum), strength };
 }
 
 function contactPairKey(a, b) { return JSON.stringify([a.id, b.id].sort()); }
@@ -127,15 +146,31 @@ function resolveBodyImpact(a, b, contact, state = world, tick = runTick) {
     const mass = debris.mass;
     setBodyMass(collector, collector.mass + mass); // full transfer at every difficulty
     consumeWorldBody(debris, state);
+    if (collector.id !== "player") storeWorldBody(state, collector);
     return { kind: "collected", collector, debris, mass };
   }
+  contact ??= sweptBodyContact(a, a, b, b);
+  if (!contact) return { kind: "ignored" };
   const key = contactPairKey(a, b);
   if (state.contacts.has(key) || hasImpactGrace(a, tick) || hasImpactGrace(b, tick)) {
     resolveSurfaceContact(a, b, contact, state);
     for (const body of [a, b]) if (body.id !== "player") storeWorldBody(state, body);
     return { kind: "protected" };
   }
-  if (!canFragmentTogether(a, b)) return { kind: "ordinary" };
+  const absorption = absorptionPair(a, b);
+  if (absorption) {
+    const { collector, consumed } = absorption, mass = consumed.mass;
+    absorbBodyMass(consumed, collector);
+    consumeWorldBody(consumed, state);
+    // Unlike ambient bodies, the player is held outside the region store.
+    if (consumed.id === "player") setBodyMass(consumed, 0);
+    if (collector.id !== "player") storeWorldBody(state, collector);
+    return { kind: "absorbed", collector, consumed, mass };
+  }
+  if (!canFragmentTogether(a, b)) {
+    if (contact) resolveSurfaceContact(a, b, contact, state);
+    return { kind: "separated" };
+  }
 
   const capacity = Math.min(fragmentationPieceCount(), Math.floor((MAX_WORLD_DEBRIS - state.debris.size) / 2));
   if (capacity < 1 || (state.ecologyStats.impacts ?? 0) >= ECOLOGY_MAX_IMPACTS_PER_TICK) {

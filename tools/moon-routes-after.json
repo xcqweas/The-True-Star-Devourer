@@ -1,0 +1,109 @@
+[
+  {
+    "seed": 1,
+    "state": "playing",
+    "seconds": 20.35,
+    "startMass": 14503.585846003487,
+    "finalMass": 811254.1730485259,
+    "planetMass": 810000,
+    "reachedPlanet": true,
+    "moonMeals": 13,
+    "asteroidMeals": 582,
+    "collisions": 0,
+    "peakLostFraction": 0,
+    "history": [
+      {
+        "seconds": 5,
+        "mass": 21162.914836297165
+      },
+      {
+        "seconds": 10,
+        "mass": 33778.28506247328
+      },
+      {
+        "seconds": 15,
+        "mass": 111910.90400423847
+      },
+      {
+        "seconds": 20,
+        "mass": 726422.8298681959
+      }
+    ],
+    "x": -3543.9325698712437,
+    "y": 21559.413995264174
+  },
+  {
+    "seed": 42,
+    "state": "playing",
+    "seconds": 30.083333333333332,
+    "startMass": 14643.092560691437,
+    "finalMass": 836788.3471140858,
+    "planetMass": 810000,
+    "reachedPlanet": true,
+    "moonMeals": 15,
+    "asteroidMeals": 486,
+    "collisions": 2,
+    "peakLostFraction": 0.2971309181302408,
+    "history": [
+      {
+        "seconds": 5,
+        "mass": 25001.409527962664
+      },
+      {
+        "seconds": 10,
+        "mass": 33555.63001532847
+      },
+      {
+        "seconds": 15,
+        "mass": 40572.05375403996
+      },
+      {
+        "seconds": 20,
+        "mass": 40768.930000176726
+      },
+      {
+        "seconds": 25,
+        "mass": 185336.51604818148
+      },
+      {
+        "seconds": 30,
+        "mass": 808067.0683015713
+      }
+    ],
+    "x": -5886.770597636603,
+    "y": 4836.679580733812
+  },
+  {
+    "seed": 1948,
+    "state": "playing",
+    "seconds": 20.35,
+    "startMass": 14702.46918227487,
+    "finalMass": 810731.898729455,
+    "planetMass": 810000,
+    "reachedPlanet": true,
+    "moonMeals": 13,
+    "asteroidMeals": 461,
+    "collisions": 0,
+    "peakLostFraction": 0,
+    "history": [
+      {
+        "seconds": 5,
+        "mass": 19750.087324651176
+      },
+      {
+        "seconds": 10,
+        "mass": 24096.088075140156
+      },
+      {
+        "seconds": 15,
+        "mass": 82393.823342616
+      },
+      {
+        "seconds": 20,
+        "mass": 687443.5692616772
+      }
+    ],
+    "x": -5048.304211480202,
+    "y": 28320.31684110855
+  }
+]

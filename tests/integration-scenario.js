@@ -8,7 +8,9 @@ function loadIntegrationScenario() {
   const route = { foods: [], next: 0, phase: "feed", peakPull: 0, warnings: 0, visibleThreats: 0,
     evolved: false, passClearance: Infinity, world, seed: runSeed };
   let predictedMass = player.mass, x = 360;
-  for (let i = 0; i < 10; i++) {
+  // The final meal keeps the later planet encounter below the extreme absorption
+  // threshold so this route still exercises fragmentation and escape.
+  for (let i = 0; i < 11; i++) {
     const radius = Math.min(radiusForMass(predictedMass) * 0.8, radiusForMass(FRAGMENTATION_MIN_MASS) * 0.9);
     const food = createBody("route:food:" + i, "asteroid", x, 0, radius, seededRandom(i + 1));
     storeWorldBody(world, food); route.foods.push(food);

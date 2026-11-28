@@ -174,8 +174,8 @@ function drawMenuTextPanel() {
     textSize(Math.min(13, width / 26)); fill(225, 230, 255);
     text("Steer from center; farther out = faster.", width / 2, height * 0.3);
     text("Center to arm steering; center again to brake.", width / 2, height * 0.39);
-    text("Large impacts shed mass; collect gold shards.", width / 2, height * 0.46);
-    text("Green food · Amber hit · Red danger · Cyan pull", width / 2, height * 0.55);
+    text("Much smaller moons are food; peers shed gold.", width / 2, height * 0.46);
+    text("Rims: green smaller · yellow similar · red larger", width / 2, height * 0.55);
     fill(255, 235, 170); textSize(16);
     text("Difficulty: " + DIFFICULTY_PRESETS[selectedDifficultyIndex].name, width / 2, height * 0.65);
     textSize(12); text("LEFT / RIGHT to change · SPACE to start", width / 2, height * 0.82);
@@ -206,9 +206,9 @@ function drawMenuTextPanel() {
   fill(225, 230, 255);
   textSize(constrain(width * 0.018, 14, 22));
   text("Center cursor to begin steering; move outward to accelerate.", width / 2, height * 0.5);
-  text("Moon-sized impacts shed mass. Steer outward; collect gold shards.", width / 2, height * 0.54);
+  text("Eat much smaller moons. Escape comparable hits, then collect gold shards.", width / 2, height * 0.54);
   textSize(constrain(width * 0.016, 13, 18));
-  text("Green: food · Amber: impact · Red: lethal · Cyan: pull · White ring: escape", width / 2, height * 0.58);
+  text("Rims: green smaller · yellow similar · red larger · Cyan: pull · White: escape", width / 2, height * 0.58);
 
   const selected = DIFFICULTY_PRESETS[selectedDifficultyIndex];
   textSize(constrain(width * 0.024, 18, 30));

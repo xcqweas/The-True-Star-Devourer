@@ -146,9 +146,14 @@ function generateRegion(seed, rx, ry, stageIndex = 0, difficulty = 1) {
   const rng = seededRandom(hashSeed(seed, "asteroids", rx, ry));
   const factor = difficulty + Math.min(stageIndex * 0.05, 0.25);
   const asteroidCount = asteroidCountForRegion(seed,rx,ry,planets);
+  // Richer distant fields support Moon growth without resizing resident food or
+  // altering the opening. Sample the fixed region center to preserve seeded identity.
+  const outer = smoothGravityWeight((Math.hypot((rx+0.5)*REGION_SIZE,(ry+0.5)*REGION_SIZE) -
+    ASTEROID_OUTER_START_DISTANCE) / Math.max(1,ASTEROID_OUTER_FADE_DISTANCE));
+  const radiusSpread = lerp(ASTEROID_RADIUS_SPREAD,ASTEROID_OUTER_RADIUS_SPREAD,outer);
   for (let slot = 0; slot < asteroidCount; slot++) {
     // Small objects remain present in every stage and throughout the run.
-    const r = Math.min(MAX_ASTEROID_RADIUS, (ASTEROID_MIN_RADIUS + ASTEROID_RADIUS_SPREAD * rng() ** 2) * factor);
+    const r = Math.min(MAX_ASTEROID_RADIUS, (ASTEROID_MIN_RADIUS + radiusSpread * rng() ** 2) * factor);
     for (let attempt = 0; attempt < PLACEMENT_ATTEMPTS; attempt++) {
       const inset = MAX_ASTEROID_RADIUS + 24;
       const body = { type: "asteroid", r, slot,

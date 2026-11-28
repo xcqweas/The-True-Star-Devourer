@@ -1,0 +1,643 @@
+{
+  "supply": {
+    "moonMass": 14400,
+    "planetMass": 1440000,
+    "requiredGain": 1425600,
+    "samples": [
+      {
+        "seed": 1,
+        "distance": 0,
+        "asteroids": 541,
+        "meanAsteroidMass": 182.4351498685611,
+        "asteroidRadii": [
+          6.00004550789239,
+          23.811087789649598
+        ],
+        "moons": 9,
+        "moonMass": 318791.58557581156,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1,
+        "distance": 8000,
+        "asteroids": 344,
+        "meanAsteroidMass": 172.4940533546484,
+        "asteroidRadii": [
+          6.00025114531822,
+          23.975456612593984
+        ],
+        "moons": 5,
+        "moonMass": 171954.85494090116,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1,
+        "distance": 16000,
+        "asteroids": 310,
+        "meanAsteroidMass": 172.81442155618484,
+        "asteroidRadii": [
+          6.000144545601024,
+          23.945573025261485
+        ],
+        "moons": 3,
+        "moonMass": 78800.15450038674,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1,
+        "distance": 32000,
+        "asteroids": 387,
+        "meanAsteroidMass": 169.4548691632062,
+        "asteroidRadii": [
+          6.000000034926762,
+          23.96473534408621
+        ],
+        "moons": 3,
+        "moonMass": 125498.76866157644,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 42,
+        "distance": 0,
+        "asteroids": 522,
+        "meanAsteroidMass": 175.08978899906754,
+        "asteroidRadii": [
+          6.000012975419741,
+          23.965471658430232
+        ],
+        "moons": 7,
+        "moonMass": 245497.4954547834,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 42,
+        "distance": 8000,
+        "asteroids": 233,
+        "meanAsteroidMass": 181.12133663894846,
+        "asteroidRadii": [
+          6.0000000122861525,
+          23.92623813725257
+        ],
+        "moons": 4,
+        "moonMass": 79064.47374287838,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 42,
+        "distance": 16000,
+        "asteroids": 214,
+        "meanAsteroidMass": 163.03533129422257,
+        "asteroidRadii": [
+          6.010243905096168,
+          23.864811073505063
+        ],
+        "moons": 3,
+        "moonMass": 109654.54365347071,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 42,
+        "distance": 32000,
+        "asteroids": 262,
+        "meanAsteroidMass": 170.7688801717389,
+        "asteroidRadii": [
+          6.000005455912774,
+          23.79757367545988
+        ],
+        "moons": 3,
+        "moonMass": 137340.39565274713,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1948,
+        "distance": 0,
+        "asteroids": 497,
+        "meanAsteroidMass": 165.5924316147638,
+        "asteroidRadii": [
+          6.000137122450853,
+          23.703525457446187
+        ],
+        "moons": 6,
+        "moonMass": 207468.26544690708,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1948,
+        "distance": 8000,
+        "asteroids": 246,
+        "meanAsteroidMass": 172.55974236407144,
+        "asteroidRadii": [
+          6.000009504394546,
+          23.891952479054343
+        ],
+        "moons": 1,
+        "moonMass": 41476.66874688271,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1948,
+        "distance": 16000,
+        "asteroids": 207,
+        "meanAsteroidMass": 177.41192478003347,
+        "asteroidRadii": [
+          6.000897239946605,
+          23.998898525809665
+        ],
+        "moons": 0,
+        "moonMass": 0,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      },
+      {
+        "seed": 1948,
+        "distance": 32000,
+        "asteroids": 365,
+        "meanAsteroidMass": 183.5712410190871,
+        "asteroidRadii": [
+          6.0000001008301584,
+          23.958495101684917
+        ],
+        "moons": 4,
+        "moonMass": 107037.81475068208,
+        "feeding": [
+          {
+            "r": 120,
+            "edibleMoons": 0
+          },
+          {
+            "r": 180,
+            "edibleMoons": 0
+          },
+          {
+            "r": 240,
+            "edibleMoons": 0
+          },
+          {
+            "r": 360,
+            "edibleMoons": 0
+          },
+          {
+            "r": 480,
+            "edibleMoons": 0
+          },
+          {
+            "r": 600,
+            "edibleMoons": 0
+          }
+        ]
+      }
+    ]
+  },
+  "opening": [
+    {
+      "seed": 1,
+      "phase": "moon",
+      "state": "playing",
+      "seconds": 25.65,
+      "meals": 64,
+      "mass": 14503.585846003487,
+      "x": -868.9271985442716,
+      "y": -4211.074275538256
+    },
+    {
+      "seed": 42,
+      "phase": "moon",
+      "state": "playing",
+      "seconds": 25.016666666666666,
+      "meals": 60,
+      "mass": 14643.092560691437,
+      "x": 2436.339825027441,
+      "y": 5509.117259380218
+    },
+    {
+      "seed": 1948,
+      "phase": "moon",
+      "state": "playing",
+      "seconds": 22.733333333333334,
+      "meals": 60,
+      "mass": 14702.46918227487,
+      "x": 1310.4802485069076,
+      "y": 2488.6621776261254
+    }
+  ],
+  "encounters": [
+    {
+      "name": "smaller",
+      "phase": "done",
+      "state": "playing",
+      "seconds": 5.95,
+      "initial": 57600,
+      "retained": 45777.99649519044,
+      "final": 72266.42839261677,
+      "netGain": 14666.42839261677,
+      "targetLoot": 14666.428392616768,
+      "firstLootSeconds": 3.683333333333333,
+      "collectionSeconds": 5.883333333333334,
+      "impactCount": 1,
+      "massDrift": 1.4551915228366852e-11,
+      "peakDistance": 2068.445794681683,
+      "recovery": [
+        {
+          "seconds": 2,
+          "netGain": -11822.00350480956,
+          "targetLoot": 0
+        },
+        {
+          "seconds": 4,
+          "netGain": 1706.654932684316,
+          "targetLoot": 8799.857035570061
+        }
+      ]
+    },
+    {
+      "name": "comparable",
+      "phase": "done",
+      "state": "playing",
+      "seconds": 6.616666666666666,
+      "initial": 57600,
+      "retained": 35026.91426882594,
+      "final": 80173.08573117407,
+      "netGain": 22573.08573117407,
+      "targetLoot": 22573.085731174062,
+      "firstLootSeconds": 2.65,
+      "collectionSeconds": 6.55,
+      "impactCount": 1,
+      "massDrift": 0,
+      "peakDistance": 1714.2877561871096,
+      "recovery": [
+        {
+          "seconds": 2,
+          "netGain": -22573.085731174062,
+          "targetLoot": 0
+        },
+        {
+          "seconds": 4,
+          "netGain": 7.275957614183426e-12,
+          "targetLoot": 9029.234292469624
+        },
+        {
+          "seconds": 6,
+          "netGain": 13543.851438704442,
+          "targetLoot": 18058.468584939248
+        }
+      ]
+    },
+    {
+      "name": "larger",
+      "phase": "done",
+      "state": "playing",
+      "seconds": 7.983333333333333,
+      "initial": 57600,
+      "retained": 11519.999999999998,
+      "final": 139402.5674220405,
+      "netGain": 81802.5674220405,
+      "targetLoot": 81802.5674220405,
+      "firstLootSeconds": 3.25,
+      "collectionSeconds": 7.916666666666667,
+      "impactCount": 1,
+      "massDrift": 2.3283064365386963e-10,
+      "peakDistance": 2973.645121429777,
+      "recovery": [
+        {
+          "seconds": 2,
+          "netGain": -46080,
+          "targetLoot": 0
+        },
+        {
+          "seconds": 4,
+          "netGain": 3001.54045322429,
+          "targetLoot": 49081.5404532243
+        },
+        {
+          "seconds": 6,
+          "netGain": 21433.540453224297,
+          "targetLoot": 49081.5404532243
+        }
+      ]
+    }
+  ],
+  "thresholds": [
+    {
+      "massRatio": 1,
+      "radiusRatio": 1,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 2,
+      "radiusRatio": 1.4142135623730951,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 2.99,
+      "radiusRatio": 1.7291616465790582,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 3,
+      "radiusRatio": 1.7320508075688772,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 4,
+      "radiusRatio": 2,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 25,
+      "radiusRatio": 5,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 63.99,
+      "radiusRatio": 7.99937497558403,
+      "moon": "fragment",
+      "planet": "fragment"
+    },
+    {
+      "massRatio": 64,
+      "radiusRatio": 8,
+      "moon": "eat",
+      "planet": "eat"
+    }
+  ]
+}

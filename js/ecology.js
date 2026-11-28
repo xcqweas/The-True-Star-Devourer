@@ -1,8 +1,11 @@
 function canCollectDebris(collector, debris, tick = runTick) {
-  if (tick < (debris.collectAfterTick ?? 0)) return false;
-  if (debris.ownerId !== null && debris.ownerId !== undefined && collector.ownerId === debris.ownerId) return true;
-  if (collector.originId === debris.originId && tick < (debris.reclaimAfterTick ?? 0)) return false;
-  return tick >= (debris.publicAfterTick ?? debris.collectAfterTick ?? 0);
+  const sourceBody = debris.parentId !== undefined ? collector.id === debris.parentId :
+    collector.originId === debris.originId;
+  if (sourceBody) {
+    const owned = debris.ownerId != null && collector.ownerId === debris.ownerId;
+    return tick >= (owned ? debris.collectAfterTick ?? 0 : debris.reclaimAfterTick ?? 0);
+  }
+  return tick >= (debris.publicAfterTick ?? 0);
 }
 
 function resolveSurfaceContact(a, b, contact, state = world) {
@@ -24,7 +27,7 @@ function resolveSurfaceContact(a, b, contact, state = world) {
     impactVelocity(a, a.vx + nx * impulse * shareA, a.vy + ny * impulse * shareA);
     impactVelocity(b, b.vx - nx * impulse * shareB, b.vy - ny * impulse * shareB);
     for (const [body, source] of [[a,b],[b,a]]) {
-      if (body !== player && isGravityResponder(body) && isGravitySource(source)) {
+      if (isGravityResponder(body) && isGravitySource(source)) {
         body.surfaceRelease = { sourceId:source.id,
           untilTick:runTick + ECOLOGY_SURFACE_GRAVITY_HOLD_TICKS };
       }
@@ -35,14 +38,15 @@ function resolveSurfaceContact(a, b, contact, state = world) {
 }
 
 function residentBody(body) {
+  if (world.consumedIds.has(body.id)) return false;
   if (body === player) return true;
-  return world.regions.get(body.regionKey)?.get(body.id) === body && !world.consumedIds.has(body.id);
+  return world.regions.get(body.regionKey)?.get(body.id) === body;
 }
 
 function settleDormantBody(body) {
   // A fading body must not freeze embedded in a body that retired earlier.
-  // This correction runs at zero background activation, preserves mass and motion,
-  // and is bounded to neighboring resident buckets.
+  // Apply the same contact policy at zero background activation, bounded to
+  // neighboring resident buckets; retirement never discards physical mass.
   const neighbors=[];
   visitRegionBodies(worldRegionBounds(body.x,body.y,body.r+MAX_PLANET_RADIUS,
     body.r+MAX_PLANET_RADIUS,0),other=>{
@@ -53,23 +57,23 @@ function settleDormantBody(body) {
   for(let pass=0;pass<ECOLOGY_CONTACT_PASSES*2;pass++) {
     let corrected=false;
     for(const other of neighbors) {
+      if (!residentBody(other)) continue;
       const dx=body.x-other.x,dy=body.y-other.y,distance=Math.hypot(dx,dy);
       const overlap=body.r+other.r+ECOLOGY_SURFACE_CLEARANCE-distance;
       if(overlap<=0)continue;
-      if(isLooseDebris(body)&&canCollectDebris(other,body)) {
-        resolveBodyImpact(other,body,null);return;
-      }
-      const nx=distance?dx/distance:1,ny=distance?dy/distance:0;
-      body.x+=nx*overlap;body.y+=ny*overlap;corrected=true;
+      resolveBodyImpact(body,other,sweptBodyContact(body,body,other,other));
+      if (!residentBody(body)) return;
+      corrected=true;
     }
     if(!corrected)break;
   }
-  if(neighbors.some(other=>Math.hypot(body.x-other.x,body.y-other.y)<body.r+other.r)) {
+  const remaining=neighbors.filter(residentBody);
+  if(remaining.some(other=>Math.hypot(body.x-other.x,body.y-other.y)<body.r+other.r)) {
     const x=body.x,y=body.y,offset=hashSeed(world.seed,body.id,'retire')/4294967296*Math.PI*2;
     for(let attempt=0;attempt<PLACEMENT_ATTEMPTS*4;attempt++) {
       const angle=offset+attempt*2.399963229728653, distance=(1+Math.floor(attempt/8))*(body.r*2+ECOLOGY_SURFACE_CLEARANCE);
       const cx=x+Math.cos(angle)*distance,cy=y+Math.sin(angle)*distance;
-      if(neighbors.every(other=>Math.hypot(cx-other.x,cy-other.y)>=body.r+other.r+ECOLOGY_SURFACE_CLEARANCE)) {
+      if(remaining.every(other=>Math.hypot(cx-other.x,cy-other.y)>=body.r+other.r+ECOLOGY_SURFACE_CLEARANCE)) {
         body.x=cx;body.y=cy;break;
       }
     }
@@ -162,6 +166,7 @@ function syncEcology(initialize = false) {
   }
   const capacity=MAX_ACTIVE_BODIES+ECOLOGY_BACKGROUND_BODIES+ECOLOGY_FADING_BODIES+ECOLOGY_CONTINUITY_BODIES;
   for (const body of [...star_objects,...selected]) {
+    if (!residentBody(body)) continue;
     if (!world.ecology.has(body.id) && world.ecology.size<capacity) {
       const weight=initialize?1:step;
       world.ecology.set(body.id,{body,weight,sources:new Map()});
@@ -265,7 +270,11 @@ function resolveEcologyContacts(bodies, starts) {
       if(b===player){const swap=a;a=b;b=swap;contact={...contact,ax:contact.bx,ay:contact.by,bx:contact.ax,by:contact.ay,nx:-contact.nx,ny:-contact.ny};}
       const result=resolveBodyImpact(a,b,contact);
       if(a===player) handlePlayerContact(b,result);
-      else if(result.kind==='ordinary')resolveSurfaceContact(a,b,contact);
+      // Fresh ejecta joins the remaining contact passes immediately; it never
+      // needs a solid collision or a later ecology refresh to become collectible.
+      for (const shard of result.kind === 'fragmented' ? result.debris : []) {
+        bodies.push(shard); starts.set(shard.id,{x:shard.x,y:shard.y});
+      }
       changed.add(a.id);changed.add(b.id);
     }
   }
@@ -277,10 +286,9 @@ function handlePlayerContact(body,result) {
     impactNotification={text:(result.strength<0.35?'Glancing':'Hard')+' hit: you -'+
       Math.round(100*result.lossA/(player.mass+result.lossA))+'%, target -'+
       Math.round(100*result.lossB/(body.mass+result.lossB))+'%',expiresAtTick:runTick+EVOLUTION_NOTICE_TICKS};
-  } else if(result.kind==='collected') {updatePlayerEvolution();score++;}
-  else if(result.kind==='ordinary') {
-    if(player.r>body.r){absorbBodyMass(body);consumeWorldBody(body);score++;}
-    else gameState='gameover';
+  } else if(result.kind==='collected' || result.kind==='absorbed') {
+    if (result.collector === player) {updatePlayerEvolution();score++;}
+    else if (result.consumed === player) gameState='gameover';
   }
 }
 

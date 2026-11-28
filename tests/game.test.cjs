@@ -219,7 +219,7 @@ test("scaled movement preserves proportional impact severity and keeps slow/glan
 test("procedural food tuning extends asteroid meals independently of movement or Moon thresholds", t => {
   const rows=[];
   for(const spread of [48,18]) {
-    const game=createGame(1600,900,1,{ASTEROID_RADIUS_SPREAD:spread});beginGame(game,true);
+    const game=createGame(1600,900,1,{ASTEROID_RADIUS_SPREAD:spread,ASTEROID_OUTER_RADIUS_SPREAD:spread});beginGame(game,true);
     game.run(`difficultyFactor=1;
       const sample=[];
       for(let y=-8;y<=8;y++)for(let x=-8;x<=8;x++)
@@ -245,7 +245,7 @@ test("procedural food tuning extends asteroid meals independently of movement or
 test("normal procedural asteroid foraging progresses comfortably with real steering and food masses", t => {
   const results=[];
   for(const spread of [48,18]) {
-    const game=createGame(1600,900,1,{ASTEROID_RADIUS_SPREAD:spread});beginGame(game);
+    const game=createGame(1600,900,1,{ASTEROID_RADIUS_SPREAD:spread,ASTEROID_OUTER_RADIUS_SPREAD:spread});beginGame(game);
     game.run(`const route=loadPacingScenario(42);
       for(let i=0;i<10800 && route.phase!=='moon' && gameState==='playing';i++) {
         steerPacingScenario(route);updateGame();
@@ -299,19 +299,20 @@ test("menu difficulty, safe startup, and restart retain existing rules", () => {
   assert.ok(game.run("star_objects.every(f => Math.hypot(f.x, f.y) >= f.r + START_SAFE_RADIUS)"));
 });
 
-test("eating, difficulty growth, and equal/larger body death use world radii", () => {
+test("eating transfers exact mass and equal contacts separate using world radii", () => {
   const game = createGame();
   beginGame(game, true);
   game.run("difficultyFactor = 1.2; const eaten = addBody(0, 0, 10);");
   game.frames(1);
   assert.equal(game.run("score"), 1);
-  close(game.run("player.mass"), 400 + 100 / 1.2);
-  close(game.run("player.r"), Math.sqrt(400 + 100 / 1.2));
+  close(game.run("player.mass"), 500);
+  close(game.run("player.r"), Math.sqrt(500));
   assert.ok(game.run("world.consumedIds.has(eaten.id)"));
   assert.equal(game.run("star_objects.length"), 0);
   game.run("addBody(player.x, player.y, player.r, 0, 0, 'moon');");
   game.frames(1);
-  assert.equal(game.run("gameState"), "gameover");
+  assert.equal(game.run("gameState"), "playing");
+  close(game.run('player.mass+allBodies().reduce((n,b)=>n+b.mass,0)'),1000);
 });
 
 test("score milestones are statistics and never pause, evolve, or reset the world", () => {
@@ -718,11 +719,11 @@ test("consumption adds prey mass at each difficulty and score stays a count", ()
     beginGame(game, true);
     game.run(`difficultyFactor = ${factor}; addBody(0, 0, 10, 0, 0, 'moon');`);
     game.frames(1);
-    close(game.run("player.mass"), 400 + 100 / factor);
-    close(game.run("player.r ** 2"), 400 + 100 / factor);
+    close(game.run("player.mass"), 500);
+    close(game.run("player.r ** 2"), 500);
     game.run("addBody(player.x, player.y, 15, 0, 0, 'planet');");
     game.frames(1);
-    close(game.run("player.mass"), 400 + 325 / factor);
+    close(game.run("player.mass"), 725);
     assert.equal(game.run("score"), 2);
     assert.equal(game.run("world.consumedIds.size"), 2);
     assert.equal(game.run("gameState"), "playing");
@@ -739,16 +740,17 @@ test("appropriate prey gives noticeable radius progress without an arbitrary rad
   assert.ok(game.context.texts.includes("Next: Moon 1.6% / 14.4K"));
 });
 
-test("equal and larger prey kill regardless of type without granting mass or points", () => {
+test("equal small bodies separate and larger bodies absorb the player without duplicating mass", () => {
   for (const [type, radius] of [["asteroid", 20], ["moon", 21], ["planet", 100]]) {
     const game = createGame();
     beginGame(game, true);
-    game.run(`addBody(0, 0, ${radius}, 0, 0, '${type}');`);
+    game.run(`const target=addBody(0, 0, ${radius}, 0, 0, '${type}');`);
     game.frames(1);
-    assert.equal(game.run("gameState"), "gameover");
-    assert.equal(game.run("player.mass"), 400);
+    assert.equal(game.run("gameState"), radius===20?'playing':'gameover');
+    assert.equal(game.run("player.mass"), radius===20?400:0);
     assert.equal(game.run("score"), 0);
-    assert.equal(game.run("world.consumedIds.size"), 0);
+    assert.equal(game.run("world.consumedIds.size"), radius===20?0:1);
+    close(game.run('player.mass+target.mass'),400+radius*radius);
   }
 });
 
@@ -782,7 +784,7 @@ test("eating through either form milestone preserves motion, world state, and ea
       runTick = 401; score = 59; simulationAccumulator = 7;
       const originalPlayer = player; const originalWorld = world; const originalSeed = runSeed;
       const consumed = world.consumedIds; consumed.add('previously-eaten');
-      const neighbor = addBody(player.x + player.r + 500, player.y, 30);
+      const neighbor = addBody(player.x - player.r - 500, player.y, 30);
       const moon = addBody(player.x, player.y + player.r + 800, 180, 0, 0, 'moon');
       const planet = addBody(player.x + player.r + 2000, player.y, 1800, 0, 0, 'planet');
       const eaten = addBody(player.x, player.y, 10);
@@ -868,11 +870,11 @@ test("HUD reports interval mass progress, current form, and the final goal", () 
 test("a grown player eats offscreen prey within its physical collision footprint", () => {
   const game = createGame(400, 300);
   beginGame(game, true);
-  game.run("difficultyFactor = 1; setBodyMass(player, EVOLUTION_FORMS[2].mass); updatePlayerEvolution(); const prey = addBody(1000, 0, 30);");
+  game.run("difficultyFactor = 1; setBodyMass(player, EVOLUTION_FORMS[2].mass); updatePlayerEvolution(); const prey = addBody(player.r-100, 0, 30);");
   assert.ok(game.run("!isBodyVisible(prey) && star_objects.includes(prey)"));
   game.frames(1);
   assert.equal(game.run("score"), 1);
-  assert.equal(game.run("player.mass"), 1440900);
+  assert.equal(game.run("player.mass"), game.run('EVOLUTION_FORMS[2].mass+900'));
   assert.ok(game.run("world.consumedIds.has(prey.id)"));
 });
 
@@ -907,7 +909,7 @@ test("death restart resets growth and run data while keeping selected difficulty
     setBodyMass(player, FRAGMENTATION_MIN_MASS / 2); // injured below the shedding threshold
     score = 75; runTick = 900; player.x = -1000; player.y = 2000;
     world.consumedIds.add('old-meal'); const oldWorld = world; const oldSeed = runSeed;
-    addBody(player.x, player.y, player.r, 0, 0, 'planet');`);
+    addBody(player.x, player.y, player.r*1.1, 0, 0, 'planet');`);
   game.frames(1);
   assert.equal(game.run("gameState"), "gameover");
   game.run("simulationAccumulator = 7; keyPressed();");
@@ -1245,7 +1247,7 @@ test("zoomed views retain oversized surfaces while distant movers participate in
   assert.ok(game.run("!star_objects.includes(small) && getRenderableBodies().includes(small)"));
   assert.ok(game.run("getRenderableBodies().includes(planet) && isBodyVisible(planet) && planet.x > width / (2 * camera.zoom)"));
   game.run("updateGame(); getRenderableBodies();");
-  assert.ok(game.run("Math.hypot(small.x-planet.x,small.y-planet.y)>=small.r+planet.r && world.ecology.has(small.id) && small.mass===100"));
+  assert.ok(game.run("world.consumedIds.has(small.id) && !residentBody(small) && planet.mass===3240100"));
 });
 
 test("widest supported view has generated coverage before the camera zooms out", () => {
@@ -1570,12 +1572,12 @@ test("outward thrust retains escape authority even at maximum inward gravity dri
   assert.ok(game.run("PLAYER_MAX_DRIFT_SPEED < PLAYER_MAX_SPEED && clearance > 0 && player.x > 4400"));
 });
 
-test("food/danger rims match the strict eating threshold on every difficulty and LOD", () => {
+test("size rims distinguish smaller, similar and larger physical radii at both LODs", () => {
   const game = createGame(); beginGame(game, true);
-  assert.deepEqual(game.json("getThreatVisual(19.999, 20).ring"), [92, 244, 176, 235]);
-  assert.deepEqual(game.json("getThreatVisual(20, 20).ring"), [255, 112, 110, 240]);
+  assert.deepEqual(game.json("getThreatVisual(10, 20).ring"), [92, 244, 176, 235]);
+  assert.deepEqual(game.json("getThreatVisual(20, 20).ring"), [255, 215, 95, 240]);
   const strokes = []; game.context.stroke = (...color) => strokes.push(color);
-  game.run("selectedDifficultyIndex = 4; const food = body(100, 0, 19.999), danger = body(200, 0, 20); drawBody(food); drawBody(danger, false, false);");
+  game.run("selectedDifficultyIndex = 4; const food = body(100, 0, 10), danger = body(200, 0, 40); drawBody(food); drawBody(danger, false, false);");
   assert.ok(strokes.some(c => c[0] === 92 && c[1] === 244));
   assert.ok(strokes.some(c => c[0] === 255 && c[1] === 112));
 });
@@ -1817,7 +1819,8 @@ test("fragmentation threshold, mass ratio and normal speed determine losses with
   const game = createGame(); beginGame(game, true);
   game.run(`const a=body(-200,0,240), b=body(200,0,240);
     const slow=impactMassLoss(a,b,50), fast=impactMassLoss(a,b,900);
-    setBodyMass(b,a.mass*25); const raid=impactMassLoss(a,b,900);`);
+    setBodyMass(b,a.mass*25); b.type='planet';b.gravitySource=true;
+    const raid=impactMassLoss(a,b,900);`);
   assert.ok(game.run("fast.a > slow.a && fast.a === fast.b && raid.a > raid.b && fast.a > raid.b"));
   assert.ok(game.run("canFragmentTogether(a,b) && !canFragmentTogether(player,b)"));
   game.run("b.kind='debris';");
@@ -1889,7 +1892,7 @@ test("large loose fragments use gold shard geometry at both LODs and cannot kill
     drawBody(shard,false,true); drawBody(shard,false,false);
     const threat=getThreatVisual(shard.r,player.r,shard); updateGame();`);
   assert.deepEqual(game.json("calls"),['polygon','polygon']);
-  assert.deepEqual(game.json("threat.ring"),[255,228,145,240]);
+  assert.deepEqual(game.json("threat.ring"),[255,112,110,240]);
   assert.equal(game.run("gameState"),'playing');
   close(game.run("player.mass"),250400);
   assert.ok(game.run("world.consumedIds.has(shard.id)"));
@@ -1957,12 +1960,13 @@ test("recovery survives a second overlapping intact body and fragments cannot in
 test("a badly damaged Moon risks death on another unprotected strike and restart clears debris and contacts", () => {
   const game=createGame(); beginGame(game,true);
   game.run(`const route=loadFragmentationScenario('larger'); setBodyMass(player,FRAGMENTATION_MIN_MASS);
+    setBodyMass(route.target,massForRadius(600)); // below the direct-absorption ratio
     player.x=-route.target.r-player.r+1;
     resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
     const damagedMass=player.mass, oldWorld=world;
     player.x=-9000; player.vx=player.vy=player.gravityVx=player.gravityVy=0;
     mouseX=width/2;mouseY=height/2;
-    for(let i=0;i<=FRAGMENTATION_REARM_TICKS;i++) updateGame();
+    for(let i=0;i<=Math.max(FRAGMENTATION_REARM_TICKS,FRAGMENTATION_GRACE_TICKS);i++) updateGame();
     player.x=route.target.x;player.y=route.target.y;updateGame();`);
   assert.ok(game.run("damagedMass<FRAGMENTATION_MIN_MASS && gameState==='gameover'"));
   game.run("key=' ';keyCode=0;keyPressed();");
@@ -1975,7 +1979,7 @@ test("eating a shed core below the Moon threshold also preserves collision mass 
     game.run(`const route=loadFragmentationScenario('smaller'); difficultyFactor=${difficulty};
       player.x=-route.target.r-player.r+1;
       const hit=resolveBodyImpact(player,route.target,sweptBodyContact(player,player,route.target,route.target));
-      runTick+=FRAGMENTATION_REARM_TICKS+1;
+      runTick+=Math.max(FRAGMENTATION_REARM_TICKS,FRAGMENTATION_GRACE_TICKS)+1;
       player.x=route.target.x-player.r-route.target.r-FRAGMENTATION_RELEASE_GAP-1;updateCollisionContacts();
       player.x=route.target.x;player.y=route.target.y;
       player.vx=player.vy=player.gravityVx=player.gravityVy=0;
@@ -1999,13 +2003,13 @@ test("alternate mass laws and zero configured shedding keep fragmentation finite
   }
 });
 
-test("impact feedback distinguishes smaller intact targets from food and preserves compact HUD rendering", () => {
+test("impact feedback is separate from physical-size rims and preserves compact HUD rendering", () => {
   const game=createGame(480,320);beginGame(game,true);
   game.run(`const route=loadFragmentationScenario('smaller');
     const visual=getThreatVisual(route.target.r,player.r,route.target);
     for(let i=0;i<60 && !world.nextImpactId;i++){steerFragmentationScenario(route);updateGame();observeFragmentationScenario(route);}
     drawGame();`);
-  assert.deepEqual(game.json("visual.ring"),[255,179,85,240]);
+  assert.deepEqual(game.json("visual.ring"),[92,244,176,235]);
   assert.ok(game.context.texts.some(text=>text.includes('hit: you -') && text.includes('target -')));
   assert.ok(game.run("gameplayNotification()===impactNotification && indicatorObstacles().length===2 && hasImpactGrace(player)"));
   game.run("windowWidth=320;windowHeight=180;windowResized();drawGame();");
@@ -2025,11 +2029,12 @@ test("debris highlighting fades into background density without despawning or lo
   assert.ok(game.run("allBodies().includes(shard) && shard.mass===36 && !world.consumedIds.has(shard.id)"));
 });
 
-test("unattended ecology preserves food and mass, resolves surfaces and bounds debris over two minutes", t=>{
+test("unattended ecology absorbs contacted food, conserves mass and clears surfaces over two minutes", t=>{
   const game=createGame();beginGame(game,true);
   game.context.now=()=>performance.now();
   game.run(`const scene=loadEcologyScenario('unattended');
-    let peakDebris=world.debris.size,peakPairs=0,peakActors=0,merges=0;
+    let peakDebris=world.debris.size,peakPairs=0,peakActors=0,merges=0,maxRestTicks=0;
+    const resting=new Map();
     const timings=[];
     for(let i=0;i<7200;i++) {
       const time=now();updateGame();timings.push(now()-time);
@@ -2039,6 +2044,14 @@ test("unattended ecology preserves food and mass, resolves surfaces and bounds d
       peakDebris=Math.max(peakDebris,world.debris.size);
       peakPairs=Math.max(peakPairs,world.ecologyStats.pairChecks);peakActors=Math.max(peakActors,world.ecologyStats.simulated);
       merges+=world.ecologyStats.merges;
+      for(const body of allBodies()) {
+        if(body===scene.source)continue;
+        const dx=body.x-scene.source.x,dy=body.y-scene.source.y,distance=Math.hypot(dx,dy);
+        const gap=distance-body.r-scene.source.r;
+        const speed=Math.abs(((body.vx-scene.source.vx)*dx+(body.vy-scene.source.vy)*dy)/distance);
+        const ticks=gap<4&&speed<1?(resting.get(body.id)??0)+1:0;
+        resting.set(body.id,ticks);maxRestTicks=Math.max(maxRestTicks,ticks);
+      }
     }
     const survivors=allBodies(),intact=survivors.filter(b=>!isLooseDebris(b));
     let penetration=0,worst=null;
@@ -2049,9 +2062,9 @@ test("unattended ecology preserves food and mass, resolves surfaces and bounds d
     const earlyMean=timings.slice(60,660).reduce((sum,t)=>sum+t,0)/600;
     const lateMean=timings.slice(-600).reduce((sum,t)=>sum+t,0)/600;
     timings.sort((a,b)=>a-b);`);
-  const result=game.json("({impacts:world.nextImpactId,peakDebris,remaining:world.debris.size,peakPairs,peakActors,merges,penetration,worst,foods:scene.foods.filter(residentBody).length,edibleFood:scene.foods.filter(b=>b.r<20).length,nearSourceFood:scene.foods.filter(b=>b.r<20&&Math.hypot(b.x-scene.source.x,b.y-scene.source.y)-scene.source.r<1600).length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),earlyMean,lateMean})");
+  const result=game.json("({impacts:world.nextImpactId,peakDebris,remaining:world.debris.size,peakPairs,peakActors,merges,penetration,maxRestTicks,worst,foods:scene.foods.filter(residentBody).length,p95:timings[Math.floor(timings.length*.95)],max:timings.at(-1),earlyMean,lateMean})");
   t.diagnostic(JSON.stringify(result));
-  assert.equal(result.foods,24);assert.ok(result.penetration<0.01 && result.edibleFood>=12 && result.nearSourceFood>=5);
+  assert.equal(result.foods,0);assert.ok(result.penetration<0.01 && result.maxRestTicks<60);
   assert.ok(result.peakDebris<=game.run('MAX_WORLD_DEBRIS')&&result.peakPairs<=game.run('ECOLOGY_MAX_PAIR_CHECKS'));
   assert.ok(result.remaining<result.peakDebris&&result.impacts>0&&result.merges>0);
 });
@@ -2059,7 +2072,7 @@ test("unattended ecology preserves food and mass, resolves surfaces and bounds d
 test("distant visible fields already attract bodies before player entry without a second activation",()=>{
   const game=createGame();beginGame(game,true);
   game.run(`const scene=loadEcologyScenario('entry'), watched=scene.foods[0], startX=watched.x;
-    for(let i=0;i<180;i++)updateGame();
+    for(let i=0;i<30;i++)updateGame(); // inspect attraction before surface absorption
     const before=watched.gravityAx, beforeWeight=world.ecology.get(watched.id).sources.get(scene.source.id).activation;
     player.x=2800;followPlayer();syncWorldRegions();updateGame();`);
   assert.ok(game.run("watched.x!==startX && before<0 && beforeWeight===1 && world.ecology.get(watched.id).sources.get(scene.source.id).activation===1"));
@@ -2070,9 +2083,9 @@ test("competing neutral collectors award a contacted fragment exactly once and p
   const game=createGame();beginGame(game,true);
   game.run(`const scene=loadEcologyScenario('competition');
     for(let i=0;i<90;i++)updateGame();`);
-  const masses=game.json('[scene.first.mass,scene.second.mass]');t.diagnostic(JSON.stringify(masses));
+  const masses=game.json('[scene.first,scene.second].filter(residentBody).map(b=>b.mass)');t.diagnostic(JSON.stringify(masses));
   assert.ok(game.run("world.consumedIds.has(scene.debris[0].id) && world.debris.size===0"));
-  close(masses[0]+masses[1],3396,1e-8);
+  close(masses.reduce((n,m)=>n+m,0),3396,1e-8);
   assert.equal(masses.filter(m=>m>1600).length,1);
 });
 
@@ -2170,7 +2183,7 @@ test("competing collectors can contest fresh material from an unattended large-b
     for(let i=0;i<60;i++)updateGame();`);
   t.diagnostic(JSON.stringify(game.json('({impacts:world.nextImpactId,consumed:world.consumedIds.has(prize.id),masses:[c.mass,d.mass],prize:{x:prize.x,y:prize.y,r:prize.r},c:{x:c.x,y:c.y},d:{x:d.x,y:d.y},cache:[world.ecology.has(c.id),world.ecology.has(d.id)]})')));
   assert.ok(game.run('world.nextImpactId===1 && world.consumedIds.has(prize.id) && [c,d].filter(body=>body.mass>900).length===1'));
-  close(game.run('c.mass+d.mass'),game.run('1800+prize.mass'),1e-8);
+  close(game.run('[c,d].filter(residentBody).reduce((n,b)=>n+b.mass,0)'),game.run('1800+prize.mass'),1e-8);
   close(game.run('player.mass+allBodies().reduce((sum,body)=>sum+body.mass,0)'),game.run('before'),1e-7);
 });
 
@@ -2239,7 +2252,7 @@ test("moving large bodies hit resident targets beyond player activation before a
   close(game.run('a.x-before.x'),game.run('before.vx*SIMULATION_STEP_SECONDS'),1e-7);
 });
 
-test("asteroids, protected shards and broken cores release from planet surfaces without losing mass",t=>{
+test("planet surfaces absorb small bodies and release only source-protected shards without losing mass",t=>{
   for(const type of ['asteroid','debris','broken']) {
     const game=createGame();beginGame(game,true);
     game.run(`const planet=addSource(5000,0,600);
@@ -2255,7 +2268,9 @@ test("asteroids, protected shards and broken cores release from planet surfaces 
         minGap=Math.min(minGap,gap);maxGap=Math.max(maxGap,gap);
         maxOutward=Math.max(maxOutward,planet.vx-object.vx);
       }`);
-    assert.ok(game.run('residentBody(object)&&minGap>=-1e-7&&maxGap>80&&maxOutward>=ECOLOGY_SURFACE_RELEASE_SPEED-1e-7&&world.nextImpactId===0'));
+    if(type==='debris')assert.ok(game.run('residentBody(object)&&minGap>=-1e-7&&maxGap>80&&maxOutward>=ECOLOGY_SURFACE_RELEASE_SPEED-1e-7'));
+    else assert.ok(game.run('!residentBody(object)&&world.consumedIds.has(object.id)'));
+    assert.equal(game.run('world.nextImpactId'),0);
     close(game.run('player.mass+allBodies().reduce((m,b)=>m+b.mass,0)'),game.run('total'),1e-6);
     t.diagnostic(JSON.stringify(game.json(`({type:'${type}',minGap,maxGap,maxOutward})`)));
   }
@@ -2264,7 +2279,8 @@ test("asteroids, protected shards and broken cores release from planet surfaces 
 test("surface release suppresses only the contacted source and restores its force smoothly",()=>{
   const game=createGame();beginGame(game,true);
   game.run(`const planet=addSource(5000,0,600),other=addSource(4000,1200,600);
-    const food=addBody(4395,0,10,100);updateGame();
+    const food=addBody(4395,0,10,100,0,'debris');
+    food.originId=planet.originId;food.reclaimAfterTick=1e9;food.gravityAfterTick=0;updateGame();
     const release=food.surfaceRelease;
     const held=gravityFromSource(food,planet),otherPull=gravityFromSource(food,other);
     runTick=release.untilTick;const edge=gravityFromSource(food,planet);
@@ -2314,4 +2330,165 @@ test("continuity pools retain bounded work when many distant movers compete for 
     }`);
   assert.equal(game.run('world.ecologyMoving.length'),game.run('ECOLOGY_CONTINUITY_BODIES'));
   assert.ok(game.run('[...world.movingBodies.values()].every(b=>b.x-starts.get(b.id)>29)'));
+});
+
+test("relative-size rims use physical radii across forms, eligibility, difficulty and every LOD", () => {
+  const game=createGame();beginGame(game,true);
+  const green=[92,244,176,235],yellow=[255,215,95,240],red=[255,112,110,240];
+  const strokes=[];game.context.stroke=(...channels)=>strokes.push(channels);
+  for (const radius of [20,119,120,240,1199,1200,1999]) {
+    game.run(`setBodyMass(player,massForRadius(${radius}));updatePlayerEvolution();`);
+    for (const [ratio,expected] of [[0.5,green],[0.8,yellow],[1,yellow],[1.25,yellow],[2,red],[10,red]]) {
+      for (const type of ['asteroid','moon','planet','debris']) {
+        game.run(`var sample=body(0,0,${radius*ratio},0,0,'${type}');sample.hasFragmented=true;
+          sample.impactGraceUntilTick=1e9;sample.collectAfterTick=1e9;
+          var visual=getThreatVisual(sample.r,player.r,sample);`);
+        assert.deepEqual(game.json('visual.ring'),expected,`${radius}, ${ratio}, ${type}`);
+        for (const detail of [true,false]) {
+          strokes.length=0;
+          game.run(`selectedDifficultyIndex=4;camera.zoom=0.01;drawBody(sample,false,${detail});`);
+          assert.ok(strokes.some(c=>JSON.stringify(c)===JSON.stringify(expected)));
+        }
+      }
+    }
+  }
+  // Form appearance can stay at Planet after a loss; colors still use actual radius.
+  game.run('setBodyMass(player,massForRadius(20));');
+  assert.equal(game.run('player.type'),'planet');
+  assert.deepEqual(game.json('getThreatVisual(1200,player.r).ring'),red);
+  const configured=createGame(1600,900,1,{OUTLINE_SIMILAR_RADIUS_RATIO:2});beginGame(configured,true);
+  assert.deepEqual(configured.json('getThreatVisual(40,20).ring'),yellow);
+});
+
+test("disparity independently lowers smaller retained fractions and raises larger retained fractions", t => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const small=body(0,0,240),big=body(0,0,240);`);
+  const rows=[];
+  for (const speed of [0,50,225,900]) {
+    let previous=null;
+    for (const ratio of [1,1.25,1.5,2,3,4,9,25,63.9]) {
+      game.run(`setBodyMass(big,small.mass*${ratio});var loss=impactMassLoss(small,big,${speed});
+        var swapped=impactMassLoss(big,small,${speed});`);
+      const loss=game.json('loss');
+      close(loss.a,game.run('swapped.b'));close(loss.b,game.run('swapped.a'));
+      if(previous) {
+        assert.ok(loss.a>=previous.a && loss.b<previous.b);
+        if(previous.a<game.run('FRAGMENTATION_MAX_LOSS'))assert.ok(loss.a>previous.a);
+      }
+      previous=loss;
+      if(speed===900)rows.push({ratio,smallRetained:1-loss.a,largeRetained:1-loss.b});
+    }
+  }
+  // Verify actual core + own debris partitions, including piece-capacity limits.
+  game.run(`var partitions=[];
+    for(const ratio of [1,2,4,25,63.9]) {
+      runTick++;world.ecologyStats.impacts=0;
+      const a=addBody(5000,0,240,900,0,'moon'),b=addBody(5000+a.r+240*Math.sqrt(ratio)-1,0,240*Math.sqrt(ratio),0,0,'planet');
+      b.gravitySource=true; // retain the planetary raid profile at high disparity
+      const original=[a.mass,b.mass],event=resolveBodyImpact(a,b,sweptBodyContact(a,a,b,b));
+      if(event.kind!=='fragmented')throw Error('Expected fragmentation at ratio '+ratio);
+      const partition=[a,b].map((parent,i)=>({before:original[i],retained:parent.mass,
+        ejecta:event.debris.filter(p=>p.parentId===parent.id).reduce((n,p)=>n+p.mass,0)}));
+      partitions.push(partition);
+      for(const parent of [a,b])if(!event.debris.filter(p=>p.parentId===parent.id).every(p=>p.mass<parent.mass))throw Error('Core ownership lost');
+    }`);
+  for(const pair of game.json('partitions'))for(const parent of pair)close(parent.retained+parent.ejecta,parent.before,1e-6);
+  t.diagnostic(JSON.stringify(rows));
+});
+
+test("extreme intact absorption has a configurable inclusive boundary and conserves mass for either actor", () => {
+  for(const playerIsLarge of [false,true])for(const reverse of [false,true])for(const ratio of [63.99,64,64.01]) {
+    const game=createGame();beginGame(game,true);
+    game.run(`setBodyMass(player,FRAGMENTATION_MIN_MASS*${playerIsLarge?ratio:1});
+      const other=addBody(player.r+radiusForMass(FRAGMENTATION_MIN_MASS*${playerIsLarge?1:ratio})-1,0,
+        radiusForMass(FRAGMENTATION_MIN_MASS*${playerIsLarge?1:ratio}),0,0,'planet');
+      other.gravitySource=true; // this fixture measures the planetary 64:1 threshold
+      const total=player.mass+other.mass,contact=sweptBodyContact(player,player,other,other);
+      const event=${reverse?'resolveBodyImpact(other,player,{...contact,ax:contact.bx,ay:contact.by,bx:contact.ax,by:contact.ay,nx:-contact.nx,ny:-contact.ny})':'resolveBodyImpact(player,other,contact)'};
+      if(event.kind==='absorbed')handlePlayerContact(other,event);`);
+    assert.equal(game.run('event.kind'),ratio<64?'fragmented':'absorbed');
+    close(game.run('player.mass+allBodies().reduce((n,b)=>n+b.mass,0)'),game.run('total'),1e-6);
+    if(ratio>=64) {
+      assert.equal(game.run('world.nextImpactId'),0);assert.equal(game.run('world.debris.size'),0);
+      assert.equal(game.run('gameState'),playerIsLarge?'playing':'gameover');
+      assert.equal(game.run('score'),playerIsLarge?1:0);
+      assert.equal(game.run('residentBody(event.consumed)'),false);
+    }
+  }
+  const game=createGame(1600,900,1,{ABSORPTION_LARGE_MASS_RATIO:4,MAX_WORLD_DEBRIS:0});beginGame(game,true);
+  game.run(`const a=addBody(4000,0,120,0,0,'moon'),b=addBody(4359,0,240,0,0,'planet');b.gravitySource=true;
+    const event=resolveBodyImpact(a,b,sweptBodyContact(a,a,b,b));`);
+  assert.equal(game.run('event.kind'),'absorbed');close(game.run('b.mass'),72000);
+});
+
+test("fresh impact debris is collectible on contact without bumping and source recovery is separate", () => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const a=addBody(5000,0,240,900,0,'moon'),b=addBody(5479,0,240,0,0,'moon');
+    a.ownerId='pilot-a';const event=resolveBodyImpact(a,b,sweptBodyContact(a,a,b,b));
+    const fromA=event.debris.find(p=>p.parentId===a.id),fromB=event.debris.find(p=>p.parentId===b.id);
+    const ally=addBody(8000,0,10);ally.ownerId=a.ownerId;
+    const sourceOwned=canCollectDebris(a,fromA),sourceNeutral=canCollectDebris(b,fromB);
+    const allyAllowed=canCollectDebris(ally,fromA),opponentAllowed=canCollectDebris(b,fromA);
+    let bumpCount=0;const realSurface=resolveSurfaceContact;
+    resolveSurfaceContact=(...args)=>{bumpCount++;return realSurface(...args);};
+    const before=player.mass+allBodies().reduce((n,b)=>n+b.mass,0);
+    player.x=fromA.x;player.y=fromA.y;player.vx=100;player.vy=25;
+    const motion=JSON.stringify([player.x,player.y,player.vx,player.vy]);
+    const collected=resolveBodyImpact(player,fromA,sweptBodyContact(player,player,fromA,fromA));
+    handlePlayerContact(fromA,collected);
+    const ambient=resolveBodyImpact(ally,fromB,sweptBodyContact(ally,ally,fromB,fromB));
+    resolveBodyImpact(player,fromA,null);`);
+  assert.deepEqual(game.json('[sourceOwned,sourceNeutral,allyAllowed,opponentAllowed]'),[false,false,true,true]);
+  assert.equal(game.run('collected.kind'),'collected');assert.equal(game.run('ambient.kind'),'collected');
+  assert.equal(game.run('bumpCount'),0);assert.equal(game.run('score'),1);
+  assert.ok(game.run('motion===JSON.stringify([player.x,player.y,player.vx,player.vy])'));
+  close(game.run('player.mass+allBodies().reduce((n,b)=>n+b.mass,0)'),game.run('before'),1e-6);
+  game.run(`const own=event.debris.find(p=>p.parentId===a.id&&!world.consumedIds.has(p.id));
+    const neutral=event.debris.find(p=>p.parentId===b.id&&!world.consumedIds.has(p.id));`);
+  assert.equal(game.run('canCollectDebris(a,own,DEBRIS_COLLECTION_DELAY_TICKS)'),true);
+  assert.equal(game.run('canCollectDebris(b,neutral,DEBRIS_RECLAIM_TICKS-1)'),false);
+  assert.equal(game.run('canCollectDebris(b,neutral,DEBRIS_RECLAIM_TICKS)'),true);
+});
+
+test("fresh ejecta participates in later contact passes during its birth tick", () => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const a=addBody(5000,0,240,900,0,'moon'),b=addBody(5479,0,240,0,0,'moon');
+    const realImpact=resolveBodyImpact;let shard=null;
+    resolveBodyImpact=(...args)=>{
+      const event=realImpact(...args);
+      if(event.kind==='fragmented') {
+        shard=event.debris[0];shard.x=player.x;shard.y=player.y;storeWorldBody(world,shard);
+      }
+      return event;
+    };
+    updateGame();`);
+  assert.ok(game.run('shard && shard.bornAtTick===runTick && world.consumedIds.has(shard.id) && score===1'));
+});
+
+test("player and ambient bodies share separation and source-field release rules", () => {
+  for(const actorIsPlayer of [false,true]) {
+    const game=createGame(1600,900,1,{ABSORPTION_MIN_MASS_RATIO:10000});beginGame(game,true);
+    game.run(`const planet=addSource(5000,0,600);
+      const actor=${actorIsPlayer?'player':'addBody(0,0,20)'};
+      actor.x=planet.x-planet.r-actor.r+1;actor.vx=100;
+      const before=actor.mass+planet.mass;
+      const event=resolveBodyImpact(actor,planet,sweptBodyContact(actor,actor,planet,planet));`);
+    assert.equal(game.run('event.kind'),'separated');
+    assert.ok(game.run('Math.hypot(actor.x-planet.x,actor.y-planet.y)>=actor.r+planet.r'));
+    close(game.run('planet.vx-actor.vx'),game.run('ECOLOGY_SURFACE_RELEASE_SPEED'),1e-7);
+    assert.ok(game.run('actor.surfaceRelease.sourceId===planet.id'));
+    close(game.run('actor.mass+planet.mass'),game.run('before'));
+  }
+});
+
+test("dormant retirement uses the shared absorption rule and ignores clearance-only gaps", () => {
+  const game=createGame();beginGame(game,true);
+  game.run(`const planet=addSource(5000,0,600),food=addBody(4391,0,10);
+    const before=planet.mass+food.mass;
+    settleDormantBody(food);
+    const peer=addBody(planet.x+planet.r+120+1,0,120,0,0,'moon');
+    const peerMass=peer.mass;settleDormantBody(peer);`);
+  assert.ok(game.run('world.consumedIds.has(food.id) && !residentBody(food)'));
+  close(game.run('planet.mass'),game.run('before'));
+  close(game.run('peer.mass'),game.run('peerMass'));
 });

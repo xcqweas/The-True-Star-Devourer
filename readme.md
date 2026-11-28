@@ -22,11 +22,13 @@ requires network access. The repository has no build step or new dependencies.
   units/second squared. Both scale smoothly with physical size to retain apparent travel.
   Gravity drift adds to this velocity, allowing boosts above the drive cap.
   Centering the mouse brakes drift; steer outward to escape a gravity source.
-- Early intact food is edible when its radius is strictly smaller; equal/larger
-  intact bodies remain lethal while the player is below the shedding threshold.
-  When both intact bodies have at least Moon mass, impacts shed material instead
-  of consuming either body. Loose gold shards are edible at any mass.
-  Green rims mean food, amber means a shedding impact, and red means lethal contact.
+- With either intact body below Moon mass, the larger absorbs the smaller;
+  equal small bodies separate. At Moon mass, a 3:1 mass ratio permits direct
+  feeding; comparable moons fragment. Encounters involving a planetary emitter
+  retain a 64:1 threshold, preserving risky raids. These rules apply
+  equally to the player and ambient bodies. Loose gold shards are edible at any mass.
+  Rims show relative physical radius: green smaller, yellow similar (0.8–1.25 times
+  the player's radius), red larger. Eligibility, form and escape protection do not change colors.
   A white player ring marks brief escape protection. Easy modes retain extra assistance.
   Score counts collected meals/shards; it does not control evolution.
 - Red edge arrows warn of relevant dangerous moons/planets. Cyan arrows show the
@@ -41,29 +43,31 @@ squared, and radius equals the square root of mass. Types do not introduce diffe
 densities. New procedural and fixture bodies derive their mass from their radius;
 the player starts at mass 400 (radius 20).
 
-Each untouched intact meal adds `prey.mass * CONSUMPTION_MASS_GAIN / difficultyFactor` to player mass,
-then recomputes physical radius. The default gain is 1: Normal absorbs 100% of prey
-mass, with easier/harder presets increasing/decreasing this amount. At Normal,
-eating a radius-15 body at radius 20 grows the player to radius 25. Appropriate prey
+Each absorption transfers the consumed body's exact mass to its collector, then
+recomputes physical radius. This conserves mass for player and ambient collectors
+at every difficulty; difficulty still controls generated food sizes and assistance.
+Eating a radius-15 body at radius 20 grows the player to radius 25. Appropriate prey
 therefore gives noticeable growth; tiny prey still gives its smaller mass contribution.
 
-`js/constants.js` defines the positive mass scale/exponent, absorption gain, ordered
+`js/constants.js` defines the positive mass scale/exponent, absorption ratios, ordered
 `EVOLUTION_FORMS` mass thresholds, final threshold, and notification duration:
 
 | Milestone | Total mass | Radius with default mass law |
 | --- | ---: | ---: |
 | Asteroid (start) | 400 | 20 |
 | Moon | 14,400 | 120 |
-| Planet | 1,440,000 | 1,200 |
+| Planet | 810,000 | 900 |
 | True Star Devourer (ending) | 4,000,000 | 2,000 |
 
 Keep thresholds increasing and the final threshold above the Planet threshold.
 Retune thresholds when changing the mass law. Form thresholds are cosmetic changes;
 they never add mass or snap radius to a new size. Excess mass is retained, including
 when a meal crosses multiple configured thresholds. Moon form is near the smallest
-generated moons, and Planet form is near the smallest generated planets. Physical
-mass determines impact eligibility; form appearance retains the highest milestone
+generated moons. Physical mass and the body's emitter profile determine interaction
+eligibility; form appearance retains the highest milestone
 already reached when mass is lost. It never grants mass or changes ownership.
+Planet form now starts below the size of generated planets. Moon's required gain
+is 795,600 mass, down from 1,425,600; the Asteroid entry/exit and final goal are unchanged.
 
 Evolution changes only the player's type and stored shape. Position, velocity,
 acceleration, angle, mass, score, elapsed ticks, camera zoom, world seed, world objects,
@@ -81,35 +85,46 @@ Player and ambient encounters use the same fragmentation and debris collection
 resolver. A spatial broadphase tests swept contacts, sorts them by contact time,
 and uses stable IDs for ties, so competing collectors cannot duplicate a meal.
 
-Two cohesive bodies at or above `FRAGMENTATION_MIN_MASS` shed mass. Its default is
-the existing Moon milestone, 14,400 mass (radius 120 under the default mass law).
+Two cohesive bodies at or above `FRAGMENTATION_MIN_MASS` shed mass below the direct
+absorption ratio. `ABSORPTION_MOON_MASS_RATIO` defaults to 3:1 inclusive, equivalent
+to a 1.73:1 radius ratio with the default mass law. Pairs involving a planetary
+emitter use `ABSORPTION_LARGE_MASS_RATIO`, still 64:1. The stored emitter profile,
+independent of the gravity enable switch, identifies these planets. Cosmetic player
+evolution does not raise its feeding threshold; the player never becomes an emitter.
+Both player and ambient pairs use this same property-based rule. The minimum
+cohesive mass defaults to the Moon milestone, 14,400 (radius 120 under the default mass law).
 The retained core keeps the same object, ID, origin, owner, form, and controls.
 Each parent's five loose pieces inherit its origin/owner metadata. The core remains
 larger than any one of its own pieces, including with aggressive loss tuning; the
 player never takes control of an enemy's larger shard.
 
 Loss fractions use relative normal closing speed, so a fast head-on hit costs more
-than a slow or glancing hit. Let `q = min(mA,mB)/max(mA,mB)` and
+than a slow or glancing hit. Let
 `s = clamp(normalSpeed / (900 * movementScale), 0, 1)`. `movementScale` is the maximum
 of the participants' control-speed multipliers (1 for unscaled ambient bodies).
 For each body:
 
-`lossFraction = min(maxLoss, (0.08 + 0.36*s) * (1 + 0.35*q) * (otherMass / totalMass)^0.6)`
+`comparableLoss = (0.08 + 0.36*s) * (1 + 0.35) * 0.5^0.6`
 
-The larger participant loses a smaller proportion. Comparable pairs lose more of
-their combined mass; larger targets can still shed more absolute mass, making raids
-potentially profitable. The default fraction cap is 0.55. A further cap derived from
-piece count always keeps the controlled core largest. Slow contact can shed a small
+`lossFraction = clamp(comparableLoss * (otherMass / ownMass)^0.6, 0, maxLoss)`
+
+`retainedMass = ownMass * (1 - lossFraction)`
+
+Each participant resolves its own retained mass. Increasing disparity raises the
+smaller participant's fractional loss and lowers the larger participant's loss.
+At reference speed, 1:1 loses 39.19% each; at 4:1, the smaller loses 80% and the larger
+17.06%. The default fraction cap is 0.8. A further cap derived from available
+piece count always keeps each own core largest. Slow contact can shed a small
 amount; normal impact strength saturates at the scaled reference speed. Equal
 proportions of available drive retain equal severity as player movement scales;
 faster head-on hits remain more damaging than slow/glancing hits. NPC-only impacts
 retain their existing 900-unit reference.
 
 Surviving cores plus ejecta exactly partition each parent's original mass, with the
-last piece taking the floating-point remainder. Debris and previously shed cores
-transfer their actual remaining mass at every difficulty; untouched opening food
-keeps its existing absorption tuning. Shards are gold angular polygons with crack
-marks, including at low detail and Moon/Planet masses. They never emit gravity.
+last piece taking the floating-point remainder. Debris, shed cores and intact bodies
+transfer their actual remaining mass at every difficulty. Shards are gold angular
+polygons with crack marks and size-colored rims, including at low detail and
+Moon/Planet masses. They never emit gravity.
 
 The resolver places remnants at swept entry positions, separates their surfaces,
 and gives them an outward impulse. The touching surfaces define an impact point
@@ -128,24 +143,28 @@ All tuning lives alongside the existing constants in `js/constants.js`:
 | Tuning | Default |
 | --- | --- |
 | Minimum cohesive mass | Moon milestone, 14,400 |
+| Sub-Moon / Moon / planetary-emitter absorption mass ratios | Strictly greater than 1 / at least 3 / at least 64 |
+| Similar-size rim band | 0.8–1.25 times player radius (`OUTLINE_SIMILAR_RADIUS_RATIO = 1.25`) |
 | Normal impact reference speed | 900 world units/second, multiplied by control-speed scale |
 | Base / speed loss / comparable bonus / mass bias | 0.08 / 0.36 / 0.35 / 0.6 |
-| Maximum fraction / pieces per participant | 0.55 / 5 |
+| Maximum fraction / pieces per participant | 0.8 / 5 |
 | Surface separation / outward relative speed | 60 units / 240 units/second |
-| Escape protection / minimum rearm interval | 1.25 / 1.5 seconds |
+| Escape protection / minimum rearm interval | 2.5 / 1.5 seconds |
 | Rearm surface gap | More than 100 units |
-| Ejection speed / drag | 140 units/second / 1.2 per second |
-| Owned recovery / public collection / neutral parent reclaim | 0.2 / 2 / 12 seconds |
-| Gravity delay | 12 seconds |
-| Full debris visibility / fade to normal density | First 15 seconds / following 2 seconds |
+| Ejection speed / drag / surface spacing | 100 units/second / 2 per second / 16 units |
+| Owned source recovery / other collectors / neutral source reclaim | 0.2 / 0 / 20 seconds |
+| Gravity delay | 20 seconds |
+| Full debris visibility / fade to normal density | First 20 seconds / following 2 seconds |
 
 Debris has no destructive expiry timer. Drag keeps it near the impact site, and gravity
 starts after the collection window. Every collector uses the same eligibility policy:
-non-null matching owners can recover their material after 0.2 seconds; other collectors
-wait two seconds; a neutral original parent waits twelve seconds before reclaiming
-its own material. Neutral bodies can still compete for someone else's open shards.
-Protected shards collide with surfaces while waiting; they do not sit inside a parent
-until its timer opens. After highlighting expires, normal smooth density rules apply.
+the owned source body recovers its material after 0.2 seconds; a neutral source body
+waits twenty seconds. Every other collector, including allies, can collect immediately
+on contact. Source identity uses `parentId`, with origin fallback for legacy fixtures.
+The source recovery timer is independent of the configurable public opening time.
+Eligible shards transfer before any surface impulse, including during the impact tick's
+remaining contact passes. Only source-protected or explicitly delayed shards separate
+from a surface while waiting. After highlighting expires, normal smooth density rules apply.
 Consumed debris stays consumed. Falling below Moon mass makes the next unprotected
 large-body strike lethal, so collecting material and choosing an escape path matter.
 
@@ -171,14 +190,15 @@ local/source caches. Current-position indices also keep a moving planet renderab
 and queryable after it leaves its original generated cell. Each body still integrates
 once per fixed tick; camera zoom and rendering cadence do not choose continuity slots.
 
-Ambient bodies collect loose shards at their exact mass, at any relative size. Other
-intact food is retained: ordinary ambient contacts separate surfaces and give a minimum
+Player and ambient bodies use the same absorption, fragmentation and separation policy,
+including final contacts before retirement. Absorbable small bodies do not remain on
+planetary surfaces. Protected or otherwise non-absorbing contacts separate and give a minimum
 180-unit/second outward relative release, retaining 0.08 restitution for harder hits.
-Responding non-player bodies receive a 1.25-second hold against the contacted emitter's
+Responding bodies receive a 1.25-second hold against the contacted emitter's
 gravity, followed by a smooth 0.5-second return. Other emitters still attract them;
-the player's steering/gravity handling is unchanged. This prevents surface-resting
-stacks while preserving intact food and protected fragments. Two
-intact large bodies use the shared shedding rules. Three bounded contact passes also
+normal steering remains available. This prevents surface-resting stacks while protecting
+fresh source material. Two intact large bodies use the same disparity-dependent
+absorption or shedding rules. Three bounded contact passes also
 handle overlap after a collector grows. Crowded buckets rotate their scan order to
 avoid repeatedly spending the entire check budget on the same pairs.
 
@@ -195,9 +215,8 @@ Hard limits favor deferred work over disappearing material. With no debris slots
 large contacts resolve their surfaces and defer additional shedding; they never remove
 mass or allocate an unbounded particle burst. Available capacity can reduce pieces
 per participant, with the existing largest-core guarantee preserved. Retiring movers
-receive a bounded final separation check so they do not freeze inside earlier dormant
-bodies. This position correction happens after their fade, while stored mass and
-velocity remain intact.
+receive a bounded final contact check so they do not freeze inside earlier dormant
+bodies. Absorption transfers mass and separation releases surfaces after their fade.
 
 | Ecosystem tuning | Default |
 | --- | --- |
@@ -407,13 +426,14 @@ weighted by field density, falling to 8% of that chance in travel lanes. These m
 provide intermediate impact/collection targets; curated system moons provide further
 growth opportunities beside the planetary landmarks. Generation remains coordinate
 and seed based, with all spatial tuning in `js/constants.js`.
-Asteroid radius is `(ASTEROID_MIN_RADIUS + ASTEROID_RADIUS_SPREAD * rng() ** 2) * difficulty`,
-capped by `MAX_ASTEROID_RADIUS`. Defaults 6 and 18 replace the old hardcoded 6 and 48:
-Normal radii range from 6 to 24 instead of 6 to 54, and theoretical mean mass falls
-from 688.8 to 172.8. This extends early food collection separately from movement speed.
-Food radii, absorption, mass law, Moon threshold, and impact eligibility retain their
-current settings; this revision changes spatial budgets and placement. Smaller food
-also increases the initially edible fraction.
+Asteroid radius is `(ASTEROID_MIN_RADIUS + spread * rng() ** 2) * difficulty`, capped
+by `MAX_ASTEROID_RADIUS`. The protected opening keeps spread 18, Normal radii 6–24,
+and theoretical mean mass 172.8. Beyond a fixed region-center distance of 8000,
+spread blends smoothly toward `ASTEROID_OUTER_RADIUS_SPREAD = 42` over 4000 units.
+Normal outer radii reach 48 and theoretical mean mass reaches 556.8. Small food
+remains mixed in. Density budgets, Moon sizes and planetary placement stay the same.
+This is fixed seeded geography: neither player growth nor revisits resize food,
+change IDs, or regenerate already resident objects.
 Each planet is owned only by the region containing its center. Placement reserves a
 300-unit collision clearance at the start, with source influence circles also kept
 at least 300 units away from the origin. This leaves the starting player outside all
@@ -527,6 +547,73 @@ reports mass error, live/peak debris, impacts, simulated bodies, and pair checks
 
 ## Validation and limits
 
+Moon progression tuning (2026-11-27): no test suites were run for this pass.
+`tools/inspect-moon-progression.cjs` is a standalone measurement tool that loads the
+game scripts directly and never imports a test runner. Use `--before` to reproduce
+the previous tuning and `--progression` for the seeded ordinary-input growth routes.
+Its snapshots are saved in `tools/moon-progression-before.json`,
+`tools/moon-progression-after.json`, `tools/moon-routes-before.json` and
+`tools/moon-routes-after.json`. The baseline uses parameter overrides, not a separate
+historical executable. The measurements exclude browser rendering and human input.
+
+Opening routes at seeds 1, 42 and 1948 still take 25.65, 25.02 and 22.73 simulated
+seconds and 64, 60 and 60 collections respectively. The outer-field samples at
+distances 16000 and 32000 average 541–581 mass per asteroid, versus 163–184 before.
+Comparable Moon contacts still shed 39.19% at reference speed; pairs just below 3:1
+still fragment. At exactly 3:1, intact Moon feeding opens. Planetary raid pairs still
+fragment below 64:1, including with the global gravity switch off.
+
+The scripted progression routes continue from actual opening play, with no granted
+Moon mass, spawned food, collection multipliers or teleportation. The routing policy
+chooses visible-range feeding opportunities, favors safe paths, and permits a useful
+slightly larger Moon collision. It steers through ordinary mouse inputs and pauses
+feeding to recover nearby impact material. Seeds 1/42/1948 reach Planet in
+20.35/30.08/20.35 additional seconds, with 13/15/13 Moon body collections; seed 42 also
+has two fragmentation events and a largest single impact loss of 29.71%.
+Under the previous tuning, the same routes are still Moon at 45 seconds, at
+287,914/256,417/241,060 mass respectively, with eight or nine fragmentation events.
+These are efficient scripted runs, not estimates of typical human completion times.
+
+At player radius 240, full recovery from a favorable radius-140 Moon gives a net
+14,666 mass in 5.25 seconds after impact (previously 5.88); an equal Moon gives
+22,573 in 4.82 seconds (previously 6.55); a radius-1200 planetary raid gives 81,803
+in 6.93 seconds (previously 7.92). This includes repayment of the player's own shed
+mass; it does not count the whole cloud as profit. Equal-Moon recovery at four
+seconds now gives +4,515 net instead of break-even, and the raid at six seconds
+gives +39,866 instead of +21,434. A raid still removes 80% of the player's mass at
+impact, so its higher possible profit retains a severe temporary survival cost.
+All loose pieces remain collectible at any player mass. Encounter mass drift stays
+below 3e-10 in these isolated probes. JavaScript syntax checks passed for the game,
+probe and relevant fixture scripts, plus inline scripts and local script references
+in seven HTML pages. No browser playthrough was performed this pass.
+
+Earlier interaction-rule validation (before Moon progression tuning):
+
+- `node --test --test-isolation=none --test-reporter=spec tests/game.test.cjs`: 147 passed, 0 failed, 0 skipped (157.6 seconds).
+- JavaScript syntax checked for 22 script files and inline scripts in seven HTML pages; all local script references exist.
+- Browser visual inspection remains unverified because local preview access was blocked, as detailed below.
+
+The interaction-rule pass was inspected before editing. The yellow/amber rim branch
+used fragmentation eligibility, so every large target acquired it once the player
+reached Moon mass. The old shared severity bonus fell with disparity and its
+other/total weighting saturated: full-speed smaller-body losses rose only from
+39.19% at equality toward 44% at extreme ratios, leaving a dominant core. The old
+global birth/public collection delays sent fresh shards through surface resolution.
+Ordinary ambient contact deliberately retained intact food and separated it, while
+the player used a separate eat/death path. Retirement only displaced intact overlaps.
+The baseline's six-second surface probes already released bodies, so they did not
+reproduce permanent resting; the confirmed policy problem was the missing ambient
+absorption outcome and inconsistent contact paths.
+
+The earlier regression coverage includes independent core/ejecta partitions, monotonic
+fractional loss across disparity, the inclusive 64:1 absorption boundary in both
+participant orders, configurable thresholds and mass laws, exact transfer at every
+difficulty, impact-tick collection without a surface impulse, source-specific recovery,
+and shared player/ambient surface release and retirement. Rim tests exercise physical
+radii 20, 119, 120, 240, 1199, 1200 and 1999, all body forms and debris, both LODs,
+and retained Planet appearance after mass loss. These use the real simulation and
+rendering functions with p5 drawing stubs, not browser screenshots.
+
 Run `node --test`. Tests load the same script list as the browser and use p5 math and
 drawing stubs. They cover camera centering, steering/braking, world movement, swept
 collisions, resize invariance, mixed types/scales, deterministic signed regions,
@@ -543,17 +630,17 @@ World traversal, evolution, and all four gravity scenarios match at 30, 60, and 
 rendering FPS. Hazard tests add exact edible/lethal classification, relative motion,
 oversized/offscreen centers, harmless trajectory filtering, difficulty assistance,
 priority/clutter limits, layout/contrast bounds, signed seams, and no physical side effects.
-The shared integration route eats ten intact meals, evolves to Moon, safely passes a
+The shared integration route eats eleven intact meals, evolves to Moon, safely passes a
 planet's field, deliberately fragments, and escapes. It matches exactly through 1440
-ticks at all three rendering rates (peak pull about 302.1). A maximum-speed
+ticks at all three rendering rates (peak pull about 298.9). A maximum-speed
 approach test waits the full 3.2-second reaction allowance before escaping, retaining
 over 1200 units of surface clearance. Suspended recovery with fields/warnings still
 executes at most 15 ticks.
 
-For the spatial-composition revision, the test suite was skipped at the user's
-request. The last full run before this generator change passed all 140 tests
-(2026-11-27); the earlier gameplay measurements below have not been rerun against
-the new layout.
+The earlier interaction-rule pass started with 140 passing tests and finished with
+147. Neither count is a suite result for the Moon tuning pass. The spatial
+composition measurements below are saved generator snapshots that predate the
+distant-food size tuning; they have not been regenerated as composition benchmarks.
 
 Current composition inspection uses `node tools/inspect-composition.cjs` (no test
 registration or test-suite execution). It samples a 1600 x 900 viewport at physical
@@ -635,9 +722,9 @@ within 1e-12 relative tolerance. Scripted collection results:
 
 | Target | Player mass after impact | Player mass after collection | Completion |
 | --- | ---: | ---: | ---: |
-| Smaller, radius 140 / mass 19,600 | 45,139.76 | 65,695.80 | 361 ticks |
-| Comparable, radius 240 / mass 57,600 | 35,026.91 | 80,173.09 | 338 ticks |
-| Larger, radius 1200 / mass 1,440,000 | 32,498.88 | 148,563.91 | 517 ticks |
+| Smaller, radius 140 / mass 19,600 | 45,778.00 | 72,266.43 | 357 ticks |
+| Comparable, radius 240 / mass 57,600 | 35,026.91 | 80,173.09 | 397 ticks |
+| Larger, radius 1200 / mass 1,440,000 | 11,520.00 | 139,402.57 | 479 ticks |
 
 These demonstrate possible gains with the test waypoint controller, not an average
 player outcome. All three routes have identical physical results at 30/60/144 render
@@ -658,8 +745,8 @@ with one impact, original player ownership, and conserved mass throughout. A sep
 encounter 30,000 units from the player resolves before the observer approaches.
 
 Six-second surface probes check intact asteroids, protected shards, and broken cores.
-They retain mass, avoid penetration, and reach surface clearances of roughly 356,
-126, and 1079 units respectively. Contacted-field tests cover the hold, smooth return,
+Asteroids and broken cores transfer their mass to the planet; source-protected shards
+release and reach roughly 126 units of surface clearance. Contacted-field tests cover the hold, smooth return,
 and independent attraction from another emitter. Warning tests cover visible surfaces
 with offscreen centers, zoom/resize transitions, current-position tracking beyond the
 original planet-cell window, single-ID deduplication, and consumed-source removal.
@@ -667,18 +754,18 @@ A 104-mover stress case exceeds the 64 reserved slots, keeps all movers progress
 through the background pool, and stays within explicit simulation/contact budgets.
 
 The unattended ecology scene runs 7200 ticks (two minutes) with the player away from
-the region. It preserves all 24 intact food bodies (19 remain edible; 12 stay near the source)
-and total mass to 1e-11 relative
-tolerance, produces one fragmentation event, and finishes without intact-body
-penetration. Peak counts are 60 simulated bodies and 32 debris; 29 merges and later
-collection reduce debris to three. The latest isolated sample used at most 1545 pair
-checks in a tick, with about 0.91 ms at the 95th percentile. Initial/final sampled mean
-tick costs were about 0.56/0.35 ms, showing no deterioration in this scene. These Node
-measurements exclude browser rendering and do not establish low-end device frame rates.
+the region. It absorbs all 24 contacted food bodies while preserving total mass
+to 1e-11 relative tolerance on every tick, produces one fragmentation event, and
+finishes without intact-body penetration. No body registers a resting tick within
+four units of the source surface at less than one unit/second normal relative speed.
+Peak counts are 60 simulated bodies and 32 debris; 29 merges and later collection
+reduce debris to zero. The sample uses at most 1545 pair checks in a tick. These Node
+checks exclude browser rendering and do not establish device frame rates.
 
 The distant-entry scene verifies nonzero attraction and fully active field weights
 before the player approaches, with the same field weights on entry. Competing
-collectors transfer one shard once (1796 versus 1600 mass); a separate arrival-time
+collectors transfer one shard once and may subsequently absorb the smaller rival;
+their surviving mass totals exactly 3396. A separate arrival-time
 test verifies an earlier NPC contact wins over a later player contact. Tests also cover
 two collectors contesting newly shed material from an unattended large-body impact,
 provenance-based reclaim windows, protected surface contact, bounded dense handoffs,
@@ -692,9 +779,10 @@ including the distant planets. This probe uses settled minimum zoom/density.
 The generation/query/force probe took about 3.0-3.6 seconds on the test host; it is not a
 browser frame-time benchmark or a survival playthrough.
 
-Current browser visual validation could not complete: automatic approval review
-denied access to the local preview because of its usage limit. The browser evidence
-below belongs to the previous baseline and has not been repeated for these changes.
+Browser visual validation for the earlier interaction-rule pass could not complete: the browser blocked the local
+preview (`ERR_BLOCKED_BY_CLIENT`), and the local server could not bind a socket
+(`WinError 10013`), including with an execution escalation. The browser evidence
+below belongs to an earlier baseline and has not been repeated for these changes.
 
 Earlier browser checks on the developer fixture confirmed growth before pullback, centered
 framing, trails, parallax, procedural region traversal while zooming, low-zoom mixed
@@ -735,7 +823,7 @@ mass is immediate and camera motion intentionally takes a short interval.
 Warning timing extrapolates current relative motion and local pull; it does not solve
 future curved trajectories or guarantee avoidance after arbitrary late inputs.
 Crowded/tiny views intentionally omit lower-priority indicators. Colors supplement
-shape/position/text for massive hazards, but tiny-body food/danger rims remain color-based.
+shape/position/text for massive hazards, but relative-size rims remain color-based.
 Spatial density now favors asteroid fields and local planetary systems, with sparse
 travel gaps. Later growth timing and natural travel through this new arrangement
 have not been replayed; available target counts and generation clearances were inspected.
